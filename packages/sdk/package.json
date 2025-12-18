@@ -1,0 +1,35 @@
+{
+  "name": "@agentics/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Agentics Platform",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "npm run build:esm && npm run build:cjs",
+    "build:esm": "tsc --module esnext --outDir dist/esm && echo '{\"type\":\"module\"}' > dist/esm/package.json",
+    "build:cjs": "tsc --module commonjs --outDir dist/cjs && echo '{\"type\":\"commonjs\"}' > dist/cjs/package.json",
+    "dev": "tsc --watch",
+    "test": "vitest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.10.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "agentics",
+    "sdk",
+    "api-client"
+  ]
+}
