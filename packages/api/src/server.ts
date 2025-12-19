@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import config from './config.js';
 import { registerObservabilityMiddleware } from './middleware/observability.js';
 import { registerObservabilityRoutes } from './handlers/metrics.js';
+import { registerLayer3HealthRoutes } from './routes/health.js';
 
 export interface ErrorResponse {
   error: string;
@@ -73,6 +74,9 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
 
   // Register observability routes (/metrics, /audit, /usage)
   registerObservabilityRoutes(server);
+
+  // Register Layer 3 health routes (/health/intelligence, /health/security, etc.)
+  registerLayer3HealthRoutes(server);
 
   // Request logging
   server.addHook('onRequest', async (request, reply) => {
