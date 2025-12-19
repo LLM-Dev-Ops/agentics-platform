@@ -11,16 +11,15 @@
  * Analysis and aggregation are performed by downstream systems.
  */
 
-import { MetricsEmitter } from './metrics';
-import { AuditLogger, AuditEventType } from './audit';
-import { UsageEmitter } from './usage-emission';
+import { MetricsEmitter } from './metrics.js';
+import { AuditLogger, AuditEventType } from './audit.js';
+import { UsageEmitter } from './usage-emission.js';
 import {
   generateCorrelationId,
-  attachCorrelationId,
   getCorrelationId,
   getLayer3Headers,
   getCorrelationContext,
-} from './correlation';
+} from './correlation.js';
 
 export class ObservabilityService {
   private static instance: ObservabilityService;
@@ -177,20 +176,20 @@ export class ObservabilityService {
 export const getObservabilityService = () => ObservabilityService.getInstance();
 
 // Export component classes for direct access if needed
-export { MetricsEmitter } from './metrics';
-export { AuditLogger, AuditEventType } from './audit';
-export { UsageEmitter } from './usage-emission';
+export { MetricsEmitter } from './metrics.js';
+export { AuditLogger } from './audit.js';
+export type { AuditEventType } from './audit.js';
+export { UsageEmitter } from './usage-emission.js';
 
 // Export correlation utilities
 export {
   generateCorrelationId,
-  attachCorrelationId,
   getCorrelationId,
   getLayer3Headers,
   getCorrelationContext,
   correlationIdHook,
-} from './correlation';
+} from './correlation.js';
 
 // Export types
-export type { AuditEvent } from './audit';
-export type { UsageEvent } from './usage-emission';
+export type { AuditEvent } from './audit.js';
+export type { UsageEvent } from './usage-emission.js';

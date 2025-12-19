@@ -14,8 +14,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import {
   getObservabilityService,
   getCorrelationId,
-  attachCorrelationId,
-} from '../services/observability';
+} from '../services/observability/index.js';
 
 // Store request start times
 const requestStartTimes = new WeakMap<FastifyRequest, number>();

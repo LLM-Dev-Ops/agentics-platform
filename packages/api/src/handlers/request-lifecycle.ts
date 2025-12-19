@@ -168,20 +168,6 @@ export async function handleRequest(
     // RETURN response
     return reply.status(upstreamResponse.status).send(upstreamResponse.body);
 
-  } catch (upstreamError) {
-    // CATCH upstreamError:
-    // emitErrorMetric(endpoint, upstreamError)
-    emitErrorMetric(getRequestPath(request.url), upstreamError);
-
-    // RETURN errorResponse(502, "UPSTREAM_ERROR", correlationId, upstreamError.message)
-    const error = createErrorResponse(
-      502,
-      'UPSTREAM_ERROR',
-      upstreamError instanceof Error ? upstreamError.message : 'Upstream service error',
-      correlationId
-    );
-    return reply.status(error.statusCode).send(error.response);
-
   } catch (error) {
     // CATCH error:
     // emitErrorMetric(endpoint, error)

@@ -17,7 +17,7 @@ export interface ScopeCheckResult {
  * Implements SPARC getRequiredScope pseudocode
  */
 export function getRequiredScope(endpoint: string): string | null {
-  const scopeMap: Record<string, string> = {
+  const scopeMap: Record<string, string | null> = {
     // Identity endpoints
     'POST /v1/identity/authenticate': null, // No auth required for login
     'POST /v1/identity/api-keys': 'identity:write',

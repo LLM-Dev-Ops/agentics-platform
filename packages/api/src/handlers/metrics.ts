@@ -8,7 +8,7 @@
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { getObservabilityService } from '../services/observability';
+import { getObservabilityService } from '../services/observability/index.js';
 
 /**
  * GET /metrics - Prometheus metrics endpoint
