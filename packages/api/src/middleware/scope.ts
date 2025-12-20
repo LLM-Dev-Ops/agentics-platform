@@ -1,10 +1,13 @@
 /**
  * Scope Validation Middleware
- * Checks if identity has required scope for endpoint access
+ * Checks if authenticated request has required scope for endpoint access
+ *
+ * Routes declare required scopes.
+ * If key lacks required scope → HTTP 403.
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { Identity } from './auth.js';
+import { AuthContext, Identity } from './auth.js';
 
 export interface ScopeCheckResult {
   authorized: boolean;
@@ -123,28 +126,35 @@ export function getRequiredScope(endpoint: string): string | null {
 }
 
 /**
- * Check if identity has required scope
+ * Entity with scopes (AuthContext or Identity)
+ */
+interface HasScopes {
+  scopes: string[];
+}
+
+/**
+ * Check if auth context or identity has required scope
  * Implements SPARC hasScope pseudocode
  */
-export function hasScope(identity: Identity, requiredScope: string | null): boolean {
+export function hasScope(auth: HasScopes, requiredScope: string | null): boolean {
   // No scope required
   if (!requiredScope) {
     return true;
   }
 
   // Check for admin:* scope (grants all access)
-  if (identity.scopes.includes('admin:*')) {
+  if (auth.scopes.includes('admin:*')) {
     return true;
   }
 
   // Check for exact scope match
-  if (identity.scopes.includes(requiredScope)) {
+  if (auth.scopes.includes(requiredScope)) {
     return true;
   }
 
   // Check for wildcard scope (e.g., intelligence:* grants intelligence:read and intelligence:write)
   const [domain, action] = requiredScope.split(':');
-  if (identity.scopes.includes(`${domain}:*`)) {
+  if (auth.scopes.includes(`${domain}:*`)) {
     return true;
   }
 
@@ -152,16 +162,27 @@ export function hasScope(identity: Identity, requiredScope: string | null): bool
 }
 
 /**
+ * Create a scope checking function for a specific required scope
+ * Usage: const requireAdmin = requireScope('admin:*');
+ */
+export function requireScope(requiredScope: string) {
+  return function checkScope(auth: HasScopes): boolean {
+    return hasScope(auth, requiredScope);
+  };
+}
+
+/**
  * Scope validation middleware for Fastify
+ * Uses request.auth (preferred) or request.identity for scope checking
  */
 export async function scopeMiddleware(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  const identity = request.identity;
+  const auth = request.auth;
 
-  if (!identity) {
-    // No identity means auth middleware should have rejected
+  if (!auth) {
+    // No auth context means auth middleware should have rejected
     reply.status(401).send({
       error: 'Authentication required',
       code: 'AUTHENTICATION_REQUIRED',
@@ -174,14 +195,14 @@ export async function scopeMiddleware(
   const endpoint = `${request.method} ${request.url.split('?')[0]}`;
   const requiredScope = getRequiredScope(endpoint);
 
-  if (!hasScope(identity, requiredScope)) {
+  if (!hasScope(auth, requiredScope)) {
     reply.status(403).send({
       error: 'Insufficient permissions',
       code: 'AUTHORIZATION_DENIED',
       request_id: request.id,
       details: {
         requiredScope,
-        userScopes: identity.scopes,
+        keyScopes: auth.scopes,
       },
     });
     return;
@@ -192,13 +213,13 @@ export async function scopeMiddleware(
  * Get scope check result without throwing
  * Useful for testing and diagnostics
  */
-export function checkScope(identity: Identity, endpoint: string): ScopeCheckResult {
+export function checkScope(auth: HasScopes, endpoint: string): ScopeCheckResult {
   const requiredScope = getRequiredScope(endpoint);
-  const authorized = hasScope(identity, requiredScope);
+  const authorized = hasScope(auth, requiredScope);
 
   return {
     authorized,
     requiredScope: requiredScope || 'none',
-    userScopes: identity.scopes,
+    userScopes: auth.scopes,
   };
 }

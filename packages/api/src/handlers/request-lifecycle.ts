@@ -6,7 +6,7 @@
 
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { v4 as uuidv4 } from 'uuid';
-import { extractCredentials, validateCredentials, Identity } from '../middleware/auth.js';
+import { extractCredentials, validateCredentials, AuthContext, Identity } from '../middleware/auth.js';
 import { isRateLimited } from '../middleware/rate-limit.js';
 import { getRequiredScope, hasScope } from '../middleware/scope.js';
 import { routeToCore, forwardRequest, streamResponse, getRequestPath, isStreamingEndpoint } from '../router/index.js';
@@ -14,7 +14,8 @@ import { createErrorResponse } from '../server.js';
 
 export interface UsageRecord {
   correlationId: string;
-  userId: string;
+  orgId: string;
+  keyId: string;
   endpoint: string;
   startTime: number;
   endTime?: number;
@@ -30,7 +31,8 @@ export interface MetricsPayload {
   statusCode: number;
   durationMs: number;
   correlationId: string;
-  userId: string;
+  orgId: string;
+  keyId: string;
 }
 
 /**
@@ -54,19 +56,21 @@ export async function handleRequest(
     // credentials = extractCredentials(request)
     const credentials = extractCredentials(request);
 
-    // identity = validateCredentials(credentials)
-    const identity = await validateCredentials(credentials);
+    // result = validateCredentials(credentials)
+    const result = await validateCredentials(credentials);
 
-    // IF identity IS NULL: RETURN errorResponse(401, "AUTHENTICATION_REQUIRED", correlationId)
-    if (!identity) {
+    // IF result IS NULL: RETURN errorResponse(401, "AUTHENTICATION_REQUIRED", correlationId)
+    if (!result) {
       const error = createErrorResponse(
         401,
         'AUTHENTICATION_REQUIRED',
-        'Valid authentication credentials are required',
+        'Valid API key required. Use Authorization: Bearer <api_key>',
         correlationId
       );
       return reply.status(error.statusCode).send(error.response);
     }
+
+    const { auth, identity } = result;
 
     // endpoint = parseEndpoint(request.path)
     const endpoint = `${request.method} ${getRequestPath(request.url)}`;
@@ -74,8 +78,8 @@ export async function handleRequest(
     // requiredScope = getRequiredScope(endpoint)
     const requiredScope = getRequiredScope(endpoint);
 
-    // IF NOT hasScope(identity, requiredScope): RETURN errorResponse(403, "AUTHORIZATION_DENIED", correlationId)
-    if (!hasScope(identity, requiredScope)) {
+    // IF NOT hasScope(auth, requiredScope): RETURN errorResponse(403, "AUTHORIZATION_DENIED", correlationId)
+    if (!hasScope(auth, requiredScope)) {
       const error = createErrorResponse(
         403,
         'AUTHORIZATION_DENIED',
@@ -83,7 +87,7 @@ export async function handleRequest(
         correlationId,
         {
           requiredScope,
-          userScopes: identity.scopes,
+          keyScopes: auth.scopes,
         }
       );
       return reply.status(error.statusCode).send(error.response);
@@ -113,8 +117,8 @@ export async function handleRequest(
       return reply.status(error.statusCode).send(error.response);
     }
 
-    // recordUsageStart(identity, endpoint, correlationId)
-    recordUsageStart(identity, endpoint, correlationId);
+    // recordUsageStart(auth, endpoint, correlationId)
+    recordUsageStart(auth, endpoint, correlationId);
 
     // layer3Core = routeToCore(endpoint)
     const path = getRequestPath(request.url);
@@ -131,29 +135,30 @@ export async function handleRequest(
     }
 
     // response = forwardRequest(layer3Core, request, correlationId)
+    // Pass org_id to Layer 3 for context (backwards compatible with userId)
     const upstreamResponse = await forwardRequest(layer3Core, {
       method: request.method,
       path: request.url,
       headers: request.headers as Record<string, string>,
       body: request.body,
       correlationId,
-      userId: identity.userId,
-      scopes: identity.scopes,
+      userId: auth.org_id, // Pass org_id as userId for Layer 3 compatibility
+      scopes: auth.scopes,
     });
 
     // Handle streaming responses
     if (upstreamResponse.streaming && upstreamResponse.body instanceof ReadableStream) {
       // For streaming, we record usage end after stream completes
       // This is a simplified version - production would track streaming metrics differently
-      recordUsageEnd(identity, endpoint, correlationId, {
+      recordUsageEnd(auth, endpoint, correlationId, {
         status: upstreamResponse.status,
       });
 
       return streamResponse(reply, upstreamResponse.body);
     }
 
-    // recordUsageEnd(identity, endpoint, correlationId, response)
-    recordUsageEnd(identity, endpoint, correlationId, upstreamResponse);
+    // recordUsageEnd(auth, endpoint, correlationId, response)
+    recordUsageEnd(auth, endpoint, correlationId, upstreamResponse);
 
     // emitMetrics(endpoint, startTime, response.status)
     emitMetrics({
@@ -162,7 +167,8 @@ export async function handleRequest(
       statusCode: upstreamResponse.status,
       durationMs: Date.now() - startTime,
       correlationId,
-      userId: identity.userId,
+      orgId: auth.org_id,
+      keyId: auth.key_id,
     });
 
     // RETURN response
@@ -186,12 +192,13 @@ export async function handleRequest(
 
 /**
  * Record usage start
- * FUNCTION recordUsageStart(identity, endpoint, correlationId)
+ * FUNCTION recordUsageStart(auth, endpoint, correlationId)
  */
-function recordUsageStart(identity: Identity, endpoint: string, correlationId: string): void {
+function recordUsageStart(auth: AuthContext, endpoint: string, correlationId: string): void {
   const usageRecord: UsageRecord = {
     correlationId,
-    userId: identity.userId,
+    orgId: auth.org_id,
+    keyId: auth.key_id,
     endpoint,
     startTime: Date.now(),
     status: 'in_progress',
@@ -202,10 +209,10 @@ function recordUsageStart(identity: Identity, endpoint: string, correlationId: s
 
 /**
  * Record usage end
- * FUNCTION recordUsageEnd(identity, endpoint, correlationId, response)
+ * FUNCTION recordUsageEnd(auth, endpoint, correlationId, response)
  */
 function recordUsageEnd(
-  identity: Identity,
+  auth: AuthContext,
   endpoint: string,
   correlationId: string,
   response: { status: number; body?: unknown }
@@ -220,7 +227,7 @@ function recordUsageEnd(
     usageRecord.tokensUsed = extractTokenUsage(response);
 
     storeUsageRecord(usageRecord);
-    incrementUsageCounters(identity.userId, endpoint, usageRecord);
+    incrementUsageCounters(auth.org_id, auth.key_id, endpoint, usageRecord);
   }
 }
 
@@ -276,11 +283,12 @@ function emitErrorMetric(endpoint: string, error: unknown): void {
 /**
  * Increment usage counters
  */
-function incrementUsageCounters(userId: string, endpoint: string, record: UsageRecord): void {
+function incrementUsageCounters(orgId: string, keyId: string, endpoint: string, record: UsageRecord): void {
   // MVP: Log usage increment
   // Production: Update usage database and quotas
   console.log('[USAGE]', {
-    userId,
+    orgId,
+    keyId,
     endpoint,
     tokensUsed: record.tokensUsed,
     durationMs: record.durationMs,

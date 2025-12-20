@@ -11,6 +11,7 @@ import config from './config.js';
 import { registerObservabilityMiddleware } from './middleware/observability.js';
 import { registerObservabilityRoutes } from './handlers/metrics.js';
 import { registerLayer3HealthRoutes } from './routes/health.js';
+import { registerProtectedExampleRoutes } from './routes/protected-example.js';
 
 export interface ErrorResponse {
   error: string;
@@ -77,6 +78,9 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
 
   // Register Layer 3 health routes (/health/intelligence, /health/security, etc.)
   registerLayer3HealthRoutes(server);
+
+  // Register example protected routes (demonstrates API key auth)
+  await registerProtectedExampleRoutes(server);
 
   // Request logging
   server.addHook('onRequest', async (request, reply) => {
