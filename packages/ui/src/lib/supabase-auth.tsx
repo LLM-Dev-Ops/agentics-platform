@@ -7,7 +7,7 @@
  * This is ONLY for UI login - API keys remain the sole machine auth mechanism.
  */
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Session, User, AuthChangeEvent } from '@supabase/supabase-js';
 
@@ -21,6 +21,7 @@ interface SupabaseAuthContextType {
   session: Session | null;
   orgInfo: OrgInfo | null;
   isLoading: boolean;
+  isAuthReady: boolean; // True when auth AND org info are loaded
   isAuthenticated: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGitHub: () => Promise<void>;
@@ -41,61 +42,93 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [orgInfo, setOrgInfo] = useState<OrgInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isConfigured, setIsConfigured] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const router = useRouter();
 
-  const loadOrgInfo = useCallback(async (accessToken: string) => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/v1/me`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
+  // Track initialization to prevent duplicate calls
+  const initRef = useRef(false);
+  const orgInfoLoadedForUserRef = useRef<string | null>(null);
 
-      if (response.ok) {
-        const data = await response.json();
-        setOrgInfo(data);
-      } else {
-        console.error('Failed to load org info:', response.status, response.statusText);
-      }
-    } catch (error) {
-      console.error('Failed to load org info:', error);
-    }
-  }, []);
-
-  // Load user and org info on mount and session change
+  // Load user and org info on mount
   useEffect(() => {
+    // Prevent double initialization in React Strict Mode
+    if (initRef.current) return;
+    initRef.current = true;
+
     let subscription: { unsubscribe: () => void } | null = null;
+    let isMounted = true;
+
+    const loadOrgInfo = async (accessToken: string, userId: string) => {
+      // Skip if already loaded for this user
+      if (orgInfoLoadedForUserRef.current === userId) {
+        return;
+      }
+
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${apiUrl}/v1/me`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!isMounted) return;
+
+        if (response.ok) {
+          const data = await response.json();
+          setOrgInfo(data);
+          orgInfoLoadedForUserRef.current = userId;
+        } else {
+          console.error('Failed to load org info:', response.status, response.statusText);
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error('Failed to load org info:', error);
+      }
+    };
 
     const initAuth = async () => {
       try {
         const supabase = await getSupabaseClient();
-        setIsConfigured(true);
 
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Get initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
 
-        if (session?.access_token) {
-          await loadOrgInfo(session.access_token);
+        if (!isMounted) return;
+
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+
+        // Load org info for initial session
+        if (initialSession?.access_token && initialSession.user) {
+          await loadOrgInfo(initialSession.access_token, initialSession.user.id);
         }
 
-        // Listen for auth changes
-        const { data } = supabase.auth.onAuthStateChange(
-          async (event: AuthChangeEvent, session: Session | null) => {
-            setSession(session);
-            setUser(session?.user ?? null);
+        if (isMounted) {
+          setIsLoading(false);
+          setIsAuthReady(true);
+        }
 
-            if (session?.access_token) {
-              await loadOrgInfo(session.access_token);
-            } else {
-              setOrgInfo(null);
+        // Listen for auth changes (sign in, sign out, token refresh)
+        const { data } = supabase.auth.onAuthStateChange(
+          async (event: AuthChangeEvent, newSession: Session | null) => {
+            if (!isMounted) return;
+
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+
+            // Only load org info on actual sign in, not token refresh
+            if (event === 'SIGNED_IN' && newSession?.access_token && newSession.user) {
+              // Reset the loaded user ref on new sign in
+              orgInfoLoadedForUserRef.current = null;
+              await loadOrgInfo(newSession.access_token, newSession.user.id);
             }
 
             if (event === 'SIGNED_OUT') {
+              setOrgInfo(null);
+              orgInfoLoadedForUserRef.current = null;
               router.push('/login');
             }
           }
@@ -103,18 +136,20 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         subscription = data.subscription;
       } catch (error) {
         console.error('Supabase not configured:', error);
-        setIsConfigured(false);
-      } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+          setIsAuthReady(true);
+        }
       }
     };
 
     initAuth();
 
     return () => {
+      isMounted = false;
       subscription?.unsubscribe();
     };
-  }, [router, loadOrgInfo]);
+  }, [router]);
 
   const signIn = async (email: string, password: string) => {
     const supabase = await getSupabaseClient();
@@ -170,6 +205,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         session,
         orgInfo,
         isLoading,
+        isAuthReady,
         isAuthenticated: !!user,
         signIn,
         signInWithGitHub,
@@ -193,18 +229,21 @@ export function useSupabaseAuth() {
 /**
  * Protected Route Wrapper
  * Redirects to login if user is not authenticated
+ * Waits for auth to be fully ready before redirecting
  */
 export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { isAuthenticated, isLoading } = useSupabaseAuth();
+  const { isAuthenticated, isAuthReady } = useSupabaseAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    // Only redirect after auth is fully ready
+    if (isAuthReady && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isAuthReady, router]);
 
-  if (isLoading) {
+  // Show loading while auth is initializing
+  if (!isAuthReady) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { ProtectedRoute, useSupabaseAuth } from '@/lib/supabase-auth';
 import { apiClient, ApiKey, ApiError } from '@/lib/api-client';
@@ -12,7 +12,7 @@ const AVAILABLE_SCOPES = [
 ];
 
 export default function DashboardKeysPage() {
-  const { session, isLoading: authLoading } = useSupabaseAuth();
+  const { session, isAuthReady } = useSupabaseAuth();
   const router = useRouter();
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,9 +25,16 @@ export default function DashboardKeysPage() {
   const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
-  const fetchKeys = useCallback(async () => {
-    // Wait for auth to finish loading
-    if (authLoading) return;
+  // Track if we've already fetched keys to prevent duplicate calls
+  const hasFetchedRef = useRef(false);
+
+  // Fetch keys once when auth is ready
+  useEffect(() => {
+    // Wait for auth to be fully ready
+    if (!isAuthReady) return;
+
+    // Only fetch once
+    if (hasFetchedRef.current) return;
 
     // If no session after auth loaded, redirect will happen via ProtectedRoute
     if (!session?.access_token) {
@@ -35,33 +42,35 @@ export default function DashboardKeysPage() {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      const fetchedKeys = await apiClient.listKeys();
-      setKeys(fetchedKeys);
-      setError('');
-    } catch (err) {
-      if (err instanceof ApiError) {
-        if (err.status === 401) {
-          // Session might be expired, redirect to login
+    hasFetchedRef.current = true;
+
+    const fetchKeys = async () => {
+      try {
+        setIsLoading(true);
+        const fetchedKeys = await apiClient.listKeys();
+        setKeys(fetchedKeys);
+        setError('');
+      } catch (err) {
+        if (err instanceof ApiError) {
+          if (err.status === 401) {
+            // Session might be expired, redirect to login
+            router.push('/login');
+            return;
+          }
+          setError(err.message);
+        } else if (err instanceof Error && err.message === 'No active session') {
           router.push('/login');
           return;
+        } else {
+          setError('Failed to load API keys');
         }
-        setError(err.message);
-      } else if (err instanceof Error && err.message === 'No active session') {
-        router.push('/login');
-        return;
-      } else {
-        setError('Failed to load API keys');
+      } finally {
+        setIsLoading(false);
       }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [session?.access_token, authLoading, router]);
+    };
 
-  useEffect(() => {
     fetchKeys();
-  }, [fetchKeys]);
+  }, [isAuthReady, session?.access_token, router]);
 
   const handleCreateKey = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,7 +272,7 @@ export default function DashboardKeysPage() {
           </div>
         )}
 
-        {isLoading || authLoading ? (
+        {isLoading || !isAuthReady ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
