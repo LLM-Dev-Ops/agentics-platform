@@ -12,6 +12,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import config from '../config.js';
+import { db } from '../db.js';
 
 /**
  * Authentication context attached to authenticated requests
@@ -159,22 +160,41 @@ export async function validateCredentials(credentials: Credentials | null): Prom
 
 /**
  * Lookup API key from database by hash
- * MVP: In-memory store (production should use database with indexed hash column)
  */
 async function lookupApiKey(keyValue: string): Promise<ApiKeyRecord | null> {
   // Hash the incoming key for lookup
   const keyHash = hashApiKey(keyValue);
 
-  // Look up by hash in the store
-  const apiKey = apiKeyStore.get(keyHash);
+  const result = await db.query(
+    `
+    SELECT *
+    FROM api_keys
+    WHERE key_hash = $1
+      AND is_active = true
+      AND revoked_at IS NULL
+      AND (expires_at IS NULL OR expires_at > now())
+    `,
+    [keyHash]
+  );
 
-  if (apiKey) {
-    // Update last_used_at timestamp
-    apiKey.last_used_at = new Date();
-    return apiKey;
+  const record = result.rows[0];
+
+  if (!record) {
+    return null;
   }
 
-  return null;
+  // Map database row to ApiKeyRecord interface
+  return {
+    id: record.id,
+    org_id: record.org_id,
+    name: record.name,
+    scopes: record.scopes,
+    key_hash: record.key_hash,
+    created_at: record.created_at,
+    expires_at: record.expires_at,
+    revoked: record.revoked_at !== null,
+    last_used_at: record.last_used_at,
+  };
 }
 
 /**
@@ -228,96 +248,17 @@ export async function authMiddleware(
 
 // ============================================================================
 // In-Memory Stores for MVP
-// Production: Replace with database queries
+// Note: API key lookup now uses Postgres via DATABASE_URL
 // ============================================================================
 
-// Store API keys by their SHA-256 hash for O(1) lookup
-const apiKeyStore = new Map<string, ApiKeyRecord>();
-
-// Store entitlements by org_id
+// Store entitlements by org_id (still in-memory for MVP)
 const entitlementStore = new Map<string, Entitlements>();
-
-/**
- * Get the API key store (for testing)
- */
-export function getApiKeyStore(): Map<string, ApiKeyRecord> {
-  return apiKeyStore;
-}
-
-/**
- * Create an API key for an organization
- * Returns the plaintext key (only shown once at creation time)
- */
-export function createApiKey(
-  orgId: string,
-  name: string,
-  scopes: string[],
-  expiresAt?: Date
-): { key: string; record: ApiKeyRecord } {
-  // Generate random key value
-  const keyValue = `agentics_${crypto.randomBytes(32).toString('base64url')}`;
-
-  // Hash for storage and lookup
-  const keyHash = hashApiKey(keyValue);
-
-  const record: ApiKeyRecord = {
-    id: crypto.randomUUID(),
-    org_id: orgId,
-    name,
-    scopes,
-    key_hash: keyHash,
-    created_at: new Date(),
-    expires_at: expiresAt,
-    revoked: false,
-  };
-
-  // Store by hash for O(1) lookup
-  apiKeyStore.set(keyHash, record);
-
-  return { key: keyValue, record };
-}
-
-/**
- * Revoke an API key by ID
- */
-export function revokeApiKey(keyId: string): boolean {
-  for (const [hash, record] of apiKeyStore.entries()) {
-    if (record.id === keyId) {
-      record.revoked = true;
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * List API keys for an organization (without the hash)
- */
-export function listApiKeys(orgId: string): Omit<ApiKeyRecord, 'key_hash'>[] {
-  const keys: Omit<ApiKeyRecord, 'key_hash'>[] = [];
-
-  for (const record of apiKeyStore.values()) {
-    if (record.org_id === orgId && !record.revoked) {
-      const { key_hash, ...rest } = record;
-      keys.push(rest);
-    }
-  }
-
-  return keys;
-}
 
 /**
  * Set entitlements for an organization
  */
 export function setEntitlements(orgId: string, entitlements: Entitlements): void {
   entitlementStore.set(orgId, entitlements);
-}
-
-/**
- * Clear all API keys (for testing)
- */
-export function clearApiKeys(): void {
-  apiKeyStore.clear();
 }
 
 /**

@@ -2,16 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/lib/auth';
+import { useSupabaseAuth } from '@/lib/supabase-auth';
 
 export default function Navigation() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, signOut } = useSupabaseAuth();
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/api-keys', label: 'API Keys' },
-    { href: '/usage', label: 'Usage' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/dashboard/keys', label: 'API Keys' },
   ];
 
   return (
@@ -47,7 +45,7 @@ export default function Navigation() {
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-700">{user?.email}</span>
                 <button
-                  onClick={logout}
+                  onClick={() => signOut()}
                   className="text-sm text-gray-700 hover:text-gray-900"
                 >
                   Logout

@@ -2,16 +2,16 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth';
+import { useSupabaseAuth } from '@/lib/supabase-auth';
 
 export default function HomePage() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useSupabaseAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        router.push('/api-keys');
+        router.push('/dashboard/keys');
       } else {
         router.push('/login');
       }

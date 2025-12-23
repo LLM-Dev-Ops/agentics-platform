@@ -30,6 +30,7 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
-    "claude-flow": "^2.7.47"
+    "claude-flow": "^2.7.47",
+    "pg": "^8.16.3"
   }
 }

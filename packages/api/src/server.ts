@@ -12,6 +12,8 @@ import { registerObservabilityMiddleware } from './middleware/observability.js';
 import { registerObservabilityRoutes } from './handlers/metrics.js';
 import { registerLayer3HealthRoutes } from './routes/health.js';
 import { registerProtectedExampleRoutes } from './routes/protected-example.js';
+import { registerKeyRoutes } from './routes/keys.js';
+import { registerMeRoute } from './routes/me.js';
 
 export interface ErrorResponse {
   error: string;
@@ -81,6 +83,12 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
 
   // Register example protected routes (demonstrates API key auth)
   await registerProtectedExampleRoutes(server);
+
+  // Register API key management routes (/v1/keys)
+  await registerKeyRoutes(server);
+
+  // Register user info route (/v1/me) - Supabase JWT auth
+  await registerMeRoute(server);
 
   // Request logging
   server.addHook('onRequest', async (request, reply) => {
