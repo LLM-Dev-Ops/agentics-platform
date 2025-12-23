@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { SupabaseAuthProvider } from '@/lib/supabase-auth';
+import { AuthGate } from '@/components/AuthGate';
 import Navigation from '@/components/navigation';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -20,12 +21,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <SupabaseAuthProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Navigation />
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              {children}
-            </main>
-          </div>
+          <AuthGate>
+            <div className="min-h-screen bg-gray-50">
+              <Navigation />
+              <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {children}
+              </main>
+            </div>
+          </AuthGate>
         </SupabaseAuthProvider>
       </body>
     </html>
