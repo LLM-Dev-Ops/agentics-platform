@@ -1,18 +1,25 @@
 /**
  * Authentication Middleware
- * Extracts and validates API keys from Authorization header
  *
- * API keys are passed via: Authorization: Bearer <api_key>
- * Keys are stored hashed (SHA-256), belong to an organization, have scopes, and can be revoked.
+ * Supports TWO authentication methods:
+ * 1. Supabase JWT (for UI/dashboard routes) - checked FIRST
+ * 2. API keys (for machine/programmatic access) - checked SECOND
+ *
+ * Auth order is CRITICAL:
+ * 1️⃣ Supabase JWT (UI routes: /v1/me, /v1/keys, /v1/keys/*)
+ * 2️⃣ API key (machine routes)
+ * 3️⃣ Reject
  *
  * Auth context attached to request: { org_id, key_id, scopes }
  */
 
 import { FastifyRequest, FastifyReply } from 'fastify';
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
-import config from '../config.js';
+import jwt from 'jsonwebtoken';
 import { db } from '../db.js';
+
+// UI routes that accept Supabase JWT authentication
+const UI_ROUTES = ['/v1/me', '/v1/keys'];
 
 /**
  * Authentication context attached to authenticated requests
@@ -221,13 +228,147 @@ async function lookupEntitlements(orgId: string): Promise<Entitlements> {
 }
 
 /**
+ * Check if a route is a UI route that accepts Supabase JWT
+ */
+function isUIRoute(url: string): boolean {
+  // Remove query string for matching
+  const path = url.split('?')[0];
+  return UI_ROUTES.some(route => path === route || path.startsWith(route + '/'));
+}
+
+/**
+ * Verify Supabase JWT and return user info
+ * Uses HS256 algorithm as required by Supabase
+ */
+interface SupabaseJWTPayload {
+  sub: string;  // User ID
+  email?: string;
+  exp: number;
+  iat: number;
+}
+
+async function verifySupabaseJWT(token: string): Promise<SupabaseJWTPayload | null> {
+  const secret = process.env.SUPABASE_JWT_SECRET;
+
+  if (!secret) {
+    console.error('SUPABASE_JWT_SECRET is not configured');
+    return null;
+  }
+
+  try {
+    // CRITICAL: Use explicit HS256 algorithm
+    const payload = jwt.verify(token, secret, {
+      algorithms: ['HS256'],
+    }) as SupabaseJWTPayload;
+
+    return payload;
+  } catch (error) {
+    // JWT verification failed (expired, invalid signature, etc.)
+    return null;
+  }
+}
+
+/**
+ * Get or create organization for a Supabase user
+ */
+async function getOrCreateOrg(userId: string): Promise<string | null> {
+  try {
+    // Try to find existing org
+    const result = await db.query(
+      'SELECT id FROM organizations WHERE owner_user_id = $1',
+      [userId]
+    );
+
+    if (result.rows.length > 0) {
+      return result.rows[0].id;
+    }
+
+    // Create new org for this user
+    const insertResult = await db.query(
+      'INSERT INTO organizations (owner_user_id) VALUES ($1) RETURNING id',
+      [userId]
+    );
+
+    return insertResult.rows[0].id;
+  } catch (error) {
+    console.error('Failed to get/create org:', error);
+    return null;
+  }
+}
+
+/**
  * Authentication middleware for Fastify
- * Validates API key and attaches auth context to request
+ *
+ * Auth order:
+ * 1. Check if Supabase JWT (for UI routes)
+ * 2. Check if API key (for machine routes)
+ * 3. Reject if neither
  */
 export async function authMiddleware(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  const authHeader = request.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    reply.status(401).send({
+      error: 'Authentication required',
+      code: 'AUTHENTICATION_REQUIRED',
+      message: 'Authorization header required',
+      request_id: request.id,
+    });
+    return;
+  }
+
+  const token = authHeader.substring(7).trim();
+
+  // 1️⃣ FIRST: Check if this is a Supabase JWT (for UI routes)
+  // Supabase JWT: does NOT start with "agentics_"
+  if (!token.startsWith('agentics_')) {
+    // This is a Supabase JWT - verify it
+    const payload = await verifySupabaseJWT(token);
+
+    if (!payload) {
+      reply.status(401).send({
+        error: 'Invalid token',
+        code: 'INVALID_TOKEN',
+        message: 'JWT verification failed',
+        request_id: request.id,
+      });
+      return;
+    }
+
+    // Get org for this user
+    const orgId = await getOrCreateOrg(payload.sub);
+
+    if (!orgId) {
+      reply.status(401).send({
+        error: 'Organization error',
+        code: 'ORG_ERROR',
+        message: 'Failed to resolve organization',
+        request_id: request.id,
+      });
+      return;
+    }
+
+    // Attach auth context for Supabase JWT users
+    request.auth = {
+      org_id: orgId,
+      key_id: 'supabase_jwt', // Marker for JWT auth
+      scopes: ['admin'], // UI users get admin scope
+    };
+
+    request.identity = {
+      userId: orgId,
+      email: payload.email,
+      scopes: ['admin'],
+      entitlements: await lookupEntitlements(orgId),
+    };
+
+    return; // Success - proceed to route handler
+  }
+
+  // 2️⃣ SECOND: Check if this is an API key
   const credentials = extractCredentials(request);
   const result = await validateCredentials(credentials);
 
