@@ -15,6 +15,7 @@ import { registerProtectedExampleRoutes } from './routes/protected-example.js';
 import { registerKeyRoutes } from './routes/keys.js';
 import { registerMeRoute } from './routes/me.js';
 import { handleRequest } from './handlers/request-lifecycle.js';
+import { registerEnterpriseRoutes } from './routes/enterprise.js';
 
 export interface ErrorResponse {
   error: string;
@@ -81,6 +82,10 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
 
   // Register Layer 3 health routes (/health/intelligence, /health/security, etc.)
   registerLayer3HealthRoutes(server);
+
+  // Enterprise gate routes — Stripe webhook (verified via signature, no auth)
+  // This is CORE INFRASTRUCTURE - controls binary enterprise entitlement
+  await registerEnterpriseRoutes(server);
 
   // Dashboard routes — Supabase JWT auth (NO API key auth)
   await server.register(async (dashboard) => {

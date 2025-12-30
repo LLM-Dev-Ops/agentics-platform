@@ -18,9 +18,6 @@
 
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db.js';
-import { Tier } from '../services/entitlements/tiers.js';
-// Import auth types to get augmented FastifyRequest with auth property
-import type { AuthContext } from './auth.js';
 
 // ============================================================================
 // LIMIT CONSTANTS - Centrally defined, non-bypassable
@@ -174,35 +171,24 @@ function cleanupOldEntries(): void {
 }
 
 // ============================================================================
-// TIER DETECTION
+// ENTERPRISE STATUS - Controlled exclusively by Stripe webhooks
 // ============================================================================
 
 /**
- * Check if organization is enterprise tier
- * Returns true for ENTERPRISE tier, false for all others
+ * Check if organization is enterprise
+ * Reads the is_enterprise flag from organizations table.
+ * This flag is controlled exclusively by Stripe webhook events.
+ *
+ * Returns true only if is_enterprise = true in database.
+ * On any error, returns false (fail closed).
  */
 async function isEnterpriseTier(orgId: string): Promise<boolean> {
   try {
-    // First check in-memory entitlement store
-    const { entitlementStore } = await import('../services/entitlements/store.js');
-    const entitlement = await entitlementStore.lookupUserEntitlement(orgId);
-
-    if (entitlement) {
-      return entitlement.tier === 'ENTERPRISE';
-    }
-
-    // Fallback: Check database for subscription status
     const result = await db.query(
-      `SELECT tier FROM organization_subscriptions WHERE org_id = $1`,
+      `SELECT is_enterprise FROM organizations WHERE id = $1`,
       [orgId]
     );
-
-    if (result.rows.length > 0) {
-      return result.rows[0].tier === 'ENTERPRISE';
-    }
-
-    // Default: Not enterprise
-    return false;
+    return result.rows[0]?.is_enterprise === true;
   } catch {
     // On error, assume not enterprise (fail closed - silent)
     return false;
