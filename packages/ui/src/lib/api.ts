@@ -1,9 +1,13 @@
+console.warn(
+  'WARNING: lib/api.ts is legacy. Dashboard routes must use lib/api-client.ts'
+);
+
 /**
  * API Client for Agentics Platform
  * Handles all HTTP requests to the backend API
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export class ApiError extends Error {
   constructor(

@@ -18,12 +18,15 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
  */
 async function getAccessToken(): Promise<string | null> {
   try {
+    console.log('[api-client] getAccessToken called');
     const { getSupabase } = await import('./supabase');
     const supabase = getSupabase();
     const { data: { session } } = await supabase.auth.getSession();
+    console.log('[api-client] session exists:', !!session);
+    console.log('[api-client] access_token exists:', !!session?.access_token);
     return session?.access_token ?? null;
   } catch (error) {
-    console.error('Failed to get Supabase session:', error);
+    console.error('[api-client] Failed to get Supabase session:', error);
     return null;
   }
 }
@@ -53,17 +56,22 @@ async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  console.log('[api-client] request:', endpoint);
   const accessToken = await getAccessToken();
 
   if (!accessToken) {
+    console.error('[api-client] NO ACCESS TOKEN - throwing');
     throw new Error('No active session');
   }
 
+  console.log('[api-client] Got token, length:', accessToken.length);
   const url = `${API_BASE_URL}${endpoint}`;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${accessToken}`,
   };
+  console.log('[api-client] Making fetch to:', url);
+  console.log('[api-client] Authorization header set:', !!headers['Authorization']);
 
   const response = await fetch(url, {
     ...options,
