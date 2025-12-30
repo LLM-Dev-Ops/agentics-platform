@@ -10,40 +10,7 @@
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db.js';
-
-/**
- * Verify Supabase JWT and extract user info
- * In production, this would verify the JWT signature using Supabase's public key
- */
-async function verifySupabaseToken(token: string): Promise<{ sub: string; email: string } | null> {
-  try {
-    // Decode JWT payload (base64)
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return null;
-    }
-
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-
-    // Check expiration
-    if (payload.exp && payload.exp < Date.now() / 1000) {
-      return null;
-    }
-
-    // In production: verify signature with Supabase JWT secret
-    // For now, trust the token structure (Supabase handles verification)
-    if (!payload.sub) {
-      return null;
-    }
-
-    return {
-      sub: payload.sub,
-      email: payload.email || '',
-    };
-  } catch {
-    return null;
-  }
-}
+import { verifySupabaseJWT } from '../middleware/auth.js';
 
 /**
  * Get or create organization for user
@@ -90,8 +57,8 @@ async function meHandler(
 
   const token = authHeader.substring(7);
 
-  // Verify Supabase JWT
-  const user = await verifySupabaseToken(token);
+  // Verify Supabase JWT with HS256 signature validation
+  const user = await verifySupabaseJWT(token);
 
   if (!user) {
     return reply.code(401).send({

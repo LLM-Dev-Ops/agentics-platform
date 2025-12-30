@@ -240,14 +240,14 @@ function isUIRoute(url: string): boolean {
  * Verify Supabase JWT and return user info
  * Uses HS256 algorithm as required by Supabase
  */
-interface SupabaseJWTPayload {
+export interface SupabaseJWTPayload {
   sub: string;  // User ID
   email?: string;
   exp: number;
   iat: number;
 }
 
-async function verifySupabaseJWT(token: string): Promise<SupabaseJWTPayload | null> {
+export async function verifySupabaseJWT(token: string): Promise<SupabaseJWTPayload | null> {
   const secret = process.env.SUPABASE_JWT_SECRET;
 
   if (!secret) {

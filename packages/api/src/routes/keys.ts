@@ -13,7 +13,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import crypto from 'crypto';
 import { db } from '../db.js';
-import { authMiddleware, hashApiKey, AuthContext } from '../middleware/auth.js';
+import { authMiddleware, hashApiKey, AuthContext, verifySupabaseJWT } from '../middleware/auth.js';
 import { hasScope } from '../middleware/scope.js';
 
 // Extend FastifyRequest to include dashboard auth
@@ -23,24 +23,6 @@ declare module 'fastify' {
       user_id: string;
       org_id: string;
     };
-  }
-}
-
-/**
- * Verify Supabase JWT and extract user info
- */
-async function verifySupabaseToken(token: string): Promise<{ sub: string } | null> {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-    if (payload.exp && payload.exp < Date.now() / 1000) return null;
-    if (!payload.sub) return null;
-
-    return { sub: payload.sub };
-  } catch {
-    return null;
   }
 }
 
@@ -72,8 +54,8 @@ async function dashboardAuthMiddleware(
     return;
   }
 
-  // Otherwise, treat as Supabase JWT
-  const user = await verifySupabaseToken(token);
+  // Otherwise, treat as Supabase JWT with HS256 signature validation
+  const user = await verifySupabaseJWT(token);
 
   if (!user) {
     reply.code(401).send({
