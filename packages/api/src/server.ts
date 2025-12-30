@@ -6,6 +6,7 @@
 import Fastify, { FastifyInstance, FastifyServerOptions } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import rawBody from 'fastify-raw-body';
 import { v4 as uuidv4 } from 'uuid';
 import config from './config.js';
 import { registerObservabilityMiddleware } from './middleware/observability.js';
@@ -72,6 +73,15 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
         imgSrc: ["'self'", 'data:', 'https:'],
       },
     },
+  });
+
+  // Register raw body plugin for Stripe webhook signature verification
+  // Required for routes with config.rawBody = true
+  await server.register(rawBody, {
+    field: 'rawBody',
+    global: false, // Only parse raw body for routes that request it
+    encoding: 'utf8',
+    runFirst: true, // Run before other parsers
   });
 
   // Register observability middleware (correlation ID, metrics, usage)

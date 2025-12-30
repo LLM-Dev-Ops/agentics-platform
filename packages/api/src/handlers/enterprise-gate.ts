@@ -75,8 +75,15 @@ export async function handleEnterpriseWebhook(
   // Verify webhook signature
   let event: Stripe.Event;
   try {
-    // Raw body is available when config.rawBody is true
-    const payload = (request.body as Buffer).toString();
+    // Raw body is provided by fastify-raw-body plugin when config.rawBody is true
+    const payload = (request as unknown as { rawBody: string }).rawBody;
+    if (!payload) {
+      reply.status(400).send({
+        error: 'Bad Request',
+        code: 'MISSING_RAW_BODY',
+      });
+      return;
+    }
     event = getStripeClient().webhooks.constructEvent(
       payload,
       signature,
