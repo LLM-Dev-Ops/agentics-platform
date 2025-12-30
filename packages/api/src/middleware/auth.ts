@@ -20,15 +20,16 @@ import jwksClient from 'jwks-rsa';
 import { db } from '../db.js';
 
 // Supabase JWKS client for ES256 verification
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mhxrmdhardaqexpuigci.supabase.co';
+// Support both backend (SUPABASE_URL) and legacy (NEXT_PUBLIC_SUPABASE_URL) env vars
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mhxrmdhardaqexpuigci.supabase.co';
 const jwks = jwksClient({
   jwksUri: `${SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
   cache: true,
-  cacheMaxAge: 600000, // 10 minutes
+  cacheMaxAge: 600000, // 10 minutes - cache signing keys
+  rateLimit: true,
+  jwksRequestsPerMinute: 10, // Limit JWKS fetches to prevent abuse
+  timeout: 30000, // 30 second timeout for JWKS fetch
 });
-
-// UI routes that accept Supabase JWT authentication
-const UI_ROUTES = ['/v1/me', '/v1/keys'];
 
 /**
  * Authentication context attached to authenticated requests
@@ -237,17 +238,8 @@ async function lookupEntitlements(orgId: string): Promise<Entitlements> {
 }
 
 /**
- * Check if a route is a UI route that accepts Supabase JWT
- */
-function isUIRoute(url: string): boolean {
-  // Remove query string for matching
-  const path = url.split('?')[0];
-  return UI_ROUTES.some(route => path === route || path.startsWith(route + '/'));
-}
-
-/**
  * Verify Supabase JWT and return user info
- * Uses HS256 algorithm as required by Supabase
+ * Uses ES256 algorithm with JWKS public key verification
  */
 export interface SupabaseJWTPayload {
   sub: string;  // User ID
@@ -258,13 +250,17 @@ export interface SupabaseJWTPayload {
 
 export async function verifySupabaseJWT(token: string): Promise<SupabaseJWTPayload | null> {
   try {
+    // Validate JWT format (must have 3 parts separated by dots)
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
     // Decode JWT header to get the key ID
-    const headerBase64 = token.split('.')[0];
-    const header = JSON.parse(Buffer.from(headerBase64, 'base64').toString());
-    console.log('🔍 JWT header:', JSON.stringify(header));
+    const headerBase64 = parts[0];
+    const header = JSON.parse(Buffer.from(headerBase64, 'base64url').toString());
 
     if (!header.kid) {
-      console.error('❌ JWT missing kid (key ID)');
       return null;
     }
 
@@ -277,18 +273,18 @@ export async function verifySupabaseJWT(token: string): Promise<SupabaseJWTPaylo
       algorithms: ['ES256'],
     }) as SupabaseJWTPayload;
 
-    console.log('✅ JWT verification successful for user:', payload.sub);
     return payload;
   } catch (error) {
-    console.error('❌ JWT verification failed:', (error as Error).message);
+    // JWT verification failed - invalid signature, expired, malformed, or JWKS fetch error
     return null;
   }
 }
 
 /**
  * Get or create organization for a Supabase user
+ * Uses UPSERT-style logic to handle race conditions
  */
-async function getOrCreateOrg(userId: string): Promise<string | null> {
+export async function getOrCreateOrg(userId: string): Promise<string | null> {
   try {
     // Try to find existing org
     const result = await db.query(

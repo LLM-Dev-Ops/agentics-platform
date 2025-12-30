@@ -9,33 +9,7 @@
  */
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { db } from '../db.js';
-import { verifySupabaseJWT } from '../middleware/auth.js';
-
-/**
- * Get or create organization for user
- */
-async function getOrCreateOrg(userId: string): Promise<string> {
-  // Check for existing org
-  const existing = await db.query(
-    `SELECT id FROM organizations WHERE owner_user_id = $1`,
-    [userId]
-  );
-
-  if (existing.rows.length > 0) {
-    return existing.rows[0].id;
-  }
-
-  // Create new org
-  const result = await db.query(
-    `INSERT INTO organizations (owner_user_id, created_at)
-     VALUES ($1, now())
-     RETURNING id`,
-    [userId]
-  );
-
-  return result.rows[0].id;
-}
+import { verifySupabaseJWT, getOrCreateOrg } from '../middleware/auth.js';
 
 /**
  * GET /v1/me
@@ -57,7 +31,7 @@ async function meHandler(
 
   const token = authHeader.substring(7);
 
-  // Verify Supabase JWT with HS256 signature validation
+  // Verify Supabase JWT with ES256 signature validation via JWKS
   const user = await verifySupabaseJWT(token);
 
   if (!user) {

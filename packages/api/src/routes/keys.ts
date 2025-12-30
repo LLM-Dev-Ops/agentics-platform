@@ -34,7 +34,6 @@ async function dashboardAuthMiddleware(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  console.log('✅ DASHBOARD AUTH MIDDLEWARE FIRED:', request.url);
   const authHeader = request.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -55,8 +54,18 @@ async function dashboardAuthMiddleware(
     return;
   }
 
-  // Otherwise, treat as Supabase JWT with HS256 signature validation
-  const user = await verifySupabaseJWT(token);
+  // Otherwise, treat as Supabase JWT with ES256 signature validation via JWKS
+  let user;
+  try {
+    user = await verifySupabaseJWT(token);
+  } catch (error) {
+    reply.code(401).send({
+      error: 'Token verification failed',
+      code: 'TOKEN_VERIFICATION_ERROR',
+      request_id: request.id,
+    });
+    return;
+  }
 
   if (!user) {
     reply.code(401).send({
@@ -68,10 +77,20 @@ async function dashboardAuthMiddleware(
   }
 
   // Get org for user
-  const orgResult = await db.query(
-    `SELECT id FROM organizations WHERE owner_user_id = $1`,
-    [user.sub]
-  );
+  let orgResult;
+  try {
+    orgResult = await db.query(
+      `SELECT id FROM organizations WHERE owner_user_id = $1`,
+      [user.sub]
+    );
+  } catch (error) {
+    reply.code(500).send({
+      error: 'Database error while looking up organization',
+      code: 'DATABASE_ERROR',
+      request_id: request.id,
+    });
+    return;
+  }
 
   if (orgResult.rows.length === 0) {
     reply.code(403).send({
@@ -161,26 +180,35 @@ async function createKeyHandler(
   // Hash for storage (never store plaintext)
   const keyHash = hashApiKey(plaintextKey);
 
-  // Insert into database
-  const result = await db.query(
-    `
-    INSERT INTO api_keys (key_hash, org_id, name, scopes, is_active, created_at)
-    VALUES ($1, $2, $3, $4, true, now())
-    RETURNING id, name, scopes, created_at
-    `,
-    [keyHash, orgId, name || 'Unnamed Key', scopes]
-  );
+  try {
+    // Insert into database
+    const result = await db.query(
+      `
+      INSERT INTO api_keys (key_hash, org_id, name, scopes, is_active, created_at)
+      VALUES ($1, $2, $3, $4, true, now())
+      RETURNING id, name, scopes, created_at
+      `,
+      [keyHash, orgId, name || 'Unnamed Key', scopes]
+    );
 
-  const record = result.rows[0];
+    const record = result.rows[0];
 
-  // Return plaintext key ONCE (never logged, never stored)
-  return reply.code(201).send({
-    api_key: plaintextKey,
-    id: record.id,
-    name: record.name,
-    scopes: record.scopes,
-    created_at: record.created_at,
-  });
+    // Return plaintext key ONCE (never logged, never stored)
+    return reply.code(201).send({
+      api_key: plaintextKey,
+      id: record.id,
+      name: record.name,
+      scopes: record.scopes,
+      created_at: record.created_at,
+    });
+  } catch (error) {
+    request.log.error({ error, orgId }, 'Failed to create API key');
+    return reply.code(500).send({
+      error: 'Failed to create API key',
+      code: 'DATABASE_ERROR',
+      request_id: request.id,
+    });
+  }
 }
 
 /**
@@ -197,27 +225,36 @@ async function listKeysHandler(
 
   const orgId = request.auth!.org_id;
 
-  const result = await db.query(
-    `
-    SELECT id, name, scopes, is_active, created_at, last_used_at, revoked_at
-    FROM api_keys
-    WHERE org_id = $1
-    ORDER BY created_at DESC
-    `,
-    [orgId]
-  );
+  try {
+    const result = await db.query(
+      `
+      SELECT id, name, scopes, is_active, created_at, last_used_at, revoked_at
+      FROM api_keys
+      WHERE org_id = $1
+      ORDER BY created_at DESC
+      `,
+      [orgId]
+    );
 
-  return reply.code(200).send({
-    keys: result.rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      scopes: row.scopes,
-      is_active: row.is_active,
-      created_at: row.created_at,
-      last_used_at: row.last_used_at,
-      revoked_at: row.revoked_at,
-    })),
-  });
+    return reply.code(200).send({
+      keys: result.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        scopes: row.scopes,
+        is_active: row.is_active,
+        created_at: row.created_at,
+        last_used_at: row.last_used_at,
+        revoked_at: row.revoked_at,
+      })),
+    });
+  } catch (error) {
+    request.log.error({ error, orgId }, 'Failed to list API keys');
+    return reply.code(500).send({
+      error: 'Failed to retrieve API keys',
+      code: 'DATABASE_ERROR',
+      request_id: request.id,
+    });
+  }
 }
 
 /**
@@ -239,35 +276,43 @@ async function revokeKeyHandler(
   const orgId = request.auth!.org_id;
   const { id } = request.params;
 
-  const result = await db.query(
-    `
-    UPDATE api_keys
-    SET is_active = false, revoked_at = now()
-    WHERE id = $1 AND org_id = $2
-    RETURNING id
-    `,
-    [id, orgId]
-  );
+  try {
+    const result = await db.query(
+      `
+      UPDATE api_keys
+      SET is_active = false, revoked_at = now()
+      WHERE id = $1 AND org_id = $2
+      RETURNING id
+      `,
+      [id, orgId]
+    );
 
-  if (result.rowCount === 0) {
-    return reply.code(404).send({
-      error: 'API key not found',
-      code: 'NOT_FOUND',
+    if (result.rowCount === 0) {
+      return reply.code(404).send({
+        error: 'API key not found',
+        code: 'NOT_FOUND',
+        request_id: request.id,
+      });
+    }
+
+    return reply.code(200).send({
+      success: true,
+      message: 'API key revoked',
+    });
+  } catch (error) {
+    request.log.error({ error, orgId, keyId: id }, 'Failed to revoke API key');
+    return reply.code(500).send({
+      error: 'Failed to revoke API key',
+      code: 'DATABASE_ERROR',
       request_id: request.id,
     });
   }
-
-  return reply.code(200).send({
-    success: true,
-    message: 'API key revoked',
-  });
 }
 
 /**
  * Register API key management routes
  */
 export async function registerKeyRoutes(fastify: FastifyInstance) {
-  console.log('🧩 REGISTERING /keys ROUTES');
   // POST /keys - Create API key
   fastify.post('/keys', {
     onRequest: [dashboardAuthMiddleware],

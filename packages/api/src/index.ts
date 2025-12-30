@@ -1,5 +1,3 @@
-console.log('🔥 PLATFORM-CORE BOOTED FROM INDEX.TS');
-
 /**
  * API Gateway Entry Point
  * Main server initialization and graceful shutdown handling
@@ -14,7 +12,6 @@ import config from './config.js';
 async function main(): Promise<void> {
   // Create server instance
   const server = await createServer();
-  console.log('🧠 INDEX.TS SERVER INSTANCE CREATED');
 
   // Routes are now scoped in server.ts:
   // - Dashboard routes (/v1/me, /v1/keys) use Supabase JWT auth

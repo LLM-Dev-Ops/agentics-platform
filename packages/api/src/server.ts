@@ -1,5 +1,3 @@
-console.log('🛠️ ROUTES REGISTERED ON THIS SERVER INSTANCE');
-
 /**
  * API Gateway Server
  * Fastify server initialization with CORS, Helmet, logging, and error handling
