@@ -16,7 +16,16 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
+import jwksClient from 'jwks-rsa';
 import { db } from '../db.js';
+
+// Supabase JWKS client for ES256 verification
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mhxrmdhardaqexpuigci.supabase.co';
+const jwks = jwksClient({
+  jwksUri: `${SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
+  cache: true,
+  cacheMaxAge: 600000, // 10 minutes
+});
 
 // UI routes that accept Supabase JWT authentication
 const UI_ROUTES = ['/v1/me', '/v1/keys'];
@@ -248,22 +257,30 @@ export interface SupabaseJWTPayload {
 }
 
 export async function verifySupabaseJWT(token: string): Promise<SupabaseJWTPayload | null> {
-  const secret = process.env.SUPABASE_JWT_SECRET;
-
-  if (!secret) {
-    console.error('SUPABASE_JWT_SECRET is not configured');
-    return null;
-  }
-
   try {
-    // CRITICAL: Use explicit HS256 algorithm
-    const payload = jwt.verify(token, secret, {
-      algorithms: ['HS256'],
+    // Decode JWT header to get the key ID
+    const headerBase64 = token.split('.')[0];
+    const header = JSON.parse(Buffer.from(headerBase64, 'base64').toString());
+    console.log('🔍 JWT header:', JSON.stringify(header));
+
+    if (!header.kid) {
+      console.error('❌ JWT missing kid (key ID)');
+      return null;
+    }
+
+    // Get the signing key from Supabase JWKS
+    const signingKey = await jwks.getSigningKey(header.kid);
+    const publicKey = signingKey.getPublicKey();
+
+    // Verify the JWT with the public key
+    const payload = jwt.verify(token, publicKey, {
+      algorithms: ['ES256'],
     }) as SupabaseJWTPayload;
 
+    console.log('✅ JWT verification successful for user:', payload.sub);
     return payload;
   } catch (error) {
-    // JWT verification failed (expired, invalid signature, etc.)
+    console.error('❌ JWT verification failed:', (error as Error).message);
     return null;
   }
 }

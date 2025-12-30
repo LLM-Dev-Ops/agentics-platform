@@ -1,10 +1,11 @@
+console.log('🔥 PLATFORM-CORE BOOTED FROM INDEX.TS');
+
 /**
  * API Gateway Entry Point
  * Main server initialization and graceful shutdown handling
  */
 
 import { createServer } from './server.js';
-import { handleRequest } from './handlers/request-lifecycle.js';
 import config from './config.js';
 
 /**
@@ -13,10 +14,11 @@ import config from './config.js';
 async function main(): Promise<void> {
   // Create server instance
   const server = await createServer();
+  console.log('🧠 INDEX.TS SERVER INSTANCE CREATED');
 
-  // Register main request handler for all API routes
-  // Exclude health and ready endpoints which are handled by server.ts
-  server.all('/v1/*', handleRequest);
+  // Routes are now scoped in server.ts:
+  // - Dashboard routes (/v1/me, /v1/keys) use Supabase JWT auth
+  // - Machine routes use API key auth via handleRequest
 
   // Graceful shutdown handling
   const signals: NodeJS.Signals[] = ['SIGINT', 'SIGTERM'];

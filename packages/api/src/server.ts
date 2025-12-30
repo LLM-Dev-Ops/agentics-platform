@@ -1,3 +1,5 @@
+console.log('🛠️ ROUTES REGISTERED ON THIS SERVER INSTANCE');
+
 /**
  * API Gateway Server
  * Fastify server initialization with CORS, Helmet, logging, and error handling
@@ -14,6 +16,7 @@ import { registerLayer3HealthRoutes } from './routes/health.js';
 import { registerProtectedExampleRoutes } from './routes/protected-example.js';
 import { registerKeyRoutes } from './routes/keys.js';
 import { registerMeRoute } from './routes/me.js';
+import { handleRequest } from './handlers/request-lifecycle.js';
 
 export interface ErrorResponse {
   error: string;
@@ -81,14 +84,17 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
   // Register Layer 3 health routes (/health/intelligence, /health/security, etc.)
   registerLayer3HealthRoutes(server);
 
-  // Register example protected routes (demonstrates API key auth)
-  await registerProtectedExampleRoutes(server);
+  // Dashboard routes — Supabase JWT auth (NO API key auth)
+  await server.register(async (dashboard) => {
+    await registerMeRoute(dashboard);
+    await registerKeyRoutes(dashboard);
+  }, { prefix: '/v1' });
 
-  // Register API key management routes (/v1/keys)
-  await registerKeyRoutes(server);
-
-  // Register user info route (/v1/me) - Supabase JWT auth
-  await registerMeRoute(server);
+  // Machine routes — API key auth enforced
+  await server.register(async (api) => {
+    api.addHook('onRequest', handleRequest);
+    await registerProtectedExampleRoutes(api);
+  }, { prefix: '/v1' });
 
   // Request logging
   server.addHook('onRequest', async (request, reply) => {

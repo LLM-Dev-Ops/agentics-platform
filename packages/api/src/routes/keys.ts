@@ -34,6 +34,7 @@ async function dashboardAuthMiddleware(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  console.log('✅ DASHBOARD AUTH MIDDLEWARE FIRED:', request.url);
   const authHeader = request.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -266,20 +267,21 @@ async function revokeKeyHandler(
  * Register API key management routes
  */
 export async function registerKeyRoutes(fastify: FastifyInstance) {
-  // POST /v1/keys - Create API key
-  fastify.post('/v1/keys', {
+  console.log('🧩 REGISTERING /keys ROUTES');
+  // POST /keys - Create API key
+  fastify.post('/keys', {
     onRequest: [dashboardAuthMiddleware],
     handler: createKeyHandler,
   });
 
-  // GET /v1/keys - List API keys
-  fastify.get('/v1/keys', {
+  // GET /keys - List API keys
+  fastify.get('/keys', {
     onRequest: [dashboardAuthMiddleware],
     handler: listKeysHandler,
   });
 
-  // DELETE /v1/keys/:id - Revoke API key
-  fastify.delete('/v1/keys/:id', {
+  // DELETE /keys/:id - Revoke API key
+  fastify.delete('/keys/:id', {
     onRequest: [dashboardAuthMiddleware],
     handler: revokeKeyHandler,
   });

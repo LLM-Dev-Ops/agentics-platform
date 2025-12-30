@@ -79,8 +79,8 @@ async function meHandler(
 }
 
 /**
- * Register /v1/me route
+ * Register /me route
  */
 export async function registerMeRoute(fastify: FastifyInstance) {
-  fastify.get('/v1/me', meHandler);
+  fastify.get('/me', meHandler);
 }
