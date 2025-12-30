@@ -66,6 +66,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        console.log('[supabase-auth] loadOrgInfo called');
+        console.log('[supabase-auth] apiUrl:', apiUrl);
+        console.log('[supabase-auth] accessToken length:', accessToken?.length);
+        console.log('[supabase-auth] userId:', userId);
+
         const response = await fetch(`${apiUrl}/v1/me`, {
           method: 'GET',
           headers: {
@@ -73,6 +78,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
             'Content-Type': 'application/json',
           },
         });
+        console.log('[supabase-auth] /v1/me response status:', response.status);
 
         if (!isMounted) return;
 
