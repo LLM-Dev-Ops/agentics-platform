@@ -11,6 +11,13 @@ import { isRateLimited } from '../middleware/rate-limit.js';
 import { getRequiredScope, hasScope } from '../middleware/scope.js';
 import { routeToCore, forwardRequest, streamResponse, getRequestPath, isStreamingEndpoint } from '../router/index.js';
 import { createErrorResponse } from '../server.js';
+import {
+  enterpriseBoundaryMiddleware,
+  dataRetentionMiddleware,
+  onSimulationStart,
+  onSimulationComplete,
+  type UpgradeRequiredError,
+} from '../middleware/enterprise-boundary.js';
 
 export interface UsageRecord {
   correlationId: string;
@@ -117,11 +124,44 @@ export async function handleRequest(
       return reply.status(error.statusCode).send(error.response);
     }
 
+    // ========================================================================
+    // ENTERPRISE BOUNDARY CHECK
+    // Enforces hard limits for non-enterprise organizations.
+    // Must run BEFORE any business logic or resource creation.
+    // ========================================================================
+
+    // Attach auth to request for enterprise boundary middleware
+    request.auth = auth;
+
+    // Check enterprise limits (simulation limits, CI/CD blocking, etc.)
+    // This will return early with UPGRADE_REQUIRED if limits exceeded
+    const enterpriseCheckResult = await checkEnterpriseBoundary(request, reply, auth);
+    if (enterpriseCheckResult.blocked) {
+      return; // Response already sent by middleware
+    }
+
+    // Track simulation run if this is a simulation request
+    let simulationRunId: string | undefined;
+    const path = getRequestPath(request.url);
+
+    if (request.method === 'POST' && path === '/v1/simulate') {
+      simulationRunId = onSimulationStart(auth.org_id);
+      // Store for later completion tracking
+      storeSimulationRunId(correlationId, simulationRunId);
+    }
+
+    // Check data retention for historical data requests
+    const dataRetentionResult = await checkDataRetention(request, reply, auth);
+    if (dataRetentionResult.blocked) {
+      return; // Response already sent
+    }
+
+    // ========================================================================
+
     // recordUsageStart(auth, endpoint, correlationId)
     recordUsageStart(auth, endpoint, correlationId);
 
     // layer3Core = routeToCore(endpoint)
-    const path = getRequestPath(request.url);
     const layer3Core = routeToCore(path);
 
     if (!layer3Core) {
@@ -160,6 +200,11 @@ export async function handleRequest(
     // recordUsageEnd(auth, endpoint, correlationId, response)
     recordUsageEnd(auth, endpoint, correlationId, upstreamResponse);
 
+    // Complete simulation run tracking (releases concurrent run slot)
+    if (simulationRunId) {
+      completeSimulationRun(correlationId, auth.org_id);
+    }
+
     // emitMetrics(endpoint, startTime, response.status)
     emitMetrics({
       endpoint: path,
@@ -178,6 +223,14 @@ export async function handleRequest(
     // CATCH error:
     // emitErrorMetric(endpoint, error)
     emitErrorMetric(getRequestPath(request.url), error);
+
+    // Clean up any in-flight simulation tracking
+    // Note: We can lookup from store even without auth context
+    const runId = simulationRunStore.get(correlationId);
+    if (runId && request.auth) {
+      onSimulationComplete(request.auth.org_id, runId);
+      simulationRunStore.delete(correlationId);
+    }
 
     // RETURN errorResponse(500, "INTERNAL_ERROR", correlationId)
     const errorResponse = createErrorResponse(
@@ -308,4 +361,122 @@ function storeUsageRecord(record: UsageRecord): void {
 
 function lookupUsageRecord(correlationId: string): UsageRecord | undefined {
   return usageStore.get(correlationId);
+}
+
+// ============================================================================
+// Enterprise Boundary Helpers
+// ============================================================================
+
+interface EnterpriseBoundaryResult {
+  blocked: boolean;
+}
+
+/**
+ * Check enterprise boundary limits
+ * Returns blocked: true if request should be rejected
+ */
+async function checkEnterpriseBoundary(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  auth: AuthContext
+): Promise<EnterpriseBoundaryResult> {
+  // Create a mock reply that captures whether a response was sent
+  let responseSent = false;
+  const originalSend = reply.send.bind(reply);
+  const originalStatus = reply.status.bind(reply);
+
+  // Track if enterprise middleware sends a response
+  const mockReply = {
+    ...reply,
+    status: (code: number) => {
+      originalStatus(code);
+      return {
+        send: (body: unknown) => {
+          responseSent = true;
+          return originalSend(body);
+        },
+      };
+    },
+    send: (body: unknown) => {
+      responseSent = true;
+      return originalSend(body);
+    },
+  } as FastifyReply;
+
+  await enterpriseBoundaryMiddleware(request, mockReply);
+
+  return { blocked: responseSent };
+}
+
+/**
+ * Check data retention limits for historical data requests
+ * Returns blocked: true if request should be rejected
+ */
+async function checkDataRetention(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  auth: AuthContext
+): Promise<EnterpriseBoundaryResult> {
+  const path = getRequestPath(request.url);
+
+  // Only check data retention for data access routes
+  const dataAccessRoutes = [
+    '/v1/simulate',
+    '/v1/data/',
+    '/v1/usage/history',
+    '/v1/simulations',
+  ];
+
+  const isDataAccessRoute = dataAccessRoutes.some(route => path.startsWith(route));
+
+  if (!isDataAccessRoute || request.method !== 'GET') {
+    return { blocked: false };
+  }
+
+  // Create a mock reply that captures whether a response was sent
+  let responseSent = false;
+  const originalSend = reply.send.bind(reply);
+  const originalStatus = reply.status.bind(reply);
+
+  const mockReply = {
+    ...reply,
+    status: (code: number) => {
+      originalStatus(code);
+      return {
+        send: (body: unknown) => {
+          responseSent = true;
+          return originalSend(body);
+        },
+      };
+    },
+    send: (body: unknown) => {
+      responseSent = true;
+      return originalSend(body);
+    },
+  } as FastifyReply;
+
+  await dataRetentionMiddleware(request, mockReply);
+
+  return { blocked: responseSent };
+}
+
+// Store simulation run IDs for completion tracking
+const simulationRunStore = new Map<string, string>(); // correlationId -> runId
+
+/**
+ * Store simulation run ID for later completion tracking
+ */
+export function storeSimulationRunId(correlationId: string, runId: string): void {
+  simulationRunStore.set(correlationId, runId);
+}
+
+/**
+ * Complete and clean up simulation tracking
+ */
+export function completeSimulationRun(correlationId: string, orgId: string): void {
+  const runId = simulationRunStore.get(correlationId);
+  if (runId) {
+    onSimulationComplete(orgId, runId);
+    simulationRunStore.delete(correlationId);
+  }
 }
