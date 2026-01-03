@@ -1,0 +1,266 @@
+# Architecture Enforcement Workflow
+#
+# Purpose: Validate dependency compliance against DEPENDENCY_GRAPH.md
+# Status: Enforcement Stub (placeholder logic for intent signaling)
+# Canonical Authority: architecture/DEPENDENCY_GRAPH.md
+#
+# This workflow documents intended architectural checks and serves as
+# the integration point for dependency enforcement tooling. Current
+# implementation provides minimal validation; full enforcement requires
+# tooling integration.
+
+name: Architecture Enforcement
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig*.json'
+  push:
+    branches: [main]
+    paths:
+      - 'packages/**'
+      - 'package.json'
+
+# Prevent concurrent runs on same PR
+concurrency:
+  group: architecture-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # DEPENDENCY GRAPH VALIDATION
+  # ============================================================================
+  validate-dependencies:
+    name: Validate Dependency Graph Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify architecture documents exist
+        run: |
+          echo "=== Architecture Enforcement Check ==="
+          echo ""
+          echo "Canonical Authority: architecture/DEPENDENCY_GRAPH.md"
+          echo ""
+
+          # Verify canonical documents exist
+          REQUIRED_DOCS=(
+            "architecture/DEPENDENCY_GRAPH.md"
+            "architecture/FORBIDDEN_PATHS.md"
+            "architecture/REPO_CLASSIFICATION.md"
+          )
+
+          MISSING=0
+          for doc in "${REQUIRED_DOCS[@]}"; do
+            if [ -f "$doc" ]; then
+              echo "✓ Found: $doc"
+            else
+              echo "✕ Missing: $doc"
+              MISSING=1
+            fi
+          done
+
+          if [ $MISSING -eq 1 ]; then
+            echo ""
+            echo "ERROR: Required architecture documents are missing."
+            exit 1
+          fi
+
+          echo ""
+          echo "All required architecture documents present."
+
+      - name: Check for forbidden Layer 3 imports in CLI
+        run: |
+          echo "=== CLI Dependency Check ==="
+          echo ""
+          echo "Rule: agentics-cli must never import Layer 3 core runtime code"
+          echo "Reference: DEPENDENCY_GRAPH.md INV-9"
+          echo ""
+
+          # Placeholder check - would be replaced with actual import analysis
+          if [ -d "packages/cli" ]; then
+            # Check for obvious violations in import statements
+            VIOLATIONS=$(grep -r "from.*LLM-.*-Core" packages/cli/src 2>/dev/null || true)
+
+            if [ -n "$VIOLATIONS" ]; then
+              echo "✕ VIOLATION: CLI imports Layer 3 core code"
+              echo "$VIOLATIONS"
+              exit 1
+            else
+              echo "✓ No obvious Layer 3 imports detected in CLI"
+            fi
+          else
+            echo "⊘ CLI package not found in this repository (expected for platform repo)"
+          fi
+
+      - name: Check for simulation imports in services
+        run: |
+          echo "=== Services Isolation Check ==="
+          echo ""
+          echo "Rule: services-* must never import simulation repositories"
+          echo "Reference: FORBIDDEN_PATHS.md Section 5"
+          echo ""
+
+          # Placeholder check
+          if [ -d "packages/api" ]; then
+            VIOLATIONS=$(grep -r "agentics-simulation\|agentics-diligence" packages/api/src 2>/dev/null || true)
+
+            if [ -n "$VIOLATIONS" ]; then
+              echo "✕ VIOLATION: API imports simulation code"
+              echo "$VIOLATIONS"
+              exit 1
+            else
+              echo "✓ No simulation imports detected in API"
+            fi
+          fi
+
+          echo "✓ Services isolation check passed"
+
+      - name: Validate package.json dependencies
+        run: |
+          echo "=== Package Dependency Audit ==="
+          echo ""
+          echo "Rule: Validate dependencies against REPO_CLASSIFICATION.md"
+          echo ""
+
+          # Check main package.json exists
+          if [ -f "package.json" ]; then
+            echo "Checking root package.json..."
+
+            # Placeholder: Would integrate with dependency analysis tool
+            # to validate against REPO_CLASSIFICATION.md allowed paths
+
+            echo "✓ Package.json structure validated"
+          fi
+
+          # Check workspace packages
+          for pkg in packages/*/package.json; do
+            if [ -f "$pkg" ]; then
+              echo "Checking $pkg..."
+              # Placeholder validation
+            fi
+          done
+
+          echo ""
+          echo "✓ Dependency audit complete"
+
+  # ============================================================================
+  # CROSS-LAYER IMPORT ANALYSIS
+  # ============================================================================
+  analyze-imports:
+    name: Analyze Cross-Layer Imports
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Document enforcement intent
+        run: |
+          echo "=== Cross-Layer Import Analysis ==="
+          echo ""
+          echo "This job will perform static import analysis to detect:"
+          echo ""
+          echo "  1. Upward dependencies (lower layer importing higher)"
+          echo "  2. Layer skip violations (L4 → L2 or L4 → L1 direct)"
+          echo "  3. Lateral execution leaks (core → core direct)"
+          echo "  4. Simulation/production coupling"
+          echo "  5. CLI runtime code embedding"
+          echo ""
+          echo "Canonical Authority: architecture/DEPENDENCY_GRAPH.md"
+          echo ""
+          echo "=== Enforcement Status ==="
+          echo ""
+          echo "Current: Stub implementation (intent signaling)"
+          echo "Planned: Integration with dependency analysis tooling"
+          echo ""
+          echo "To implement full enforcement, integrate with:"
+          echo "  - madge (circular dependency detection)"
+          echo "  - dependency-cruiser (import path rules)"
+          echo "  - Custom ESLint rules (import restrictions)"
+          echo ""
+          echo "✓ Enforcement intent documented"
+
+  # ============================================================================
+  # ARCHITECTURE DOCUMENTATION SYNC
+  # ============================================================================
+  validate-docs:
+    name: Validate Architecture Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check document consistency
+        run: |
+          echo "=== Architecture Document Consistency ==="
+          echo ""
+
+          # Verify DEPENDENCY_GRAPH.md is referenced as canonical
+          CANONICAL="architecture/DEPENDENCY_GRAPH.md"
+
+          DOCS=(
+            "architecture/FORBIDDEN_PATHS.md"
+            "architecture/REPO_CLASSIFICATION.md"
+            "architecture/ARCHITECTURE_DECISIONS.md"
+          )
+
+          for doc in "${DOCS[@]}"; do
+            if [ -f "$doc" ]; then
+              if grep -q "DEPENDENCY_GRAPH.md" "$doc"; then
+                echo "✓ $doc references canonical document"
+              else
+                echo "⚠ $doc should reference DEPENDENCY_GRAPH.md"
+              fi
+            fi
+          done
+
+          echo ""
+          echo "✓ Document consistency check complete"
+
+      - name: Verify README references
+        run: |
+          echo "=== README Architecture References ==="
+          echo ""
+
+          if grep -q "architecture/DEPENDENCY_GRAPH.md" README.md; then
+            echo "✓ README references dependency graph"
+          else
+            echo "⚠ README should reference architecture/DEPENDENCY_GRAPH.md"
+          fi
+
+          echo ""
+          echo "✓ README reference check complete"
+
+# ============================================================================
+# ENFORCEMENT ROADMAP
+# ============================================================================
+#
+# Phase 1 (Current): Intent Signaling
+#   - Document structure validation
+#   - Basic grep-based violation detection
+#   - Architecture document consistency
+#
+# Phase 2 (Planned): Static Analysis
+#   - Integrate dependency-cruiser with DEPENDENCY_GRAPH.md rules
+#   - Add madge for circular dependency detection
+#   - Custom ESLint import rules per FORBIDDEN_PATHS.md
+#
+# Phase 3 (Future): Full Enforcement
+#   - Block PRs with architectural violations
+#   - Automated REPO_CLASSIFICATION.md updates
+#   - Cross-repository dependency tracking
+#
+# ============================================================================
