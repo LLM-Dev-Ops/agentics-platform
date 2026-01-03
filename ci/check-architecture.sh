@@ -28,7 +28,7 @@
 # Usage:
 #   ./ci/check-architecture.sh [--verbose] [--fix-suggestions]
 #
-# Version: 3.0.0
+# Version: 3.1.0
 # Classification: CI Enforcement Artifact
 # Canonical Architecture Version: 1.1 (from ARCHITECTURE_INDEX.md)
 # Frozen Architecture Version: v1 (from ARCHITECTURE_VERSION.md)
@@ -41,7 +41,7 @@ set -euo pipefail
 # ==============================================================================
 
 readonly SCRIPT_NAME="check-architecture"
-readonly SCRIPT_VERSION="3.0.0"
+readonly SCRIPT_VERSION="3.1.0"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly ARCH_DIR="${ROOT_DIR}/architecture"
@@ -1666,6 +1666,191 @@ check_cross_core_deps() {
     fi
 }
 
+# -----------------------------------------------------------------------------
+# CHECK 14: Validate platform-cli delegation correctness
+# Rule: platform-cli must delegate simulation/deployment, not execute directly
+# Reference: CLI_COMMAND_OWNERSHIP.md §Exclusivity Statement
+# Enforcement: Source code pattern analysis
+# -----------------------------------------------------------------------------
+check_platform_cli_delegation() {
+    log_info "Checking platform-cli delegation correctness..."
+    ((TOTAL_CHECKS++)) || true
+
+    local platform_cli_dir="${ROOT_DIR}/packages/platform-cli"
+    if ! dir_exists "$platform_cli_dir"; then
+        log_verbose "platform-cli not found, skipping delegation check"
+        log_success "Platform-CLI delegation check skipped (no platform-cli)"
+        ((PASSED_CHECKS++)) || true
+        return
+    fi
+
+    local found_violation=false
+
+    # Check that delegation commands use forward() pattern
+    local delegation_src="${platform_cli_dir}/src/delegation"
+    if dir_exists "$delegation_src"; then
+        # Verify forwarder.ts exists and has correct pattern
+        local forwarder="${delegation_src}/forwarder.ts"
+        if file_exists "$forwarder"; then
+            # Check that forwarder spawns external process (doesn't import runtime)
+            if ! grep -qE "(spawn|exec)\s*\(" "$forwarder"; then
+                log_violation "DELEGATION-PATTERN" "CLI_COMMAND_OWNERSHIP.md §Delegation Model" \
+                    "$(get_relative_path "$forwarder")" \
+                    "Forwarder must use spawn/exec for delegation, not direct imports"
+                found_violation=true
+            fi
+        fi
+    fi
+
+    # Check command handlers for direct execution violations
+    local commands_dir="${platform_cli_dir}/src/commands"
+    if dir_exists "$commands_dir"; then
+        # Check for forbidden direct execution patterns in source code
+        local -a forbidden_patterns=(
+            "runSimulation"
+            "executeSimulation"
+            "simulationRunner"
+            "deploymentExporter"
+            "materializeDeployment"
+            "writeToDatabase"
+            "mutateProduction"
+        )
+
+        for pattern in "${forbidden_patterns[@]}"; do
+            local matches
+            matches=$(grep -rl "$pattern" "$commands_dir" 2>/dev/null | grep -v "\.d\.ts$" | grep -v "node_modules" || true)
+            if [[ -n "$matches" ]]; then
+                while IFS= read -r file; do
+                    [[ -z "$file" ]] && continue
+                    log_violation "DIRECT-EXEC" "CLI_COMMAND_OWNERSHIP.md §Exclusivity Statement" \
+                        "$(get_relative_path "$file")" \
+                        "Direct execution pattern detected: ${pattern}. Must delegate via forward()."
+                    found_violation=true
+                done <<< "$matches"
+            fi
+        done
+
+        # Check for database write patterns (forbidden in CLI)
+        local db_write_patterns
+        db_write_patterns=$(grep -rlE "(\.insert|\.update|\.delete|prisma\.(create|update|delete)|\.save\(\))" "$commands_dir" 2>/dev/null | grep -v "\.d\.ts$" | grep -v "node_modules" || true)
+        if [[ -n "$db_write_patterns" ]]; then
+            while IFS= read -r file; do
+                [[ -z "$file" ]] && continue
+                log_violation "DB-MUTATION" "CLI_COMMAND_OWNERSHIP.md §Rule H-6" \
+                    "$(get_relative_path "$file")" \
+                    "Database mutation detected in CLI. CLIs must not write to databases directly."
+                found_violation=true
+            done <<< "$db_write_patterns"
+        fi
+    fi
+
+    if [[ "$found_violation" == "false" ]]; then
+        log_success "Platform-CLI delegation correctness verified"
+        ((PASSED_CHECKS++)) || true
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# CHECK 15: Validate CLI surface exclusivity
+# Rule: Only platform-cli may expose org/env/simulation/deployment commands
+# Reference: CLI_COMMAND_OWNERSHIP.md §Exclusivity Statement
+# Enforcement: Source code pattern analysis
+# -----------------------------------------------------------------------------
+check_cli_surface_exclusivity() {
+    log_info "Checking CLI surface exclusivity..."
+    ((TOTAL_CHECKS++)) || true
+
+    local found_violation=false
+
+    # Define exclusive command surfaces that only platform-cli may expose
+    local -a exclusive_patterns=(
+        "org.*switch"
+        "env.*switch"
+        "intent.*promote"
+        "simulation.*run"
+        "simulate.*execute"
+        "deployment.*export"
+        "deploy.*materialize"
+    )
+
+    # Find all packages except platform-cli
+    while IFS= read -r pkg_dir; do
+        [[ -z "$pkg_dir" ]] && continue
+
+        # Skip platform-cli (it's the exclusive owner)
+        if [[ "$pkg_dir" == *"platform-cli"* ]]; then
+            continue
+        fi
+
+        # Skip non-CLI packages (only check packages with CLI patterns)
+        local pkg_name
+        pkg_name=$(basename "$pkg_dir")
+        local pkg_json="${pkg_dir}/package.json"
+
+        if ! file_exists "$pkg_json"; then
+            continue
+        fi
+
+        # Check if package has bin entries (indicating it's a CLI)
+        local has_bin=false
+        if check_jq_available; then
+            if jq -e '.bin' "$pkg_json" &>/dev/null; then
+                has_bin=true
+            fi
+        else
+            if grep -q '"bin"' "$pkg_json"; then
+                has_bin=true
+            fi
+        fi
+
+        # Also check for commander/yargs (CLI frameworks)
+        local is_cli_like=false
+        local deps
+        deps=$(get_all_deps "$pkg_json")
+        if echo "$deps" | grep -qE "(commander|yargs|oclif|clipanion)"; then
+            is_cli_like=true
+        fi
+
+        if [[ "$has_bin" != "true" ]] && [[ "$is_cli_like" != "true" ]]; then
+            continue
+        fi
+
+        # Search for exclusive command patterns in this package's source
+        local src_dir="${pkg_dir}/src"
+        if ! dir_exists "$src_dir"; then
+            continue
+        fi
+
+        for pattern in "${exclusive_patterns[@]}"; do
+            local matches
+            matches=$(grep -rlE "$pattern" "$src_dir" 2>/dev/null | \
+                     grep -v "\.d\.ts$" | \
+                     grep -v "node_modules" | \
+                     grep -v "\.test\." | \
+                     grep -v "\.spec\." || true)
+
+            if [[ -n "$matches" ]]; then
+                while IFS= read -r file; do
+                    [[ -z "$file" ]] && continue
+
+                    # Check if it's actually a command definition (not just a reference)
+                    if grep -qE "(command|\.command\(|subcommand)" "$file"; then
+                        log_violation "EXCLUSIVITY" "CLI_COMMAND_OWNERSHIP.md §Exclusivity Statement" \
+                            "$(get_relative_path "$file")" \
+                            "Exclusive command surface '${pattern}' found outside platform-cli. Only agentics-platform-cli may expose this."
+                        found_violation=true
+                    fi
+                done <<< "$matches"
+            fi
+        done
+    done < <(find "${ROOT_DIR}/packages" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+
+    if [[ "$found_violation" == "false" ]]; then
+        log_success "CLI surface exclusivity verified"
+        ((PASSED_CHECKS++)) || true
+    fi
+}
+
 # ==============================================================================
 # SUMMARY AND REPORTING
 # ==============================================================================
@@ -1845,6 +2030,10 @@ main() {
     check_cargo_deps
     check_go_deps
     check_cross_core_deps
+
+    # Phase 3: CLI exclusivity and delegation validation
+    check_platform_cli_delegation
+    check_cli_surface_exclusivity
 
     # Print summary
     print_summary

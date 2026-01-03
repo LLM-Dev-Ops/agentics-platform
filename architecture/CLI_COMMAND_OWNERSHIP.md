@@ -1,6 +1,6 @@
 # CLI Command Ownership
 
-**Version**: 1.0
+**Version**: 1.1
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
 **Last Updated**: 2025-01-03
@@ -68,6 +68,85 @@ The Agentics platform defines two distinct CLI categories with different executi
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Exclusivity Statement
+
+The `agentics-platform-cli` is the **sole sanctioned human entry point** for the following capabilities. No other repository, CLI, or service may expose these operations directly to human operators.
+
+### Exclusive Command Surfaces
+
+| Capability | Exclusive Owner | Rationale |
+|------------|----------------|-----------|
+| **Organizational Context Switching** | `agentics-platform-cli` | Context determines governance scope and policy evaluation |
+| **Environment Promotion** | `agentics-platform-cli` | Promotion is a governance operation requiring policy validation |
+| **Simulation Execution** | `agentics-platform-cli` | Simulation must be isolated and delegated, never executed locally |
+| **Deployment Export** | `agentics-platform-cli` | Deployment materialization must flow through exporters |
+
+### Exclusivity Constraints
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     EXCLUSIVITY CONSTRAINTS                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  FORBIDDEN EXPOSURES (No repository may provide):                   │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━                      │
+│                                                                     │
+│  1. CLI commands for org/env context switching                      │
+│     • Only agentics-platform-cli may expose org switch              │
+│     • Only agentics-platform-cli may expose env switch              │
+│                                                                     │
+│  2. CLI commands for environment promotion                          │
+│     • Only agentics-platform-cli may expose intent promote          │
+│     • No direct promotion APIs exposed to human operators           │
+│                                                                     │
+│  3. CLI commands for simulation execution                           │
+│     • Only agentics-platform-cli may invoke simulations             │
+│     • Simulation repos provide internal APIs, not CLI surfaces      │
+│                                                                     │
+│  4. CLI commands for deployment export                              │
+│     • Only agentics-platform-cli may trigger exports                │
+│     • Exporter repos are invoked via delegation, not CLI            │
+│                                                                     │
+│  DELEGATION REQUIREMENT:                                            │
+│  ━━━━━━━━━━━━━━━━━━━━━━━                                             │
+│                                                                     │
+│  The platform-cli MUST delegate these operations:                   │
+│  • Simulation → Layer 4 API → simulation repositories               │
+│  • Deployment → Layer 4 API → deployment-exporters                  │
+│  • Core operations → Layer 4 API → Layer 3 cores                    │
+│                                                                     │
+│  The platform-cli MUST NOT execute these operations directly:       │
+│  • No local simulation execution                                    │
+│  • No local deployment artifact generation                          │
+│  • No direct database mutations                                     │
+│  • No direct service state modifications                            │
+│                                                                     │
+│  ENFORCEMENT:                                                       │
+│  ━━━━━━━━━━━━                                                       │
+│                                                                     │
+│  • CI validates no other package exposes these command surfaces     │
+│  • CI validates delegation patterns in platform-cli                 │
+│  • CI validates no direct execution of simulation/deployment code   │
+│                                                                     │
+│  Reference: ADR-006, DEPENDENCY_GRAPH.md INV-9, FORBIDDEN_PATHS.md  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Verification Checklist
+
+For auditors and reviewers, confirm:
+
+- [ ] No repository other than `agentics-platform` exposes `org switch` or `env switch` commands
+- [ ] No repository other than `agentics-platform` exposes `intent promote` commands
+- [ ] No repository other than `agentics-platform` exposes simulation invocation commands
+- [ ] No repository other than `agentics-platform` exposes deployment export commands
+- [ ] Platform-cli uses `forward()` for delegation, not direct execution
+- [ ] Platform-cli imports no runtime code from simulation or deployment repositories
+- [ ] All delegation flows through Layer 4 API, never bypassing architectural boundaries
 
 ---
 
