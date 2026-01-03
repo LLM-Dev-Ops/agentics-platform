@@ -40,3 +40,6 @@ pnpm-debug.log*
 .turbo
 .vercel
 .eslintcache
+
+# Claude Code metrics (auto-generated)
+.claude-flow/metrics/
