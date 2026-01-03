@@ -11,6 +11,7 @@ Layer 4 is the externally facing gateway through which all platform capabilities
 - [Architecture Overview](#architecture-overview)
   - [Dependency Graph](#dependency-graph)
   - [Enforcement Artifacts](#enforcement-artifacts)
+- [Architecture Freeze](#architecture-freeze)
 - [Layer 3 Backend Services](#layer-3-backend-services)
 - [Unified API Surface](#unified-api-surface)
 - [Command-Line Interface](#command-line-interface)
@@ -97,6 +98,74 @@ The architecture is enforced through a suite of canonical documents and CI tooli
 | [`.github/workflows/architecture-enforcement.yml`](.github/workflows/architecture-enforcement.yml) | CI enforcement checks |
 
 These documents form a closed, intentional system designed for technical audit. All artifacts reference `DEPENDENCY_GRAPH.md` as the canonical authority.
+
+---
+
+## Architecture Freeze
+
+The platform architecture is frozen at version **v1** as declared in [`ARCHITECTURE_VERSION.md`](ARCHITECTURE_VERSION.md). This freeze establishes an immutable baseline governing all repositories in the fleet.
+
+### Governance
+
+| Aspect | Status |
+|--------|--------|
+| Frozen Version | v1 |
+| Freeze Date | 2025-01-03 |
+| Amendment Authority | CTO approval via ADR process |
+| Enforcement | Automated CI gate |
+
+### What Is Frozen
+
+- Five-layer architecture (Layers 1-5)
+- Downward-only dependency rule (5→4→3→2→1)
+- Repository classifications and layer assignments
+- Forbidden dependency paths
+- CLI command ownership and delegation boundaries
+- Architectural invariants (INV-1 through INV-9)
+- Hard rules for CLI enforcement (H-1 through H-6)
+
+### What Is Not Frozen
+
+- Implementation details within repositories
+- User experience and interface design
+- Performance tuning and optimization
+- Internal service architecture (within layer boundaries)
+
+### CI Enforcement
+
+The [`ci/check-architecture.sh`](ci/check-architecture.sh) script runs as a mandatory CI gate. It validates:
+
+- Architecture version file exists and matches expected frozen version
+- Cross-document consistency (REPO_CLASSIFICATION ↔ DEPENDENCY_GRAPH ↔ FORBIDDEN_PATHS)
+- CLI hard rules H-1 through H-6 are defined
+- No forbidden dependencies exist in any package
+- No upward or layer-skipping dependencies
+- CLI packages do not import Layer 3 core runtime
+- Simulation isolation is maintained
+- Infrastructure and integration boundaries are preserved
+
+CI exits non-zero on any violation. Violations include the rule identifier, source document reference, file location, and actionable message.
+
+### Requesting Changes
+
+Architectural changes require a formal Architecture Decision Record (ADR):
+
+1. Submit RFC with proposed change, rationale, and impact analysis
+2. Platform Architecture Team reviews for consistency and compliance
+3. CTO approval required for any frozen element modification
+4. Update architecture documents in precedence order
+5. Update CI enforcement to reflect approved changes
+
+No exceptions are permitted without ADR amendment.
+
+### Canonical References
+
+| Document | Purpose |
+|----------|---------|
+| [`ARCHITECTURE_VERSION.md`](ARCHITECTURE_VERSION.md) | Frozen version declaration |
+| [`architecture/ARCHITECTURE_INDEX.md`](architecture/ARCHITECTURE_INDEX.md) | Conflict resolution hierarchy |
+| [`architecture/DEPENDENCY_GRAPH.md`](architecture/DEPENDENCY_GRAPH.md) | Layer rules (supreme authority) |
+| [`architecture/ARCHITECTURE_DECISIONS.md`](architecture/ARCHITECTURE_DECISIONS.md) | Closed architectural decisions |
 
 ---
 
