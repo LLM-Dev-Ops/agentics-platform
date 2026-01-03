@@ -28,9 +28,10 @@
 # Usage:
 #   ./ci/check-architecture.sh [--verbose] [--fix-suggestions]
 #
-# Version: 2.0.0
+# Version: 3.0.0
 # Classification: CI Enforcement Artifact
 # Canonical Architecture Version: 1.1 (from ARCHITECTURE_INDEX.md)
+# Frozen Architecture Version: v1 (from ARCHITECTURE_VERSION.md)
 # Last Updated: 2025-01-03
 
 set -euo pipefail
@@ -40,7 +41,7 @@ set -euo pipefail
 # ==============================================================================
 
 readonly SCRIPT_NAME="check-architecture"
-readonly SCRIPT_VERSION="2.0.0"
+readonly SCRIPT_VERSION="3.0.0"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly ARCH_DIR="${ROOT_DIR}/architecture"
@@ -48,7 +49,11 @@ readonly ARCH_DIR="${ROOT_DIR}/architecture"
 # Expected architecture document version (from ARCHITECTURE_INDEX.md)
 readonly EXPECTED_ARCH_VERSION="1.1"
 
+# Expected frozen architecture version (from ARCHITECTURE_VERSION.md)
+readonly EXPECTED_FROZEN_VERSION="v1"
+
 # Architecture document paths
+readonly ARCH_VERSION="${ROOT_DIR}/ARCHITECTURE_VERSION.md"
 readonly ARCH_INDEX="${ARCH_DIR}/ARCHITECTURE_INDEX.md"
 readonly REPO_CLASS="${ARCH_DIR}/REPO_CLASSIFICATION.md"
 readonly FORBIDDEN_PATHS="${ARCH_DIR}/FORBIDDEN_PATHS.md"
@@ -280,6 +285,123 @@ parse_architecture_version() {
     echo "$version"
 }
 
+# Parse ARCHITECTURE_VERSION.md to extract frozen version
+parse_frozen_version() {
+    local version=""
+
+    if ! file_exists "$ARCH_VERSION"; then
+        echo ""
+        return
+    fi
+
+    # Extract version from **Frozen Version**: vX line
+    version=$(grep -E '^\*\*Frozen Version\*\*:\s*v[0-9]+' "$ARCH_VERSION" | \
+              sed 's/.*:\s*\(v[0-9]\+\).*/\1/' | head -1)
+
+    echo "$version"
+}
+
+# Parse ARCHITECTURE_VERSION.md to verify it references ARCHITECTURE_INDEX.md
+check_version_references_index() {
+    if ! file_exists "$ARCH_VERSION"; then
+        return 1
+    fi
+
+    # Check if ARCHITECTURE_VERSION.md references ARCHITECTURE_INDEX.md
+    if grep -qE 'ARCHITECTURE_INDEX\.md' "$ARCH_VERSION"; then
+        return 0
+    fi
+
+    return 1
+}
+
+# Parse repositories from DEPENDENCY_GRAPH.md
+parse_repos_from_dependency_graph() {
+    local -a repos=()
+
+    if ! file_exists "$DEPENDENCY_GRAPH"; then
+        echo ""
+        return
+    fi
+
+    local content
+    content=$(cat "$DEPENDENCY_GRAPH")
+
+    # Extract repository names from backticks
+    while IFS= read -r line; do
+        local repo
+        # Extract LLM-*-Core patterns
+        repo=$(echo "$line" | sed -n 's/.*`\(LLM-[^`]*-Core\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+
+        # Extract agentics-* patterns
+        repo=$(echo "$line" | sed -n 's/.*`\(agentics-[^`]*\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+
+        # Extract infra-* patterns
+        repo=$(echo "$line" | sed -n 's/.*`\(infra-[^`]*\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+
+        # Extract services-* patterns
+        repo=$(echo "$line" | sed -n 's/.*`\(services-[^`]*\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+
+        # Extract integrations-* patterns
+        repo=$(echo "$line" | sed -n 's/.*`\(integrations-[^`]*\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+    done < <(echo "$content")
+
+    # Return unique values
+    printf '%s\n' "${repos[@]}" | sort -u
+}
+
+# Parse repositories from FORBIDDEN_PATHS.md
+parse_repos_from_forbidden_paths() {
+    local -a repos=()
+
+    if ! file_exists "$FORBIDDEN_PATHS"; then
+        echo ""
+        return
+    fi
+
+    local content
+    content=$(cat "$FORBIDDEN_PATHS")
+
+    # Extract repository names from backticks
+    while IFS= read -r line; do
+        local repo
+        repo=$(echo "$line" | sed -n 's/.*`\(LLM-[^`]*-Core\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+
+        repo=$(echo "$line" | sed -n 's/.*`\(agentics-[^`]*\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+
+        repo=$(echo "$line" | sed -n 's/.*`\(infra-[^`]*\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+
+        repo=$(echo "$line" | sed -n 's/.*`\(services-[^`]*\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+
+        repo=$(echo "$line" | sed -n 's/.*`\(integrations-[^`]*\)`.*/\1/p')
+        [[ -n "$repo" ]] && repos+=("$repo")
+    done < <(echo "$content")
+
+    printf '%s\n' "${repos[@]}" | sort -u
+}
+
+# Parse CLI hard rules from CLI_COMMAND_OWNERSHIP.md
+parse_cli_hard_rules() {
+    local -a rules=()
+
+    if ! file_exists "$CLI_OWNERSHIP"; then
+        echo ""
+        return
+    fi
+
+    # Extract rule IDs (H-1 through H-6)
+    grep -oE 'H-[0-9]+' "$CLI_OWNERSHIP" | sort -u
+}
+
 # Parse REPO_CLASSIFICATION.md to extract canonical classifications
 # This replaces all hard-coded lists with document-derived data
 parse_repo_classifications() {
@@ -485,26 +607,197 @@ is_forbidden_import() {
 # ==============================================================================
 
 # -----------------------------------------------------------------------------
-# CHECK 0: Validate architecture document version
+# CHECK 0a: Validate ARCHITECTURE_VERSION.md exists and is canonical
+# Rule: ARCHITECTURE_VERSION.md must exist at repository root
+# Reference: ARCHITECTURE_INDEX.md §Authoritative Version Declaration
+# -----------------------------------------------------------------------------
+check_architecture_version_file() {
+    log_info "Checking ARCHITECTURE_VERSION.md existence and validity..."
+    ((TOTAL_CHECKS++)) || true
+
+    # Check if ARCHITECTURE_VERSION.md exists
+    if ! file_exists "$ARCH_VERSION"; then
+        log_violation "ARCH-VERSION-MISSING" "ARCHITECTURE_INDEX.md §Authoritative Version Declaration" \
+            "ARCHITECTURE_VERSION.md" \
+            "CRITICAL: ARCHITECTURE_VERSION.md not found at repository root. This file is REQUIRED for architectural governance."
+        return
+    fi
+
+    # Check frozen version
+    local frozen_version
+    frozen_version=$(parse_frozen_version)
+
+    if [[ -z "$frozen_version" ]]; then
+        log_violation "ARCH-VERSION-PARSE" "ARCHITECTURE_VERSION.md" \
+            "$(get_relative_path "$ARCH_VERSION")" \
+            "Could not parse frozen version from ARCHITECTURE_VERSION.md. Expected format: **Frozen Version**: vX"
+        return
+    fi
+
+    if [[ "$frozen_version" != "$EXPECTED_FROZEN_VERSION" ]]; then
+        log_violation "ARCH-VERSION-MISMATCH" "ARCHITECTURE_VERSION.md" \
+            "$(get_relative_path "$ARCH_VERSION")" \
+            "Frozen version mismatch: expected ${EXPECTED_FROZEN_VERSION}, found ${frozen_version}. Update CI script or resolve version drift via ADR process."
+        return
+    fi
+
+    # Check if ARCHITECTURE_VERSION.md references ARCHITECTURE_INDEX.md
+    if ! check_version_references_index; then
+        log_violation "ARCH-VERSION-REF" "ARCHITECTURE_VERSION.md" \
+            "$(get_relative_path "$ARCH_VERSION")" \
+            "ARCHITECTURE_VERSION.md must reference ARCHITECTURE_INDEX.md as governing documents source."
+        return
+    fi
+
+    log_success "ARCHITECTURE_VERSION.md validated: frozen version ${frozen_version}"
+    ((PASSED_CHECKS++)) || true
+}
+
+# -----------------------------------------------------------------------------
+# CHECK 0b: Validate architecture document version
 # Rule: Architecture version must match expected frozen version
 # Reference: ARCHITECTURE_INDEX.md §Document Inventory
 # -----------------------------------------------------------------------------
 check_architecture_version() {
-    log_info "Checking architecture document version..."
+    log_info "Checking ARCHITECTURE_INDEX.md version..."
     ((TOTAL_CHECKS++)) || true
 
     local actual_version
     actual_version=$(parse_architecture_version)
 
     if [[ "$actual_version" != "$EXPECTED_ARCH_VERSION" ]]; then
-        log_violation "ARCH-VERSION" "ARCHITECTURE_INDEX.md" \
+        log_violation "ARCH-INDEX-VERSION" "ARCHITECTURE_INDEX.md" \
             "$(get_relative_path "$ARCH_INDEX")" \
-            "Architecture version mismatch: expected ${EXPECTED_ARCH_VERSION}, found ${actual_version}. Update script or resolve version drift."
+            "Architecture index version mismatch: expected ${EXPECTED_ARCH_VERSION}, found ${actual_version}. Update script or resolve version drift."
         return
     fi
 
-    log_success "Architecture version verified: ${actual_version}"
+    # Verify ARCHITECTURE_INDEX.md references ARCHITECTURE_VERSION.md
+    if ! grep -qE 'ARCHITECTURE_VERSION\.md' "$ARCH_INDEX"; then
+        log_violation "ARCH-INDEX-REF" "ARCHITECTURE_INDEX.md" \
+            "$(get_relative_path "$ARCH_INDEX")" \
+            "ARCHITECTURE_INDEX.md must reference ARCHITECTURE_VERSION.md as authoritative version source."
+        return
+    fi
+
+    log_success "ARCHITECTURE_INDEX.md version verified: ${actual_version}"
     ((PASSED_CHECKS++)) || true
+}
+
+# -----------------------------------------------------------------------------
+# CHECK 0c: Validate cross-document repository consistency
+# Rule: All repos in REPO_CLASSIFICATION.md must appear in DEPENDENCY_GRAPH.md and FORBIDDEN_PATHS.md
+# Reference: ARCHITECTURE_INDEX.md §Document Cross-Reference Matrix
+# -----------------------------------------------------------------------------
+check_cross_document_consistency() {
+    log_info "Checking cross-document repository consistency..."
+    ((TOTAL_CHECKS++)) || true
+
+    local found_violation=false
+
+    # Get repos from each document
+    local repos_from_class=""
+    local repos_from_dep=""
+    local repos_from_forbidden=""
+
+    # Parse repos from REPO_CLASSIFICATION.md
+    if file_exists "$REPO_CLASS"; then
+        # Extract core repos
+        repos_from_class=$(grep -oE '`(LLM-[^`]*-Core|agentics-[^`]*|infra-[^`]*|services-[^`]*|integrations-[^`]*)`' "$REPO_CLASS" | \
+                          tr -d '`' | sort -u)
+    fi
+
+    # Parse repos from DEPENDENCY_GRAPH.md
+    repos_from_dep=$(parse_repos_from_dependency_graph)
+
+    # Parse repos from FORBIDDEN_PATHS.md
+    repos_from_forbidden=$(parse_repos_from_forbidden_paths)
+
+    # Check that key repos from REPO_CLASSIFICATION.md appear in DEPENDENCY_GRAPH.md
+    local -a key_repos=(
+        "agentics-platform"
+        "agentics-cli"
+        "LLM-Intelligence-Core"
+        "LLM-Security-Core"
+        "LLM-Automation-Core"
+        "LLM-Governance-Core"
+        "LLM-Data-Core"
+        "LLM-Ecosystem-Core"
+        "LLM-Research-Core"
+        "LLM-Interface-Core"
+    )
+
+    for repo in "${key_repos[@]}"; do
+        if ! echo "$repos_from_dep" | grep -qxF "$repo"; then
+            log_violation "CROSS-DOC-MISSING" "DEPENDENCY_GRAPH.md" \
+                "$(get_relative_path "$DEPENDENCY_GRAPH")" \
+                "Repository '$repo' from REPO_CLASSIFICATION.md not found in DEPENDENCY_GRAPH.md"
+            found_violation=true
+        fi
+    done
+
+    # Check that Layer 3 cores from classification appear in FORBIDDEN_PATHS.md
+    for core in "${LAYER3_CORES[@]}"; do
+        # Skip npm-style names, only check repository names
+        if [[ "$core" == @* ]]; then
+            continue
+        fi
+        if ! echo "$repos_from_forbidden" | grep -qxF "$core"; then
+            log_violation "CROSS-DOC-FORBIDDEN" "FORBIDDEN_PATHS.md" \
+                "$(get_relative_path "$FORBIDDEN_PATHS")" \
+                "Core repository '$core' from REPO_CLASSIFICATION.md not referenced in FORBIDDEN_PATHS.md"
+            found_violation=true
+        fi
+    done
+
+    if [[ "$found_violation" == "false" ]]; then
+        log_success "Cross-document repository consistency verified"
+        ((PASSED_CHECKS++)) || true
+    fi
+}
+
+# -----------------------------------------------------------------------------
+# CHECK 0d: Validate CLI_COMMAND_OWNERSHIP.md hard rules are complete
+# Rule: All hard rules H-1 through H-6 must be defined
+# Reference: CLI_COMMAND_OWNERSHIP.md §Hard Rules
+# -----------------------------------------------------------------------------
+check_cli_ownership_rules() {
+    log_info "Checking CLI_COMMAND_OWNERSHIP.md completeness..."
+    ((TOTAL_CHECKS++)) || true
+
+    if ! file_exists "$CLI_OWNERSHIP"; then
+        log_violation "CLI-OWNERSHIP-MISSING" "ARCHITECTURE_INDEX.md" \
+            "$(get_relative_path "$CLI_OWNERSHIP")" \
+            "CRITICAL: CLI_COMMAND_OWNERSHIP.md not found. This document is required for CLI boundary enforcement."
+        return
+    fi
+
+    local found_violation=false
+    local -a required_rules=("H-1" "H-2" "H-3" "H-4" "H-5" "H-6")
+    local defined_rules
+    defined_rules=$(parse_cli_hard_rules)
+
+    for rule in "${required_rules[@]}"; do
+        if ! echo "$defined_rules" | grep -qxF "$rule"; then
+            log_violation "CLI-RULE-MISSING" "CLI_COMMAND_OWNERSHIP.md §Hard Rules" \
+                "$(get_relative_path "$CLI_OWNERSHIP")" \
+                "Hard rule ${rule} not found in CLI_COMMAND_OWNERSHIP.md"
+            found_violation=true
+        fi
+    done
+
+    # Check that CLI_COMMAND_OWNERSHIP.md references governing documents
+    if ! grep -qE 'DEPENDENCY_GRAPH\.md' "$CLI_OWNERSHIP"; then
+        log_violation "CLI-OWNERSHIP-REF" "CLI_COMMAND_OWNERSHIP.md" \
+            "$(get_relative_path "$CLI_OWNERSHIP")" \
+            "CLI_COMMAND_OWNERSHIP.md must reference DEPENDENCY_GRAPH.md as canonical source"
+        found_violation=true
+    fi
+
+    if [[ "$found_violation" == "false" ]]; then
+        log_success "CLI_COMMAND_OWNERSHIP.md completeness verified (H-1 through H-6)"
+        ((PASSED_CHECKS++)) || true
+    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -1383,8 +1676,9 @@ print_summary() {
     echo -e "${BOLD}                    ARCHITECTURE ENFORCEMENT SUMMARY                        ${NC}"
     echo -e "${BOLD}═══════════════════════════════════════════════════════════════════════════${NC}"
     echo ""
-    echo -e "  Script Version:      ${SCRIPT_VERSION}"
-    echo -e "  Architecture Version: ${EXPECTED_ARCH_VERSION}"
+    echo -e "  Script Version:       ${SCRIPT_VERSION}"
+    echo -e "  Index Version:        ${EXPECTED_ARCH_VERSION}"
+    echo -e "  Frozen Version:       ${EXPECTED_FROZEN_VERSION}"
     echo ""
     echo -e "  Total Checks:    ${TOTAL_CHECKS}"
     echo -e "  ${GREEN}Passed:${NC}          ${PASSED_CHECKS}"
@@ -1407,6 +1701,7 @@ print_summary() {
     fi
 
     echo -e "${BOLD}Canonical Reference Documents:${NC}"
+    echo "  0. ARCHITECTURE_VERSION.md (frozen version declaration)"
     echo "  1. architecture/ARCHITECTURE_INDEX.md (precedence hierarchy)"
     echo "  2. architecture/DEPENDENCY_GRAPH.md (layer rules)"
     echo "  3. architecture/FORBIDDEN_PATHS.md (explicit prohibitions)"
@@ -1484,17 +1779,27 @@ verify_prerequisites() {
     fi
 
     # Verify all required architecture documents exist
+    # CRITICAL: ARCHITECTURE_VERSION.md at root is required for governance
     local -a required_docs=(
+        "$ARCH_VERSION"
         "$ARCH_INDEX"
         "$REPO_CLASS"
         "$DEPENDENCY_GRAPH"
+        "$FORBIDDEN_PATHS"
+        "$CLI_OWNERSHIP"
     )
 
+    local missing_critical=false
     for doc in "${required_docs[@]}"; do
         if ! file_exists "$doc"; then
-            log_fatal "Required architecture document not found: $(get_relative_path "$doc")"
+            log_error "Required architecture document not found: $(get_relative_path "$doc")"
+            missing_critical=true
         fi
     done
+
+    if [[ "$missing_critical" == "true" ]]; then
+        log_fatal "CRITICAL: One or more required architecture documents are missing. CI cannot proceed."
+    fi
 
     log_verbose "All prerequisite architecture documents present"
 }
@@ -1520,7 +1825,13 @@ main() {
     echo ""
 
     # Run all checks in order
+    # Phase 1: Document validation (hard-fail if missing or invalid)
+    check_architecture_version_file
     check_architecture_version
+    check_cross_document_consistency
+    check_cli_ownership_rules
+
+    # Phase 2: Dependency validation
     check_cli_layer3_deps
     check_cli_forbidden_deps
     check_cli_simulation_execution

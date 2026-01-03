@@ -5,6 +5,20 @@
 **Classification**: Master Architecture Enforcement Document
 **Last Updated**: 2025-01-03
 **Architectural Freeze**: v1 (Immutable until ADR-based amendment)
+**Authoritative Version Source**: [`ARCHITECTURE_VERSION.md`](../ARCHITECTURE_VERSION.md)
+
+---
+
+## Authoritative Version Declaration
+
+The frozen architecture version is authoritatively declared in [`ARCHITECTURE_VERSION.md`](../ARCHITECTURE_VERSION.md) at the repository root. That document:
+
+- Declares the canonical frozen version identifier (v1)
+- Establishes the freeze date and immutability boundary
+- Defines the scope of what is frozen versus excluded
+- Specifies the ADR amendment procedure for changes
+
+**All enforcement tooling must validate against ARCHITECTURE_VERSION.md.** CI pipelines that cannot locate or parse this document must fail with a blocking error.
 
 ---
 
