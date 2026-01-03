@@ -28,6 +28,9 @@ These decisions represent closed, intentional choices—not evolving experiments
 | ADR-006 | CLI as thin client without runtime embedding | Distribution Model |
 | ADR-007 | Simulation repositories isolated from production | Compliance & Safety |
 | ADR-008 | Consolidation cores own all business logic | Domain Ownership |
+| ADR-009 | Simulation abstraction and organization-agnostic design | Product Architecture |
+
+**Note**: ADR-009 is documented in full in [`adr/ADR-009-simulation-abstraction.md`](adr/ADR-009-simulation-abstraction.md).
 
 ---
 
