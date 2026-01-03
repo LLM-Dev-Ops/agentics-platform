@@ -9,6 +9,8 @@ Layer 4 is the externally facing gateway through which all platform capabilities
 ## Table of Contents
 
 - [Architecture Overview](#architecture-overview)
+  - [Dependency Graph](#dependency-graph)
+  - [Enforcement Artifacts](#enforcement-artifacts)
 - [Layer 3 Backend Services](#layer-3-backend-services)
 - [Unified API Surface](#unified-api-surface)
 - [Command-Line Interface](#command-line-interface)
@@ -64,6 +66,37 @@ The Agentics.dev platform follows a strict four-layer architecture that separate
 **Layer 3** consolidation cores own all domain logic. Each core is responsible for a specific capability area and orchestrates the underlying Layer 1 and Layer 2 components to fulfill requests. Layer 4 forwards requests to these cores and returns their responses.
 
 **Layer 1 and Layer 2** repositories remain first-class components of the platform. These standalone engines, developer tools, and specialized subsystems continue to evolve independently and provide the foundational capabilities that Layer 3 cores compose. Layer 4 never invokes Layer 1 or Layer 2 directly—all access flows through Layer 3. This structure preserves the long-term value of every previously built repository while enforcing strict architectural boundaries.
+
+### Dependency Graph
+
+The platform enforces strict dependency rules across all layers to preserve component value, enable independent evolution, and support technical diligence. The canonical dependency governance artifact is maintained at [`architecture/DEPENDENCY_GRAPH.md`](architecture/DEPENDENCY_GRAPH.md).
+
+Key architectural invariants enforced by the dependency graph:
+
+- **Downward-only dependencies**: Dependencies flow strictly from Layer 5 → Layer 4 → Layer 3 → Layer 2 → Layer 1
+- **No layer skipping**: Layer 4 cannot invoke Layer 1 or Layer 2 directly; all access routes through Layer 3
+- **No lateral execution leaks**: Layer 3 cores do not invoke each other directly; cross-domain operations route through Layer 4
+- **Simulation isolation**: Simulation and research environments cannot mutate production state
+- **Single entry point**: All external traffic enters through Layer 4 API Gateway
+
+This dependency graph serves as an enforcement artifact for code reviews, CI pipeline checks, and architectural audits. Violations of the documented dependency rules should be treated as build failures.
+
+The dependency graph also defines governance for repository classes including infrastructure repositories (`infra-*`), service repositories (`services-*`), integration repositories (`integrations-*`), and simulation repositories (`agentics-simulation-*`, `agentics-diligence-*`). Each class has explicit allowed and forbidden dependency paths. The document is designed to satisfy CTO review, broker diligence, and PE technical audit requirements.
+
+### Enforcement Artifacts
+
+The architecture is enforced through a suite of canonical documents and CI tooling:
+
+| Artifact | Purpose |
+|----------|---------|
+| [`architecture/DEPENDENCY_GRAPH.md`](architecture/DEPENDENCY_GRAPH.md) | Canonical dependency rules and layer definitions |
+| [`architecture/FORBIDDEN_PATHS.md`](architecture/FORBIDDEN_PATHS.md) | Explicit enumeration of prohibited dependency paths |
+| [`architecture/REPO_CLASSIFICATION.md`](architecture/REPO_CLASSIFICATION.md) | Authoritative repository-to-class mapping |
+| [`architecture/ARCHITECTURE_DECISIONS.md`](architecture/ARCHITECTURE_DECISIONS.md) | Key architectural decisions for diligence review |
+| [`architecture/DEPENDENCY_DIAGRAM.md`](architecture/DEPENDENCY_DIAGRAM.md) | Visual representation of the dependency graph |
+| [`.github/workflows/architecture-enforcement.yml`](.github/workflows/architecture-enforcement.yml) | CI enforcement checks |
+
+These documents form a closed, intentional system designed for technical audit. All artifacts reference `DEPENDENCY_GRAPH.md` as the canonical authority.
 
 ---
 
