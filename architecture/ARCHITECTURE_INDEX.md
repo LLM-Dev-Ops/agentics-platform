@@ -1,11 +1,12 @@
 # Architecture Index
 
-**Version**: 1.1
+**Version**: 1.2
 **Status**: Canonical
 **Classification**: Master Architecture Enforcement Document
 **Last Updated**: 2025-01-03
-**Architectural Freeze**: v1 (Immutable until ADR-based amendment)
+**Architectural Freeze**: architecture-v1.0.0 (Immutable until ADR-based amendment)
 **Authoritative Version Source**: [`ARCHITECTURE_VERSION.md`](../ARCHITECTURE_VERSION.md)
+**Git Tag**: `architecture-v1.0.0`
 
 ---
 
@@ -13,12 +14,27 @@
 
 The frozen architecture version is authoritatively declared in [`ARCHITECTURE_VERSION.md`](../ARCHITECTURE_VERSION.md) at the repository root. That document:
 
-- Declares the canonical frozen version identifier (v1)
+- Declares the canonical frozen version identifier (architecture-v1.0.0)
 - Establishes the freeze date and immutability boundary
 - Defines the scope of what is frozen versus excluded
 - Specifies the ADR amendment procedure for changes
 
 **All enforcement tooling must validate against ARCHITECTURE_VERSION.md.** CI pipelines that cannot locate or parse this document must fail with a blocking error.
+
+---
+
+## Release Certification: architecture-v1.0.0
+
+> **This is the first locked and auditable architecture release.**
+
+Version `architecture-v1.0.0` represents the formal certification of the Agentics platform architecture as:
+
+- **Frozen**: No changes permitted without ADR amendment and CTO approval
+- **Enforced**: CI pipelines validate all commits against architectural constraints
+- **Auditable**: Complete documentation suitable for PE technical audit and acquisition due diligence
+- **Tagged**: Git tag `architecture-v1.0.0` marks this immutable baseline
+
+All repositories in the Agentics fleet are governed by this version. Architectural compliance is mandatory for all code changes.
 
 ---
 
@@ -30,7 +46,7 @@ This document is the **single source of truth** for platform architecture enforc
 
 - Enumerates and links to all authoritative architecture artifacts
 - Establishes the conflict-resolution hierarchy for architectural decisions
-- Defines the v1 architectural freeze boundary
+- Defines the architecture-v1.0.0 freeze boundary
 - Specifies the amendment process for architectural changes
 
 **This document does NOT:**
@@ -127,11 +143,11 @@ When architectural ambiguity or conflict arises, resolution follows this strict 
 
 ---
 
-## Architectural Freeze Boundary (v1)
+## Architectural Freeze Boundary (architecture-v1.0.0)
 
 ### Freeze Definition
 
-The v1 architectural freeze establishes an immutable baseline for the platform architecture. The following elements are frozen:
+The architecture-v1.0.0 freeze establishes an immutable baseline for the platform architecture. The following elements are frozen:
 
 | Frozen Element | Reference |
 |---------------|-----------|

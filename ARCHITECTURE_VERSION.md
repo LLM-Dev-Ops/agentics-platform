@@ -1,16 +1,17 @@
 # Agentics Platform Architecture Version Declaration
 
-**Frozen Version**: v1
+**Frozen Version**: architecture-v1.0.0
 **Freeze Date**: 2025-01-03
 **Status**: FROZEN
 **Authority**: Immutable until ADR-based Amendment
 **Classification**: Governance Document
+**Git Tag**: `architecture-v1.0.0`
 
 ---
 
 ## Declaration of Architectural Freeze
 
-This document formally declares that the Agentics platform architecture is **frozen at version v1** as of the freeze date specified above. This freeze establishes an immutable baseline that governs all platform development, integration, and deployment activities.
+This document formally declares that the Agentics platform architecture is **frozen at version architecture-v1.0.0** as of the freeze date specified above. This freeze establishes an immutable baseline that governs all platform development, integration, and deployment activities.
 
 **This version is authoritative and immutable.** No architectural changes, exceptions, or deviations are permitted except through the approved Architecture Decision Record (ADR) process as defined in the canonical architecture documentation.
 
@@ -28,7 +29,7 @@ This version declaration does not define, modify, or supersede any architectural
 
 ### Included in Freeze
 
-The following architectural elements are frozen and immutable under version v1:
+The following architectural elements are frozen and immutable under version architecture-v1.0.0:
 
 | Element | Governing Document |
 |---------|-------------------|
@@ -119,7 +120,7 @@ CI enforcement mechanisms must be updated to reflect approved changes:
 
 | Version | Date | Description | Approver |
 |---------|------|-------------|----------|
-| v1 | 2025-01-03 | Initial architectural freeze | Platform Architecture Team |
+| architecture-v1.0.0 | 2025-01-03 | Initial architectural freeze; first locked and auditable release | Platform Architecture Team |
 
 ---
 

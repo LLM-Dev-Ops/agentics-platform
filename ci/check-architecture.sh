@@ -28,10 +28,10 @@
 # Usage:
 #   ./ci/check-architecture.sh [--verbose] [--fix-suggestions]
 #
-# Version: 3.1.0
+# Version: 3.2.0
 # Classification: CI Enforcement Artifact
-# Canonical Architecture Version: 1.1 (from ARCHITECTURE_INDEX.md)
-# Frozen Architecture Version: v1 (from ARCHITECTURE_VERSION.md)
+# Canonical Architecture Version: 1.2 (from ARCHITECTURE_INDEX.md)
+# Frozen Architecture Version: architecture-v1.0.0 (from ARCHITECTURE_VERSION.md)
 # Last Updated: 2025-01-03
 
 set -euo pipefail
@@ -41,16 +41,16 @@ set -euo pipefail
 # ==============================================================================
 
 readonly SCRIPT_NAME="check-architecture"
-readonly SCRIPT_VERSION="3.1.0"
+readonly SCRIPT_VERSION="3.2.0"
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly ARCH_DIR="${ROOT_DIR}/architecture"
 
 # Expected architecture document version (from ARCHITECTURE_INDEX.md)
-readonly EXPECTED_ARCH_VERSION="1.1"
+readonly EXPECTED_ARCH_VERSION="1.2"
 
 # Expected frozen architecture version (from ARCHITECTURE_VERSION.md)
-readonly EXPECTED_FROZEN_VERSION="v1"
+readonly EXPECTED_FROZEN_VERSION="architecture-v1.0.0"
 
 # Architecture document paths
 readonly ARCH_VERSION="${ROOT_DIR}/ARCHITECTURE_VERSION.md"
@@ -294,9 +294,9 @@ parse_frozen_version() {
         return
     fi
 
-    # Extract version from **Frozen Version**: vX line
-    version=$(grep -E '^\*\*Frozen Version\*\*:\s*v[0-9]+' "$ARCH_VERSION" | \
-              sed 's/.*:\s*\(v[0-9]\+\).*/\1/' | head -1)
+    # Extract version from **Frozen Version**: architecture-vX.Y.Z or vX line
+    version=$(grep -E '^\*\*Frozen Version\*\*:\s*(architecture-v[0-9]+\.[0-9]+\.[0-9]+|v[0-9]+)' "$ARCH_VERSION" | \
+              sed 's/.*:\s*\(architecture-v[0-9]\+\.[0-9]\+\.[0-9]\+\|v[0-9]\+\).*/\1/' | head -1)
 
     echo "$version"
 }
@@ -630,7 +630,7 @@ check_architecture_version_file() {
     if [[ -z "$frozen_version" ]]; then
         log_violation "ARCH-VERSION-PARSE" "ARCHITECTURE_VERSION.md" \
             "$(get_relative_path "$ARCH_VERSION")" \
-            "Could not parse frozen version from ARCHITECTURE_VERSION.md. Expected format: **Frozen Version**: vX"
+            "Could not parse frozen version from ARCHITECTURE_VERSION.md. Expected format: **Frozen Version**: architecture-vX.Y.Z"
         return
     fi
 

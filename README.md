@@ -103,16 +103,19 @@ These documents form a closed, intentional system designed for technical audit. 
 
 ## Architecture Freeze
 
-The platform architecture is frozen at version **v1** as declared in [`ARCHITECTURE_VERSION.md`](ARCHITECTURE_VERSION.md). This freeze establishes an immutable baseline governing all repositories in the fleet.
+The platform architecture is frozen at version **architecture-v1.0.0** as declared in [`ARCHITECTURE_VERSION.md`](ARCHITECTURE_VERSION.md). This freeze establishes an immutable baseline governing **all repositories in the Agentics fleet**. No architectural changes, exceptions, or deviations are permitted except through the approved Architecture Decision Record (ADR) process with CTO approval.
+
+All code changes across the fleet are validated against this frozen architecture via automated CI enforcement. Violations block merge and require either remediation or formal ADR amendment.
 
 ### Governance
 
 | Aspect | Status |
 |--------|--------|
-| Frozen Version | v1 |
+| Frozen Version | architecture-v1.0.0 |
+| Git Tag | `architecture-v1.0.0` |
 | Freeze Date | 2025-01-03 |
 | Amendment Authority | CTO approval via ADR process |
-| Enforcement | Automated CI gate |
+| Enforcement | Automated CI gate (`ci/check-architecture.sh`) |
 
 ### What Is Frozen
 
@@ -148,15 +151,16 @@ CI exits non-zero on any violation. Violations include the rule identifier, sour
 
 ### Requesting Changes
 
-Architectural changes require a formal Architecture Decision Record (ADR):
+Architectural changes require a formal Architecture Decision Record (ADR). The frozen architecture (`architecture-v1.0.0`) cannot be modified without completing this process:
 
 1. Submit RFC with proposed change, rationale, and impact analysis
 2. Platform Architecture Team reviews for consistency and compliance
 3. CTO approval required for any frozen element modification
 4. Update architecture documents in precedence order
 5. Update CI enforcement to reflect approved changes
+6. Increment architecture version and update Git tag
 
-No exceptions are permitted without ADR amendment.
+**No exceptions are permitted without ADR amendment.** This policy ensures architectural integrity, auditability, and transaction readiness.
 
 ### Canonical References
 
