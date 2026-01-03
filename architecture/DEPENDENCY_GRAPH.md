@@ -1,6 +1,6 @@
 # Agentics Platform Dependency Graph
 
-**Version**: 1.2
+**Version**: 1.3
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
 **Last Updated**: 2025-01-03
@@ -27,7 +27,8 @@ The Agentics platform follows a strict five-layer architecture designed to:
 **Description**: External clients and integrations that consume platform capabilities through Layer 4.
 
 **Components**:
-- CLI (`agentics-cli`) — see special handling below
+- Platform CLI (`agentics-platform-cli`) — apex orchestration CLI for governance operations
+- Developer CLI (`agentics-cli`) — general-purpose developer tooling
 - SDK (`@agentics/sdk`)
 - Web UI (`@agentics/ui`)
 - LLM Tool Integrations (Claude Code, ChatGPT, GitHub Copilot)
@@ -40,22 +41,47 @@ The Agentics platform follows a strict five-layer architecture designed to:
 - Stateless interaction model
 - May be developed by external parties
 
+**Two CLI Architecture**:
+
+The platform maintains two distinct CLIs with separate responsibilities:
+
+1. **Platform CLI (`agentics-platform-cli`)**: The apex orchestration CLI that exclusively owns:
+   - Organization management (`org *`)
+   - Environment management (`env *`)
+   - Simulation operations (`simulate *`)
+   - Deployment operations (`deploy *`)
+   - Governance and compliance commands
+
+2. **Developer CLI (`agentics-cli`)**: General-purpose developer tooling that:
+   - Delegates governance operations to Platform CLI via `forward()` spawn
+   - Owns developer-focused commands (code, debug, test)
+   - May depend on `@agentics/sdk` for API communication
+
 **Special Case: `agentics-cli`**
 
-The CLI (`agentics-cli`) occupies a dual role:
+The Developer CLI (`agentics-cli`) occupies a dual role:
 
 1. **External Consumer**: When invoking remote platform operations, the CLI acts as a Layer 5 consumer that communicates exclusively through Layer 4 API endpoints. All remote operations (simulations, intelligence requests, security scans) route through the API Gateway.
 
 2. **Local Orchestration Tool**: The CLI may perform local-only operations (configuration management, credential storage, output formatting, local file operations) without contacting Layer 4.
 
-**CLI Dependency Constraints**:
+**Developer CLI (`agentics-cli`) Dependency Constraints**:
 - The CLI **must never** import or link against Layer 3 core runtime code
 - The CLI **must never** import or link against Layer 2 service runtime code
 - The CLI **must never** embed business logic belonging to consolidation cores
 - The CLI **may** import shared type definitions and API contracts from `@agentics/shared`
+- The CLI **may** use `@agentics/sdk` for API communication
 - The CLI **may** vendor lightweight utility libraries that contain no platform business logic
 
-This constraint ensures the CLI remains a thin remote control that can be distributed independently without exposing internal implementation details or creating version coupling with backend services.
+**Platform CLI (`agentics-platform-cli`) Dependency Constraints**:
+- The Platform CLI **must never** import or link against Layer 3 core runtime code
+- The Platform CLI **must never** import or link against Layer 2 service runtime code
+- The Platform CLI **must never** import `@agentics/sdk` (uses HTTP API directly)
+- The Platform CLI **must never** import `@agentics/cli` (independent package)
+- The Platform CLI **may only** import `@agentics/shared` for type definitions
+- The Platform CLI **must** remain a thin client communicating via HTTP
+
+This constraint ensures both CLIs remain thin remote controls that can be distributed independently without exposing internal implementation details or creating version coupling with backend services.
 
 ---
 
@@ -470,9 +496,15 @@ Infrastructure repositories contain no application logic. Service repositories c
 
 ### INV-9: CLI Runtime Isolation
 
-> The CLI (`agentics-cli`) must never import Layer 3 core runtime code or Layer 2 service implementations.
+> Both CLIs (`agentics-platform-cli` and `agentics-cli`) must never import Layer 3 core runtime code or Layer 2 service implementations.
 
-The CLI remains a thin client that communicates through Layer 4 API. Direct imports from consolidation cores or internal services would create version coupling and expose internal implementation details.
+Both CLIs remain thin clients that communicate through Layer 4 API. Direct imports from consolidation cores or internal services would create version coupling and expose internal implementation details.
+
+### INV-10: CLI Command Exclusivity
+
+> The Platform CLI (`agentics-platform-cli`) is the exclusive owner of organization, environment, simulation, and deployment commands.
+
+No other CLI, SDK, or external consumer may implement these governance operations. The Developer CLI (`agentics-cli`) delegates to Platform CLI via subprocess spawn, not import. See [`CLI_COMMAND_OWNERSHIP.md`](CLI_COMMAND_OWNERSHIP.md) for the complete command ownership matrix.
 
 ---
 
@@ -737,11 +769,18 @@ This dependency architecture is designed to satisfy the following stakeholder re
 
 ## Appendix: Repository Reference
 
+### Monorepo Package Mapping
+
+The Agentics platform is implemented as a monorepo. See [`REPO_CLASSIFICATION.md`](REPO_CLASSIFICATION.md) for the complete mapping between logical repository names and package implementations.
+
 ### Layer 5 (External Consumers)
 
 | Repository | Description |
 |------------|-------------|
-| `agentics-cli` | Command-line interface; dual role as external consumer and local orchestration tool |
+| `agentics-platform-cli` | Apex orchestration CLI; exclusive owner of org/env/simulation/deployment commands |
+| `agentics-cli` | Developer CLI; dual role as external consumer and local orchestration tool |
+| `@agentics/sdk` | TypeScript SDK for platform API access |
+| `@agentics/ui` | Web UI for account management and platform interaction |
 
 ### Layer 4
 

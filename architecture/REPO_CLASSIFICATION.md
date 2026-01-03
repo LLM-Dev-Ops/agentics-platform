@@ -1,6 +1,6 @@
 # Repository Classification
 
-**Version**: 1.0
+**Version**: 1.1
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
 **Last Updated**: 2025-01-03
@@ -20,7 +20,8 @@ All repositories listed here have been explicitly defined in prior architectural
 
 | Class | Description |
 |-------|-------------|
-| **Platform** | Core product surface (API Gateway, CLI, SDK, UI) |
+| **Platform** | Core product surface (API Gateway, CLIs) |
+| **External** | Layer 5 external consumers (SDK, UI) designed for third-party distribution |
 | **Core** | Layer 3 consolidation cores owning business logic domains |
 | **Engine** | Layer 1 foundational engines and subsystems |
 | **Infrastructure** | Deployment, provisioning, and operational configuration |
@@ -38,7 +39,21 @@ All repositories listed here have been explicitly defined in prior architectural
 | Repository | Class | Layer | Allowed Dependencies | Forbidden Dependencies |
 |------------|-------|-------|---------------------|------------------------|
 | `agentics-platform` | Platform | 4 | Layer 3 cores (HTTP), `@agentics/shared` | Layer 2 direct, Layer 1 direct, simulation, infra |
-| `agentics-cli` | Platform | 5 | Layer 4 API (HTTP), `@agentics/shared` | Layer 3 runtime, Layer 2 runtime, simulation, infra |
+| `agentics-platform-cli` | Platform | 5 | Layer 4 API (HTTP only), `@agentics/shared` | Layer 3 runtime, Layer 2 runtime, simulation, infra, all non-@agentics/shared packages |
+| `agentics-cli` | Platform | 5 | Layer 4 API (HTTP), `@agentics/sdk`, `@agentics/shared` | Layer 3 runtime, Layer 2 runtime, simulation, infra |
+
+**Note**: `agentics-platform-cli` is the apex orchestration CLI responsible for org/env/simulation/deployment operations. It is the **exclusive** entry point for governance operations and must remain a thin client. See [`CLI_COMMAND_OWNERSHIP.md`](CLI_COMMAND_OWNERSHIP.md) for command ownership rules.
+
+---
+
+### External Consumer Repositories (Layer 5)
+
+| Repository | Class | Layer | Allowed Dependencies | Forbidden Dependencies |
+|------------|-------|-------|---------------------|------------------------|
+| `@agentics/sdk` | External | 5 | `@agentics/shared` (types), third-party HTTP clients | Layer 3 runtime, Layer 2 runtime, Layer 1 engines, simulation, infra |
+| `@agentics/ui` | External | 5 | `@agentics/sdk`, `@agentics/shared`, React/Next.js | Layer 3 runtime, Layer 2 runtime, Layer 1 engines, simulation, infra |
+
+**Note**: External consumer repositories are designed for distribution to third parties. They communicate exclusively through Layer 4 API endpoints and must never import internal platform runtime code.
 
 ---
 
@@ -124,7 +139,8 @@ All repositories listed here have been explicitly defined in prior architectural
 
 | Class | Count | Repositories |
 |-------|-------|--------------|
-| Platform | 2 | `agentics-platform`, `agentics-cli` |
+| Platform | 3 | `agentics-platform`, `agentics-platform-cli`, `agentics-cli` |
+| External | 2 | `@agentics/sdk`, `@agentics/ui` |
 | Core | 8 | `LLM-Intelligence-Core`, `LLM-Security-Core`, `LLM-Automation-Core`, `LLM-Governance-Core`, `LLM-Data-Core`, `LLM-Ecosystem-Core`, `LLM-Research-Core`, `LLM-Interface-Core` |
 | Engine | 1 | `RuvVector` |
 | Simulation | 5 | `agentics-simulation-planner`, `agentics-simulation-runner`, `agentics-deployment-exporters`, `agentics-diligence-artifacts`, `agentics-org-manifests` |
@@ -132,13 +148,45 @@ All repositories listed here have been explicitly defined in prior architectural
 | Service | 4 | `services-queue`, `services-cache`, `services-metrics`, `services-auth` |
 | Integration | 4 | `integrations-github`, `integrations-slack`, `integrations-jira`, `integrations-datadog` |
 | Shared | 1 | `@agentics/shared` |
-| **Total** | **29** | |
+| **Total** | **32** | |
+
+---
+
+## Monorepo Package Mapping
+
+The Agentics platform is implemented as a monorepo with scoped npm packages. This table maps logical repository names used in architecture documentation to their actual package implementations.
+
+| Architecture Repository | Package Name | Location | Layer |
+|------------------------|--------------|----------|-------|
+| `agentics-platform` | `@agentics/api` | `packages/api` | 4 |
+| `agentics-platform-cli` | `@agentics/platform-cli` | `packages/platform-cli` | 5 |
+| `agentics-cli` | `@agentics/cli` | `packages/cli` | 5 |
+| `@agentics/sdk` | `@agentics/sdk` | `packages/sdk` | 5 |
+| `@agentics/ui` | `@agentics/ui` | `packages/ui` | 5 |
+| `@agentics/shared` | `@agentics/shared` | `packages/shared` | N/A |
+
+**Implementation Notes**:
+
+1. **API Gateway**: The `agentics-platform` logical repository is implemented as `@agentics/api` in the monorepo. All architecture rules for `agentics-platform` apply to this package.
+
+2. **Two CLIs**: The platform has two distinct CLIs:
+   - `@agentics/platform-cli` (apex orchestration): Exclusive owner of org/env/simulation/deployment commands
+   - `@agentics/cli` (developer CLI): General-purpose developer tooling that delegates governance operations to platform-cli
+
+3. **Package Scoping**: All packages use the `@agentics` npm scope for consistent namespacing and dependency management.
+
+4. **Cross-Package Dependencies**: Within the monorepo, packages reference each other via `*` version specifiers. CI enforces that cross-package dependencies comply with layer rules.
 
 ---
 
 ## Layer Assignment Rules
 
-1. **Layer 5**: External consumers (`agentics-cli`, SDK, UI, partner APIs)
+1. **Layer 5**: External consumers and CLIs
+   - `agentics-platform-cli` (apex orchestration CLI)
+   - `agentics-cli` (developer CLI)
+   - `@agentics/sdk` (TypeScript SDK)
+   - `@agentics/ui` (Web UI)
+   - Partner APIs and third-party applications
 2. **Layer 4**: API Gateway, control plane (`agentics-platform`), and simulation repositories (`agentics-simulation-*`, `agentics-org-manifests`, `agentics-diligence-*`, `agentics-deployment-exporters`)
 3. **Layer 3**: Consolidation cores (`LLM-*-Core`) — note: `LLM-Research-Core` consumes simulation outputs but does not execute simulations
 4. **Layer 2**: Internal services (`services-*`)

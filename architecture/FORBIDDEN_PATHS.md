@@ -1,6 +1,6 @@
 # Forbidden Dependency Paths
 
-**Version**: 1.1
+**Version**: 1.2
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
 **Last Updated**: 2025-01-03
@@ -25,6 +25,8 @@ Violations of any path listed below represent architectural failures that must b
 | Class | Pattern | Examples |
 |-------|---------|----------|
 | Platform | `agentics-platform`, `agentics-cli` | Core product surface |
+| Platform CLI | `agentics-platform-cli` | Apex orchestration CLI |
+| External Consumers | `@agentics/sdk`, `@agentics/ui` | SDK and UI for third-party distribution |
 | Consolidation Cores | `LLM-*-Core` | Business logic domains |
 | Infrastructure | `infra-*` | Deployment, provisioning, operations |
 | Services | `services-*` | Internal microservices |
@@ -56,9 +58,60 @@ The CLI is a thin client that must never embed runtime business logic. It commun
 | `agentics-deployment-exporters` | CLI must not directly invoke export tooling |
 | `agentics-diligence-artifacts` | CLI must not directly invoke diligence generation |
 
-**Allowed**: `@agentics/shared` (types only), `agentics-platform` orchestration API (HTTP calls only)
+**Allowed**: `@agentics/shared` (types only), `@agentics/sdk`, `agentics-platform` orchestration API (HTTP calls only)
 
 **API Restriction**: The CLI may only call platform orchestration APIs exposed by `agentics-platform`. It must never directly trigger simulations, planners, runners, or diligence exporters. All such operations are mediated exclusively through platform-provided endpoints.
+
+---
+
+### 1b. Platform CLI (`agentics-platform-cli`)
+
+The Platform CLI is the apex orchestration CLI responsible for org, environment, simulation, and deployment governance. It has stricter dependency constraints than the developer CLI.
+
+| Forbidden Dependency | Rationale |
+|---------------------|-----------|
+| `LLM-Intelligence-Core` | Platform CLI must not import core runtime code |
+| `LLM-Security-Core` | Platform CLI must not import core runtime code |
+| `LLM-Automation-Core` | Platform CLI must not import core runtime code |
+| `LLM-Governance-Core` | Platform CLI must not import core runtime code |
+| `LLM-Data-Core` | Platform CLI must not import core runtime code |
+| `LLM-Ecosystem-Core` | Platform CLI must not import core runtime code |
+| `LLM-Research-Core` | Platform CLI must not import core runtime code |
+| `LLM-Interface-Core` | Platform CLI must not import core runtime code |
+| `services-*` | Platform CLI must not import service implementations |
+| `infra-*` | Platform CLI does not manage infrastructure directly |
+| `@agentics/sdk` | Platform CLI must NOT use SDK; uses HTTP API directly |
+| `@agentics/cli` | Platform CLI is independent; no cross-CLI dependencies |
+| `agentics-simulation-planner` | Platform CLI delegates via HTTP, never imports |
+| `agentics-simulation-runner` | Platform CLI delegates via HTTP, never imports |
+| `agentics-deployment-exporters` | Platform CLI delegates via HTTP, never imports |
+| `agentics-diligence-artifacts` | Platform CLI delegates via HTTP, never imports |
+
+**Allowed**: `@agentics/shared` (types only), `agentics-platform` orchestration API (HTTP calls only)
+
+**Exclusive Constraint**: The Platform CLI is the **sole** entry point for organization, environment, simulation, and deployment operations. No other CLI or external consumer may implement these commands. See [`CLI_COMMAND_OWNERSHIP.md`](CLI_COMMAND_OWNERSHIP.md) for command ownership rules.
+
+---
+
+### 1c. External Consumers (`@agentics/sdk`, `@agentics/ui`)
+
+External consumers are designed for third-party distribution and must remain isolated from internal platform implementation details.
+
+| Forbidden Dependency | Rationale |
+|---------------------|-----------|
+| `LLM-*-Core` | External consumers must not import core runtime code |
+| `services-*` | External consumers must not import service implementations |
+| `infra-*` | External consumers do not manage infrastructure |
+| `agentics-simulation-*` | External consumers cannot access simulation directly |
+| `agentics-diligence-*` | External consumers cannot access diligence directly |
+| `agentics-platform-cli` | SDK/UI must not depend on CLI packages |
+| `integrations-*` | External consumers access integrations via API only |
+
+**Allowed for SDK**: `@agentics/shared` (types only), third-party HTTP clients
+
+**Allowed for UI**: `@agentics/shared`, `@agentics/sdk`, React/Next.js, third-party UI libraries
+
+**Distribution Constraint**: External consumers may be published to public registries. They must not expose or embed internal implementation details.
 
 ---
 
@@ -197,22 +250,26 @@ Diligence and manifest tooling generates audit artifacts; it must not execute in
 ## Cross-Class Forbidden Path Matrix
 
 ```
-From ↓ / To →       │ CLI │ Platform │ Cores │ infra-* │ services-* │ integrations-* │ simulation │
-────────────────────┼─────┼──────────┼───────┼─────────┼────────────┼────────────────┼────────────│
-CLI                 │  -  │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✕      │
-Platform            │  ✕  │    -     │   ✓   │    ✕    │     ✕      │       ✕        │     △      │
-Cores               │  ✕  │    ✕     │   ✕   │    ✕    │     ✓      │       ✕        │     ✕      │
-infra-*             │  ✕  │    ✕     │   ✕   │    ✓    │     ✕      │       ✕        │     ✕      │
-services-*          │  ✕  │    ✕     │   ✕   │    ✕    │     ✓      │       ⇨        │     ✕      │
-integrations-*      │  ✕  │    ◇     │   ✕   │    ✕    │     ✕      │       ✓        │     ✕      │
-simulation          │  ✕  │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✓      │
-diligence           │  ✕  │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ▽      │
-────────────────────┴─────┴──────────┴───────┴─────────┴────────────┴────────────────┴────────────┘
+From ↓ / To →       │ CLI │ P-CLI │ SDK/UI │ Platform │ Cores │ infra-* │ services-* │ integrations-* │ simulation │
+────────────────────┼─────┼───────┼────────┼──────────┼───────┼─────────┼────────────┼────────────────┼────────────│
+CLI (agentics-cli)  │  -  │   ⇢   │   ✓    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✕      │
+Platform CLI        │  ✕  │   -   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✕      │
+SDK/UI              │  ✕  │   ✕   │   ◆    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✕      │
+Platform            │  ✕  │   ✕   │   ✕    │    -     │   ✓   │    ✕    │     ✕      │       ✕        │     △      │
+Cores               │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✓      │       ✕        │     ✕      │
+infra-*             │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✓    │     ✕      │       ✕        │     ✕      │
+services-*          │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✓      │       ⇨        │     ✕      │
+integrations-*      │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✓        │     ✕      │
+simulation          │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✓      │
+diligence           │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ▽      │
+────────────────────┴─────┴───────┴────────┴──────────┴───────┴─────────┴────────────┴────────────────┴────────────┘
 
 Legend:
   ✓  Allowed (within class or designated path)
   ✕  Forbidden (architectural violation)
   ◇  Allowed via Layer 4 API only (not direct import)
+  ◆  SDK may be used by UI; both may use @agentics/shared
+  ⇢  CLI may delegate to Platform CLI via spawn (forward())
   ⇨  Allowed invocation (services may invoke integrations when delegated by cores)
   △  Read-only query of simulation outputs (no execution)
   ▽  Consumes immutable simulation outputs only (no execution)
