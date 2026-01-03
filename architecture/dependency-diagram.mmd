@@ -1,0 +1,144 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#e1e5e8', 'primaryTextColor': '#1a1a1a', 'primaryBorderColor': '#666', 'lineColor': '#666', 'secondaryColor': '#f5f5f5', 'tertiaryColor': '#fff'}}}%%
+
+flowchart TB
+    subgraph L5["Layer 5: External Consumers"]
+        CLI["agentics-cli<br/>━━━━━━━━━━━━━━━<br/>Thin Client Only<br/>No Core Runtime"]
+        SDK["@agentics/sdk"]
+        UI["@agentics/ui"]
+        Partners["Partner APIs"]
+        LLMTools["LLM Tools<br/>(Claude Code, etc.)"]
+    end
+
+    subgraph L4["Layer 4: API Gateway & Simulation"]
+        subgraph GATEWAY["Control Plane"]
+            Platform["agentics-platform<br/>━━━━━━━━━━━━━━━<br/>Auth • Rate Limit<br/>Usage • Routing<br/>━━━━━━━━━━━━━━━<br/>NO BUSINESS LOGIC"]
+        end
+
+        subgraph CORE_ROUTER["Core Gateway Abstraction"]
+            Router["Request Router<br/>━━━━━━━━━━━━━━━<br/>Dispatch Only<br/>No Transformation"]
+        end
+
+        subgraph SIM_L4["Simulation Repositories"]
+            SimPlanner["agentics-simulation-planner<br/>━━━━━━━━━━━━━━━<br/>Scenario Planning"]
+            SimRunner["agentics-simulation-runner<br/>━━━━━━━━━━━━━━━<br/>Isolated Execution"]
+            Exporters["agentics-deployment-exporters<br/>━━━━━━━━━━━━━━━<br/>Artifact Export"]
+            Diligence["agentics-diligence-artifacts<br/>━━━━━━━━━━━━━━━<br/>Audit Evidence"]
+            OrgManifests["agentics-org-manifests<br/>━━━━━━━━━━━━━━━<br/>Org Definitions"]
+        end
+    end
+
+    subgraph L3["Layer 3: Consolidation Cores"]
+        subgraph CORES["Domain Logic Owners (ALL Business Logic)"]
+            Intelligence["LLM-Intelligence-Core<br/>Model Orchestration"]
+            Security["LLM-Security-Core<br/>Threat Detection"]
+            Automation["LLM-Automation-Core<br/>Workflow Execution"]
+            Governance["LLM-Governance-Core<br/>Policy Evaluation"]
+            Data["LLM-Data-Core<br/>Data Operations"]
+            Ecosystem["LLM-Ecosystem-Core<br/>Integration Logic"]
+            Research["LLM-Research-Core<br/>━━━━━━━━━━━━━━━<br/>CONSUMES Sim Outputs<br/>No Sim Execution"]
+            Interface["LLM-Interface-Core<br/>Conversations"]
+        end
+    end
+
+    subgraph L2["Layer 2: Services"]
+        subgraph SHARED_SVC["Shared Services"]
+            SvcQueue["services-queue"]
+            SvcCache["services-cache"]
+            SvcMetrics["services-metrics"]
+        end
+        subgraph CORE_SCOPED["Core-Scoped Services"]
+            SvcAuth["services-auth<br/>(Identity-scoped)"]
+        end
+    end
+
+    subgraph L1["Layer 1: State Substrate (NO LOGIC)"]
+        subgraph SUBSTRATE["Deterministic State Only"]
+            RuvVector["RuvVector<br/>━━━━━━━━━━━━━━━<br/>Vector Storage<br/>Similarity Search<br/>━━━━━━━━━━━━━━━<br/>STATE ONLY"]
+            Storage["Storage Backends<br/>━━━━━━━━━━━━━━━<br/>Persistence Only"]
+            Cache["Cache Infrastructure<br/>━━━━━━━━━━━━━━━<br/>Ephemeral State"]
+        end
+    end
+
+    subgraph INFRA["Infrastructure (PROVISIONING ONLY)"]
+        InfraK8s["infra-kubernetes<br/>━━━━━━━━━━━━━━━<br/>No App Logic"]
+        InfraTF["infra-terraform<br/>━━━━━━━━━━━━━━━<br/>No App Logic"]
+        InfraMon["infra-monitoring<br/>━━━━━━━━━━━━━━━<br/>No App Logic"]
+        InfraSec["infra-secrets<br/>━━━━━━━━━━━━━━━<br/>No App Logic"]
+    end
+
+    subgraph INT["Integrations (STATELESS EDGE ADAPTERS)"]
+        IntGH["integrations-github<br/>━━━━━━━━━━━━━━━<br/>No State Ownership"]
+        IntSlack["integrations-slack<br/>━━━━━━━━━━━━━━━<br/>No State Ownership"]
+        IntJira["integrations-jira<br/>━━━━━━━━━━━━━━━<br/>No State Ownership"]
+        IntDD["integrations-datadog<br/>━━━━━━━━━━━━━━━<br/>No State Ownership"]
+    end
+
+    %% Layer 5 → Layer 4 (HTTPS only)
+    CLI -->|"HTTPS<br/>API Calls Only"| Platform
+    SDK -->|"HTTPS"| Platform
+    UI -->|"HTTPS"| Platform
+    Partners -->|"HTTPS"| Platform
+    LLMTools -->|"HTTPS"| Platform
+
+    %% Platform → Router (internal dispatch)
+    Platform --> Router
+
+    %% Router → Cores (dispatch only, no logic)
+    Router -.->|"Dispatch"| Intelligence
+    Router -.->|"Dispatch"| Security
+    Router -.->|"Dispatch"| Automation
+    Router -.->|"Dispatch"| Governance
+    Router -.->|"Dispatch"| Data
+    Router -.->|"Dispatch"| Ecosystem
+    Router -.->|"Dispatch"| Research
+    Router -.->|"Dispatch"| Interface
+
+    %% Simulation → Platform (read-only API)
+    SimPlanner -.->|"L4 API<br/>Read Only"| Platform
+    SimRunner -.->|"L4 API<br/>Read Only"| Platform
+
+    %% Research consumes simulation outputs (not executes)
+    SimRunner -.->|"Outputs Only"| Research
+
+    %% Cores → Services
+    Intelligence --> SvcQueue
+    Intelligence --> SvcCache
+    Security --> SvcMetrics
+    Automation --> SvcAuth
+    Data --> SvcQueue
+    Research --> SvcMetrics
+
+    %% Services → Substrate
+    SvcQueue --> Storage
+    SvcCache --> Cache
+    SvcMetrics --> Storage
+
+    %% Cores → Substrate (direct access allowed)
+    Research --> RuvVector
+    Data --> Storage
+    Intelligence --> Cache
+
+    %% Integration → Platform (API only, stateless)
+    IntGH -.->|"L4 API Only"| Platform
+    IntSlack -.->|"L4 API Only"| Platform
+
+    %% Styling
+    classDef layer5 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef layer4 fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef layer4sim fill:#fff8e1,stroke:#fbc02d,stroke-width:2px,stroke-dasharray: 5 5
+    classDef layer3 fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    classDef layer2 fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef layer1 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef router fill:#ffecb3,stroke:#ff8f00,stroke-width:2px
+    classDef infra fill:#eceff1,stroke:#546e7a,stroke-width:2px
+    classDef integration fill:#e0f7fa,stroke:#00838f,stroke-width:2px
+
+    class CLI,SDK,UI,Partners,LLMTools layer5
+    class Platform layer4
+    class Router router
+    class SimPlanner,SimRunner,Exporters,Diligence,OrgManifests layer4sim
+    class Intelligence,Security,Automation,Governance,Data,Ecosystem,Research,Interface layer3
+    class SvcQueue,SvcCache,SvcMetrics,SvcAuth layer2
+    class RuvVector,Storage,Cache layer1
+    class InfraK8s,InfraTF,InfraMon,InfraSec infra
+    class IntGH,IntSlack,IntJira,IntDD integration
