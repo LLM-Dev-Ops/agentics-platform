@@ -14,7 +14,7 @@ import { ArchitectureParseError } from '../errors.js';
 const ARCHITECTURE_DIR = 'architecture';
 const POLICY_DOCS = [
   { name: 'DEPENDENCY_GRAPH.md', types: ['layer_boundary', 'dependency_rule'] as PolicyRuleType[] },
-  { name: 'FORBIDDEN_PATHS.md', types: ['forbidden_path'] as PolicyRuleType[] },
+  { name: 'FORBIDDEN_PATHS.md', types: ['forbidden_path', 'integration_surface'] as PolicyRuleType[] },
   { name: 'REPO_CLASSIFICATION.md', types: ['repo_classification'] as PolicyRuleType[] },
 ];
 
@@ -161,6 +161,54 @@ function parseRepoClassification(content: string): PolicyRule[] {
 }
 
 /**
+ * Parse integration surface rules from FORBIDDEN_PATHS.md
+ */
+function parseIntegrationSurfaceRules(content: string): PolicyRule[] {
+  const rules: PolicyRule[] = [];
+
+  // Find the Integration Surface section
+  const surfaceSection = content.match(/### 9\. Integration Surface Repositories[^#]*/s);
+  if (!surfaceSection) {
+    return rules;
+  }
+
+  const sectionContent = surfaceSection[0];
+
+  // Parse forbidden dependencies table
+  const tableRegex = /\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = tableRegex.exec(sectionContent)) !== null) {
+    const target = match[1]?.trim();
+    const rationale = match[2]?.trim();
+
+    // Skip header rows
+    if (target === 'Forbidden Dependency' || target?.includes('---') || !target) {
+      continue;
+    }
+
+    rules.push({
+      id: `IS-erp-surface-${target}`.replace(/[^a-zA-Z0-9-]/g, '-'),
+      type: 'integration_surface',
+      pattern: `erp-surface -> ${target}`,
+      description: rationale ?? `Integration surfaces must not depend on ${target}`,
+      severity: 'critical',
+    });
+  }
+
+  // Add explicit ERP mediation rule
+  rules.push({
+    id: 'IS-erp-mediation-required',
+    type: 'integration_surface',
+    pattern: 'ERP mediation via erp-surface',
+    description: 'All ERP system references must be mediated through erp-surface. Direct references to ERP systems from simulation or deployment repositories are forbidden.',
+    severity: 'critical',
+  });
+
+  return rules;
+}
+
+/**
  * Determine severity from description/rationale text
  */
 function determineSeverity(text: string): PolicySeverity {
@@ -191,6 +239,9 @@ function parseRulesFromMarkdown(content: string, _docName: string, types: Policy
         break;
       case 'repo_classification':
         rules.push(...parseRepoClassification(content));
+        break;
+      case 'integration_surface':
+        rules.push(...parseIntegrationSurfaceRules(content));
         break;
     }
   }

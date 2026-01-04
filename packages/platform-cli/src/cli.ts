@@ -16,6 +16,7 @@ import { envList, envSwitch, envCurrent } from './commands/env/index.js';
 import { artifactPlan, artifactInspect, artifactDiff, artifactList } from './commands/artifact/index.js';
 import { intentSubmit, intentStatus, intentApprove, intentReject, intentList, intentPromote } from './commands/intent/index.js';
 import { archLayers, archBoundaries, archRepos, archValidate } from './commands/architecture/index.js';
+import { erpDomains, erpEvents, erpReferences } from './commands/erp/index.js';
 import { formatError, getExitCode, PlatformCliError } from './errors.js';
 import { VERSION, CLI_NAME } from './index.js';
 import type { CliFlags } from './context/types.js';
@@ -372,6 +373,68 @@ archCmd
     try {
       const context = getMinimalContext({ ...program.opts(), ...options });
       await archValidate(path, context, { format: options.format, strict: options.strict });
+    } catch (error) {
+      handleError(error);
+    }
+  });
+
+// ============ ERP SURFACE COMMANDS ============
+const erpCmd = program.command('erp').description('ERP surface introspection (read-only)');
+
+erpCmd
+  .command('domains')
+  .description('List available ERP capability domains')
+  .option('--format <format>', 'Output format (json|table)')
+  .option('--domain <domain>', 'Filter by specific domain')
+  .option('--verbose', 'Show detailed capability information')
+  .action(async (options) => {
+    try {
+      const context = getMinimalContext({ ...program.opts(), ...options });
+      await erpDomains(context, {
+        format: options.format,
+        domain: options.domain,
+        verbose: options.verbose,
+      });
+    } catch (error) {
+      handleError(error);
+    }
+  });
+
+erpCmd
+  .command('events')
+  .description('List supported ERP events')
+  .option('--format <format>', 'Output format (json|table)')
+  .option('--domain <domain>', 'Filter by domain')
+  .option('--category <category>', 'Filter by event category')
+  .option('--direction <direction>', 'Filter by direction (inbound|outbound)')
+  .action(async (options) => {
+    try {
+      const context = getMinimalContext({ ...program.opts(), ...options });
+      await erpEvents(context, {
+        format: options.format,
+        domain: options.domain,
+        category: options.category,
+        direction: options.direction,
+      });
+    } catch (error) {
+      handleError(error);
+    }
+  });
+
+erpCmd
+  .command('references')
+  .description('Show simulations and intents referencing ERP surfaces')
+  .option('--format <format>', 'Output format (json|table)')
+  .option('--type <type>', 'Filter by reference type (simulation|intent|all)')
+  .option('--domain <domain>', 'Filter by domain')
+  .action(async (options) => {
+    try {
+      const context = getMinimalContext({ ...program.opts(), ...options });
+      await erpReferences(context, {
+        format: options.format,
+        type: options.type,
+        domain: options.domain,
+      });
     } catch (error) {
       handleError(error);
     }

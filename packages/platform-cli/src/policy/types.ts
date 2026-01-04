@@ -7,7 +7,8 @@ export type PolicyRuleType =
   | 'forbidden_path'
   | 'layer_boundary'
   | 'repo_classification'
-  | 'dependency_rule';
+  | 'dependency_rule'
+  | 'integration_surface';
 
 /** Severity levels for policy violations */
 export type PolicySeverity = 'critical' | 'high' | 'medium';
