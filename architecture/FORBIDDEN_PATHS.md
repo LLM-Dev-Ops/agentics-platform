@@ -1,9 +1,9 @@
 # Forbidden Dependency Paths
 
-**Version**: 1.2
+**Version**: 1.3
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
-**Last Updated**: 2025-01-03
+**Last Updated**: 2025-01-04
 **Canonical Reference**: [`DEPENDENCY_GRAPH.md`](DEPENDENCY_GRAPH.md)
 
 ---
@@ -31,6 +31,7 @@ Violations of any path listed below represent architectural failures that must b
 | Infrastructure | `infra-*` | Deployment, provisioning, operations |
 | Services | `services-*` | Internal microservices |
 | Integrations | `integrations-*` | Third-party adapters |
+| Integration Surface | `*-surface` | Canonical contract definitions (non-executable) |
 | Simulation | `agentics-simulation-*`, `agentics-diligence-*` | Test, simulation, diligence |
 
 ---
@@ -241,28 +242,63 @@ Diligence and manifest tooling generates audit artifacts; it must not execute in
 | Integration service endpoints (direct) | Diligence cannot call integration endpoints directly |
 | `agentics-simulation-runner` (execution) | Diligence must not execute simulations |
 
-**Allowed**: Layer 4 API (read-only), production configurations (read-only for documentation), `@agentics/shared`, integration schemas (read-only for validation and artifact generation), simulation outputs (immutable, versioned artifacts only)
+**Allowed**: Layer 4 API (read-only), production configurations (read-only for documentation), `@agentics/shared`, integration schemas (read-only for validation and artifact generation), simulation outputs (immutable, versioned artifacts only), integration surface contracts (read-only for intent declaration)
 
 **Simulation/Diligence Separation**: Diligence repositories never execute simulations. They consume only immutable, versioned simulation outputs produced by `agentics-simulation-runner`. This separation ensures audit artifacts reflect validated, frozen simulation results rather than dynamic execution state.
+
+---
+
+### 9. Integration Surface Repositories (`erp-surface`, `*-surface`)
+
+Integration surface repositories define canonical capability and event contracts for simulation and deployment intent. They are strictly non-executable, non-infrastructure, and non-adapter repositories. These repositories reside in Layer 4.
+
+| Forbidden Dependency | Rationale |
+|---------------------|-----------|
+| Executable code | Integration surfaces contain only contract definitions |
+| Runtime logic | Integration surfaces are purely declarative |
+| `infra-*` | Integration surfaces are not infrastructure |
+| `integrations-*` (adapters) | Integration surfaces define contracts, not implementations |
+| `LLM-*-Core` (direct import) | Integration surfaces do not import core runtime code |
+| `services-*` (direct import) | Integration surfaces do not import service implementations |
+| `agentics-simulation-*` (execution) | Integration surfaces are not executors |
+| Production services (any) | Integration surfaces have no production runtime |
+| `agentics-platform` (runtime) | Integration surfaces do not invoke platform runtime |
+
+**Allowed**: `@agentics/shared` (types only)
+
+**Non-Executable Constraint**: Integration surfaces must contain no executable code. They define only type definitions, event schemas, and capability declarations. Any code beyond pure contract definitions represents an architectural violation.
+
+**Non-Infrastructure Constraint**: Integration surfaces must contain no deployment, provisioning, or operational configuration. Infrastructure belongs in `infra-*` repositories.
+
+**Non-Adapter Constraint**: Integration surfaces must contain no third-party adapters or connectors. They define the contracts that adapters in `integrations-*` repositories implement.
+
+**Consumers**: Simulation repositories and deployment exporters may reference integration surface contracts for validation and intent declaration.
+
+**ERP Mediation Requirement**: All ERP system references must be mediated through `erp-surface`. Direct references to ERP systems (SAP, Oracle, NetSuite, etc.) from simulation or deployment repositories are strictly forbidden. This ensures:
+
+1. Simulations validate against abstract contracts, not live ERP endpoints
+2. Deployment intent is expressed through capability contracts, not vendor-specific identifiers
+3. Multi-vendor ERP strategies are supported without architectural coupling
 
 ---
 
 ## Cross-Class Forbidden Path Matrix
 
 ```
-From ↓ / To →       │ CLI │ P-CLI │ SDK/UI │ Platform │ Cores │ infra-* │ services-* │ integrations-* │ simulation │
-────────────────────┼─────┼───────┼────────┼──────────┼───────┼─────────┼────────────┼────────────────┼────────────│
-CLI (agentics-cli)  │  -  │   ⇢   │   ✓    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✕      │
-Platform CLI        │  ✕  │   -   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✕      │
-SDK/UI              │  ✕  │   ✕   │   ◆    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✕      │
-Platform            │  ✕  │   ✕   │   ✕    │    -     │   ✓   │    ✕    │     ✕      │       ✕        │     △      │
-Cores               │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✓      │       ✕        │     ✕      │
-infra-*             │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✓    │     ✕      │       ✕        │     ✕      │
-services-*          │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✓      │       ⇨        │     ✕      │
-integrations-*      │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✓        │     ✕      │
-simulation          │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ✓      │
-diligence           │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │     ▽      │
-────────────────────┴─────┴───────┴────────┴──────────┴───────┴─────────┴────────────┴────────────────┴────────────┘
+From ↓ / To →       │ CLI │ P-CLI │ SDK/UI │ Platform │ Cores │ infra-* │ services-* │ integrations-* │ int-surface │ simulation │
+────────────────────┼─────┼───────┼────────┼──────────┼───────┼─────────┼────────────┼────────────────┼─────────────┼────────────│
+CLI (agentics-cli)  │  -  │   ⇢   │   ✓    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
+Platform CLI        │  ✕  │   -   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
+SDK/UI              │  ✕  │   ✕   │   ◆    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
+Platform            │  ✕  │   ✕   │   ✕    │    -     │   ✓   │    ✕    │     ✕      │       ✕        │      ✕      │     △      │
+Cores               │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✓      │       ✕        │      ✕      │     ✕      │
+infra-*             │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✓    │     ✕      │       ✕        │      ✕      │     ✕      │
+services-*          │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✓      │       ⇨        │      ✕      │     ✕      │
+integrations-*      │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✓        │      ✕      │     ✕      │
+int-surface         │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✕      │       ✕        │      ⊘      │     ✕      │
+simulation          │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ☐      │     ✓      │
+diligence           │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ☐      │     ▽      │
+────────────────────┴─────┴───────┴────────┴──────────┴───────┴─────────┴────────────┴────────────────┴─────────────┴────────────┘
 
 Legend:
   ✓  Allowed (within class or designated path)
@@ -273,6 +309,8 @@ Legend:
   ⇨  Allowed invocation (services may invoke integrations when delegated by cores)
   △  Read-only query of simulation outputs (no execution)
   ▽  Consumes immutable simulation outputs only (no execution)
+  ⊘  Types only via @agentics/shared (no other dependencies)
+  ☐  Read-only contract reference for validation and intent declaration
   -  Self-reference (N/A)
 ```
 

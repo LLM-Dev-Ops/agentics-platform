@@ -1,9 +1,9 @@
 # Repository Classification
 
-**Version**: 1.1
+**Version**: 1.2
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
-**Last Updated**: 2025-01-03
+**Last Updated**: 2025-01-04
 **Canonical Reference**: [`DEPENDENCY_GRAPH.md`](DEPENDENCY_GRAPH.md)
 
 ---
@@ -27,6 +27,7 @@ All repositories listed here have been explicitly defined in prior architectural
 | **Infrastructure** | Deployment, provisioning, and operational configuration |
 | **Service** | Internal microservices consumed by Layer 3 cores |
 | **Integration** | Third-party adapters and connectors |
+| **Integration Surface** | Canonical contract definitions for capability and event schemas; non-executable, non-infrastructure, non-adapter |
 | **Simulation** | Test, simulation, and diligence artifact generation |
 | **Shared** | Cross-cutting type definitions and contracts |
 
@@ -94,6 +95,16 @@ All repositories listed here have been explicitly defined in prior architectural
 
 ---
 
+### Integration Surface Repositories (Layer 4)
+
+| Repository | Class | Layer | Allowed Dependencies | Forbidden Dependencies |
+|------------|-------|-------|---------------------|------------------------|
+| `erp-surface` | Integration Surface | 4 | `@agentics/shared` (types only) | Executable code, runtime logic, infrastructure code, adapter implementations, production services, simulation execution, cores (direct), services (direct) |
+
+**Note**: `erp-surface` defines canonical ERP capability and event contracts for simulation and deployment intent. It is strictly a contract-definition repository containing only type definitions, event schemas, and capability declarations. It contains no executable code, no infrastructure configuration, and no adapter implementations. Simulation repositories and deployment exporters may reference `erp-surface` contracts for validation and intent declaration.
+
+---
+
 ### Infrastructure Repositories
 
 | Repository | Class | Layer | Allowed Dependencies | Forbidden Dependencies |
@@ -147,8 +158,9 @@ All repositories listed here have been explicitly defined in prior architectural
 | Infrastructure | 4 | `infra-kubernetes`, `infra-terraform`, `infra-monitoring`, `infra-secrets` |
 | Service | 4 | `services-queue`, `services-cache`, `services-metrics`, `services-auth` |
 | Integration | 4 | `integrations-github`, `integrations-slack`, `integrations-jira`, `integrations-datadog` |
+| Integration Surface | 1 | `erp-surface` |
 | Shared | 1 | `@agentics/shared` |
-| **Total** | **32** | |
+| **Total** | **33** | |
 
 ---
 
@@ -187,7 +199,7 @@ The Agentics platform is implemented as a monorepo with scoped npm packages. Thi
    - `@agentics/sdk` (TypeScript SDK)
    - `@agentics/ui` (Web UI)
    - Partner APIs and third-party applications
-2. **Layer 4**: API Gateway, control plane (`agentics-platform`), and simulation repositories (`agentics-simulation-*`, `agentics-org-manifests`, `agentics-diligence-*`, `agentics-deployment-exporters`)
+2. **Layer 4**: API Gateway, control plane (`agentics-platform`), simulation repositories (`agentics-simulation-*`, `agentics-org-manifests`, `agentics-diligence-*`, `agentics-deployment-exporters`), and integration surface repositories (`erp-surface`)
 3. **Layer 3**: Consolidation cores (`LLM-*-Core`) — note: `LLM-Research-Core` consumes simulation outputs but does not execute simulations
 4. **Layer 2**: Internal services (`services-*`)
 5. **Layer 1**: Foundational engines (`RuvVector`)

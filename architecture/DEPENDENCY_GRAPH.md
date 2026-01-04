@@ -1,9 +1,9 @@
 # Agentics Platform Dependency Graph
 
-**Version**: 1.3
+**Version**: 1.4
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
-**Last Updated**: 2025-01-03
+**Last Updated**: 2025-01-04
 
 ---
 
@@ -643,55 +643,113 @@ Beyond the five-layer architecture, repositories are classified into distinct cl
 
 **Layer Placement**: All simulation repositories reside in Layer 4. `LLM-Research-Core` (Layer 3) consumes simulation outputs for research analytics but does not execute simulations directly.
 
+---
+
+### Integration Surface Repositories
+
+**Naming Convention**: `*-surface`
+
+**Description**: Contract-definition repositories that declare canonical capability and event schemas for simulation and deployment intent. Integration surfaces are strictly non-executable, non-infrastructure, and non-adapter repositories. They contain only type definitions, event schemas, and capability declarations.
+
+| Repository | Description |
+|------------|-------------|
+| `erp-surface` | Canonical ERP capability and event contracts for simulation and deployment intent |
+
+**Layer Placement**: Integration surface repositories reside in Layer 4. They are consumed by simulation repositories and deployment exporters for contract validation and intent declaration.
+
 **Allowed Dependencies**:
-- Layer 4 API (read-only operations, simulation endpoints)
-- `@agentics/shared` (type definitions)
-- LLM-Research-Core (through Layer 4 API only)
-- Production telemetry (read-only, with audit logging)
-- Production schema snapshots (versioned, immutable)
+- `@agentics/shared` (type definitions only)
 
 **Forbidden Dependencies**:
-- Production databases (write access)
-- Production services (mutation operations)
-- Infrastructure repositories for production environments
-- Direct Layer 3 core imports
-- Live integration adapters (`integrations-*` runtime code)
-- Integration service endpoints (direct calls)
-
-**Integrations Boundary**: Simulation repositories may reference integration schema definitions and configuration templates (read-only) for validation and artifact generation. They must never import live integration adapters or depend on integration runtime state.
+- Executable code or runtime logic
+- Infrastructure repositories (`infra-*`)
+- Adapter implementations (`integrations-*`)
+- Production services
+- Simulation execution (import only, no execution)
+- Layer 3 cores (direct import)
+- Layer 2 services (direct import)
 
 **Isolation Guarantees**:
 
-1. **Write Isolation**: Simulation repositories cannot write to production databases or modify production state under any circumstances.
+1. **Non-Executable**: Integration surfaces contain no executable code. They define contracts only.
 
-2. **Execution Isolation**: Simulation code paths are never invoked by production services. Build configurations enforce this separation.
+2. **Non-Infrastructure**: Integration surfaces contain no deployment, provisioning, or operational configuration.
 
-3. **Network Isolation**: Simulation environments operate in separate network segments from production when deployed.
+3. **Non-Adapter**: Integration surfaces contain no third-party adapters or connectors. They define the contracts that adapters implement.
 
-4. **Data Isolation**: Simulation data is stored in dedicated namespaces and cannot be accessed by production queries.
+4. **Contract-Only**: All content is limited to type definitions, event schemas, capability declarations, and documentation.
 
-5. **Credential Isolation**: Simulation environments use distinct credential sets that have no write permissions to production resources.
+**ERP Abstraction Mediation**:
 
-**Compliance Note**: This isolation model satisfies SOC 2 Type II control requirements for environment separation and is designed to meet HIPAA and financial services regulatory expectations for test/production isolation.
+The `erp-surface` repository serves as the **canonical abstraction layer** for all ERP system references. This mediation pattern ensures:
+
+1. **No Direct ERP References**: Simulations and deployments must **never** reference ERP systems directly. All ERP capabilities, events, and contracts are accessed exclusively through `erp-surface`.
+
+2. **Contract-Based Coupling**: Rather than coupling to specific ERP implementations (SAP, Oracle, NetSuite, etc.), simulation and deployment artifacts reference abstract capability contracts defined in `erp-surface`.
+
+3. **Intent Declaration**: Deployment exporters declare ERP integration intent through `erp-surface` contracts, not through direct ERP system identifiers or endpoints.
+
+4. **Simulation Fidelity**: Simulation planners and runners validate against `erp-surface` schemas to ensure ERP-related scenarios are architecturally compliant without requiring live ERP connections.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    ERP ABSTRACTION MEDIATION                        │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────────┐         ┌─────────────────┐                   │
+│  │   Simulation    │         │   Deployment    │                   │
+│  │   Repositories  │         │    Exporters    │                   │
+│  └────────┬────────┘         └────────┬────────┘                   │
+│           │                           │                             │
+│           │  ALLOWED: Contract refs   │                             │
+│           ▼                           ▼                             │
+│  ┌─────────────────────────────────────────────┐                   │
+│  │              erp-surface                     │  ← Layer 4        │
+│  │   (Canonical ERP Capability Contracts)       │                   │
+│  │   • Type definitions                         │                   │
+│  │   • Event schemas                            │                   │
+│  │   • Capability declarations                  │                   │
+│  └─────────────────────────────────────────────┘                   │
+│                         │                                           │
+│                         │  DEFINES contracts for                    │
+│                         ▼                                           │
+│  ┌─────────────────────────────────────────────┐                   │
+│  │         integrations-erp-* (future)         │  ← N/A Layer      │
+│  │      (Actual ERP adapter implementations)    │                   │
+│  └─────────────────────────────────────────────┘                   │
+│                                                                     │
+│  FORBIDDEN PATHS:                                                   │
+│  ━━━━━━━━━━━━━━━━                                                   │
+│  • Simulation ───✕──→ ERP Systems (direct)                         │
+│  • Deployment ───✕──→ ERP Systems (direct)                         │
+│  • Any Layer 4 ───✕──→ ERP Runtime (direct)                        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Rationale**: This abstraction pattern enables simulation and deployment planning without runtime ERP dependencies, supports multi-vendor ERP strategies through contract polymorphism, and isolates ERP implementation details from architectural artifacts.
 
 ---
 
 ### Repository Class Dependency Matrix
 
 ```
-                    │ Platform │ infra-* │ services-* │ integrations-* │ simulation │
-────────────────────┼──────────┼─────────┼────────────┼────────────────┼────────────│
-Platform            │    -     │    ✕    │     ✕      │       ✕        │     ✕      │
-infra-*             │    ✕     │    ✓    │     ✕      │       ✕        │     ✕      │
-services-*          │    ✕     │    ✕    │     ✓      │       ✕        │     ✕      │
-integrations-*      │    ◇     │    ✕    │     ✕      │       ✓        │     ✕      │
-simulation          │    ◇     │    ✕    │     ✕      │       ✕        │     ✓      │
-────────────────────┴──────────┴─────────┴────────────┴────────────────┴────────────┘
+                    │ Platform │ infra-* │ services-* │ integrations-* │ int-surface │ simulation │
+────────────────────┼──────────┼─────────┼────────────┼────────────────┼─────────────┼────────────│
+Platform            │    -     │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
+infra-*             │    ✕     │    ✓    │     ✕      │       ✕        │      ✕      │     ✕      │
+services-*          │    ✕     │    ✕    │     ✓      │       ✕        │      ✕      │     ✕      │
+integrations-*      │    ◇     │    ✕    │     ✕      │       ✓        │      ☐      │     ✕      │
+int-surface         │    ✕     │    ✕    │     ✕      │       ✕        │      ⊘      │     ✕      │
+simulation          │    ◇     │    ✕    │     ✕      │       ✕        │      ☐      │     ✓      │
+────────────────────┴──────────┴─────────┴────────────┴────────────────┴─────────────┴────────────┘
 
 Legend:
   ✓  Allowed (within class or downward)
   ✕  Forbidden
   ◇  Allowed via Layer 4 API only (not direct import)
+  ⊘  Types only via @agentics/shared (no other dependencies)
+  ☐  Read-only contract reference for validation and intent declaration
   -  Self-reference (N/A)
 ```
 
@@ -816,6 +874,12 @@ The Agentics platform is implemented as a monorepo. See [`REPO_CLASSIFICATION.md
 | `agentics-deployment-exporters` | Export tools for deployment configurations and diligence documentation |
 | `agentics-diligence-artifacts` | Generated artifacts for buyer diligence, audit reports, and compliance documentation |
 | `agentics-org-manifests` | Organization-level manifest definitions and templates |
+
+### Integration Surface Repositories (Layer 4)
+
+| Repository | Description |
+|------------|-------------|
+| `erp-surface` | Canonical ERP capability and event contracts for simulation and deployment intent |
 
 ### Infrastructure Repositories (`infra-*`)
 

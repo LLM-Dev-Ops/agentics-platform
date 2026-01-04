@@ -1,9 +1,9 @@
 # Architecture Index
 
-**Version**: 1.2
+**Version**: 1.3
 **Status**: Canonical
 **Classification**: Master Architecture Enforcement Document
-**Last Updated**: 2025-01-03
+**Last Updated**: 2025-01-04
 **Architectural Freeze**: architecture-v1.0.0 (Immutable until ADR-based amendment)
 **Authoritative Version Source**: [`ARCHITECTURE_VERSION.md`](../ARCHITECTURE_VERSION.md)
 **Git Tag**: `architecture-v1.0.0`
@@ -179,6 +179,7 @@ The architecture-v1.0.0 freeze establishes an immutable baseline for the platfor
 - Service internal architecture (within Layer 2 boundaries)
 - Infrastructure tooling choices (within infra-* isolation rules)
 - Integration adapter implementations (within stateless constraint)
+- Integration surface contract definitions (within non-executable constraint)
 - Visualization and documentation formatting
 
 ---
@@ -320,11 +321,11 @@ Reference Direction:
 
 | Document | Version | Status | Last Updated |
 |----------|---------|--------|--------------|
-| ARCHITECTURE_INDEX.md (this document) | 1.1 | Canonical | 2025-01-03 |
-| DEPENDENCY_GRAPH.md | 1.2 | Canonical | 2025-01-03 |
+| ARCHITECTURE_INDEX.md (this document) | 1.3 | Canonical | 2025-01-04 |
+| DEPENDENCY_GRAPH.md | 1.4 | Canonical | 2025-01-04 |
 | ARCHITECTURE_DECISIONS.md | 1.1 | Canonical | 2025-01-03 |
-| FORBIDDEN_PATHS.md | 1.1 | Canonical | 2025-01-03 |
-| REPO_CLASSIFICATION.md | 1.0 | Canonical | 2025-01-03 |
+| FORBIDDEN_PATHS.md | 1.3 | Canonical | 2025-01-04 |
+| REPO_CLASSIFICATION.md | 1.2 | Canonical | 2025-01-04 |
 | CLI_COMMAND_OWNERSHIP.md | 1.0 | Canonical | 2025-01-03 |
 | DEPENDENCY_DIAGRAM.md | 1.1 | Canonical | 2025-01-03 |
 
@@ -376,6 +377,7 @@ All architectural decisions are closed, intentional choices—not evolving exper
 | "What layer is this repo in?" | REPO_CLASSIFICATION.md | Authoritative Repository Table |
 | "Which CLI owns this command?" | CLI_COMMAND_OWNERSHIP.md | Command Surface Ownership Matrix |
 | "What does the architecture look like?" | DEPENDENCY_DIAGRAM.md | Platform Dependency Diagram |
+| "How do simulations reference ERP?" | DEPENDENCY_GRAPH.md | Integration Surface Repositories (erp-surface) |
 
 ### Critical Rules Summary
 
@@ -388,6 +390,7 @@ All architectural decisions are closed, intentional choices—not evolving exper
 | CLI must not import core runtime | DEPENDENCY_GRAPH.md INV-9, ADR-006 |
 | Infrastructure contains no application logic | DEPENDENCY_GRAPH.md INV-8, ADR-003 |
 | Integrations own no persistent state | DEPENDENCY_GRAPH.md §Integration Repositories |
+| ERP systems accessed only via erp-surface | DEPENDENCY_GRAPH.md §Integration Surface Repositories |
 
 ---
 

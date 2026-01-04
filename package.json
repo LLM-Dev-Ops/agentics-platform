@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "claude-flow": "^2.7.47",
+    "init": "^0.1.2",
     "pg": "^8.16.3"
   }
 }
