@@ -1,8 +1,66 @@
 # CLI Authentication Flow
 
-## Overview
+**Version**: 1.1
+**Status**: Canonical
+**Classification**: Security & Authentication Architecture
+**Last Updated**: 2025-01-05
+**Governing Constraint**: ADR-006 (CLI as Thin Client)
 
-The Agentics CLI uses a browser-based device authorization flow for authentication, similar to the patterns used by Claude CLI and GitHub CLI. This document describes the complete end-to-end authentication sequence.
+---
+
+## Executive Summary
+
+The Agentics CLI uses a browser-based device authorization flow for authentication. This document describes the complete end-to-end authentication sequence, URL ownership rules, and the architectural constraints that prevent domain misconfiguration.
+
+**Critical Constraint**: All URLs MUST use the canonical `agentics.dev` domain. Implicit defaults and inferred domains are prohibited in production to prevent misconfiguration (e.g., `agentics.org` vs `agentics.dev`).
+
+---
+
+## URL Ownership and Configuration
+
+### Canonical Domain
+
+The canonical domain for all Agentics Platform services is:
+
+```
+agentics.dev
+```
+
+This domain is defined in a single location (`@agentics/shared/constants/urls.ts`) and propagated to all packages.
+
+### Production URLs
+
+| Service | URL | Environment Variable |
+|---------|-----|---------------------|
+| Platform UI | `https://app.agentics.dev` | `AGENTICS_PLATFORM_URL` or `PLATFORM_URL` |
+| API Gateway | `https://api.agentics.dev/v1` | `AGENTICS_API_URL` or `AGENTICS_ENDPOINT` |
+| Marketing Site | `https://agentics.dev` | N/A |
+
+### Environment Variable Priority
+
+For each URL type, environment variables are checked in priority order:
+
+**Platform URL (UI)**:
+1. `AGENTICS_PLATFORM_URL` (preferred)
+2. `PLATFORM_URL` (legacy)
+3. Default pattern (development only)
+
+**API URL**:
+1. `AGENTICS_API_URL` (preferred)
+2. `AGENTICS_ENDPOINT` (legacy)
+3. `NEXT_PUBLIC_API_URL` (UI package)
+4. Default pattern (development only)
+
+### Fail-Fast Behavior
+
+**In Production** (`NODE_ENV !== 'development'`):
+- If no environment variable is set, the API server will throw an error at startup
+- The CLI will reject URLs with non-canonical domains
+- The UI will log an error and fall back to production pattern
+
+**Rationale**: Silent fallbacks have caused production incidents where URLs resolved to wrong domains (e.g., `agentics.org` instead of `agentics.dev`). Explicit configuration prevents this class of errors.
+
+---
 
 ## Architecture
 
@@ -20,6 +78,8 @@ The Agentics CLI uses a browser-based device authorization flow for authenticati
                                             └───────────────────┘
 ```
 
+---
+
 ## Authentication Sequence
 
 ```
@@ -31,70 +91,88 @@ CLI                         API                      Platform UI              Su
  │  {session_code, device_code, verification_url}         │                      │
  │  <─────────────────────────                            │                      │
  │                           │                            │                      │
- │  2. Print URL & open browser                           │                      │
+ │  2. Validate URL domain   │                            │                      │
+ │  (MUST be agentics.dev)   │                            │                      │
+ │                           │                            │                      │
+ │  3. Print URL & open browser                           │                      │
  │  ─────────────────────────────────────────────────────>│                      │
  │                           │                            │                      │
- │                           │  3. GET /v1/cli/auth/sessions/verify/{code}       │
+ │                           │  4. GET /v1/cli/auth/sessions/verify/{code}       │
  │                           │<───────────────────────────│                      │
  │                           │                            │                      │
  │                           │  {session_info}            │                      │
  │                           │────────────────────────────>                      │
  │                           │                            │                      │
- │                           │                            │  4. User signs in    │
+ │                           │                            │  5. User signs in    │
  │                           │                            │─────────────────────>│
  │                           │                            │                      │
  │                           │                            │  {JWT token}         │
  │                           │                            │<─────────────────────│
  │                           │                            │                      │
- │                           │  5. POST /v1/cli/auth/sessions/{code}/authorize   │
+ │                           │  6. POST /v1/cli/auth/sessions/{code}/authorize   │
  │                           │<───────────────────────────│ (with JWT Bearer)    │
  │                           │                            │                      │
  │                           │  {api_key}                 │                      │
  │                           │────────────────────────────>                      │
  │                           │                            │                      │
- │                           │                            │  6. Display API key  │
+ │                           │                            │  7. Display API key  │
  │                           │                            │  (copy to clipboard) │
  │                           │                            │                      │
- │  7. GET /v1/cli/auth/sessions/{device_code} (polling)  │                      │
+ │  8. GET /v1/cli/auth/sessions/{device_code} (polling)  │                      │
  │  ─────────────────────────>                            │                      │
  │                           │                            │                      │
  │  {status: "completed", api_key}                        │                      │
  │  <─────────────────────────                            │                      │
  │                           │                            │                      │
- │  8. Store API key locally │                            │                      │
+ │  9. Store API key locally │                            │                      │
  │                           │                            │                      │
 ```
 
-## Components
+---
 
-### 1. CLI (`packages/cli/src/commands/login.ts`)
+## Component Configuration
 
-**Responsibilities:**
-- Initiates authentication by creating a session via API
-- Displays the verification URL to the user
-- Optionally opens the browser automatically
-- Polls the API for session completion
-- Stores the received API key in `~/.agentics/credentials.json`
+### 1. CLI (`packages/cli/src/config.ts`)
 
-**Key Configuration:**
-- `AGENTICS_ENDPOINT`: API endpoint (default: `https://api.agentics.dev/v1`)
-- `AGENTICS_API_KEY`: Can be set directly to skip browser auth
-
-**Commands:**
-```bash
-# Browser-based auth (default, recommended)
-agentics login
-
-# Browser auth without auto-opening
-agentics login --no-browser
-
-# Direct API key auth
-agentics login --api-key <key>
+**Canonical Domain Definition**:
+```typescript
+export const AGENTICS_DOMAIN = 'agentics.dev';
+export const DEFAULT_ENDPOINT = `https://api.${AGENTICS_DOMAIN}/v1`;
+export const DEFAULT_PLATFORM_URL = `https://app.${AGENTICS_DOMAIN}`;
 ```
+
+**URL Validation** (`packages/cli/src/commands/login.ts`):
+- Validates verification URL uses `agentics.dev` domain
+- Rejects URLs with incorrect domains (e.g., `agentics.org`)
+- Warns on localhost URLs (development only)
 
 ### 2. API Backend (`packages/api/src/routes/cli-auth.ts`)
 
-**Endpoints:**
+**Configuration**:
+```typescript
+const AGENTICS_DOMAIN = 'agentics.dev';
+const PLATFORM_URL_ENV_VARS = ['AGENTICS_PLATFORM_URL', 'PLATFORM_URL'];
+```
+
+**Fail-Fast Behavior**:
+- In production, throws error if no environment variable is set
+- In development, uses default pattern
+- Logs configured URL at startup
+
+### 3. Platform UI (`packages/ui/src/app/cli/auth/page.tsx`)
+
+**Configuration**:
+```typescript
+const AGENTICS_DOMAIN = 'agentics.dev';
+```
+
+**URL Parameter Support**:
+- Accepts both `?code=` (preferred) and `?session=` (legacy) parameters
+- Normalizes API URL to prevent double `/v1` prefix
+
+---
+
+## API Endpoints
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
@@ -104,134 +182,165 @@ agentics login --api-key <key>
 | POST | `/v1/cli/auth/sessions/:session_code/authorize` | JWT | Authorize and generate API key |
 | POST | `/v1/cli/auth/sessions/:session_code/cancel` | None | Cancel pending session |
 
-**Key Configuration:**
-- `PLATFORM_URL`: UI base URL (default: `https://app.agentics.dev`)
-
-**Database Table:** `cli_auth_sessions`
-- Stores session state, codes, and temporary API key for one-time retrieval
-
-### 3. Platform UI (`packages/ui/src/app/cli/auth/page.tsx`)
-
-**Route:** `/cli/auth?code=<session_code>`
-
-**Responsibilities:**
-- Verifies the session code is valid
-- Prompts user to sign in (if not authenticated)
-- Displays CLI details and requested permissions
-- Allows user to authorize or cancel
-- Generates and displays API key (shown once)
-
-**Key Configuration:**
-- `NEXT_PUBLIC_API_URL`: API endpoint (default: `http://localhost:8000`)
-
-## Security Considerations
-
-1. **Session Codes**:
-   - `session_code`: 8-character user-visible code for verification
-   - `device_code`: 32-character secret for CLI polling
-
-2. **API Key Generation**:
-   - Format: `agentics_sk_cli_<random_hex_32>`
-   - Stored hashed in database
-   - Plaintext returned once to CLI, then cleared
-
-3. **Session Expiry**:
-   - Sessions expire after 10 minutes
-   - Polling interval: 5 seconds
-
-4. **JWT Validation**:
-   - Authorization requires valid Supabase JWT
-   - API keys cannot authorize sessions (prevents key escalation)
+---
 
 ## Environment Variables
 
-### API Server
+### API Server (Required in Production)
+
 ```bash
-PLATFORM_URL=https://app.agentics.dev    # UI URL for verification links
-DATABASE_URL=...                          # PostgreSQL connection
-SUPABASE_JWT_SECRET=...                  # For JWT verification
+# Primary (preferred)
+AGENTICS_PLATFORM_URL=https://app.agentics.dev
+
+# Or legacy name
+PLATFORM_URL=https://app.agentics.dev
+
+# Database and Auth
+DATABASE_URL=postgresql://...
+SUPABASE_JWT_SECRET=...
 ```
 
-### Platform UI
+### Platform UI (Required in Production)
+
 ```bash
-NEXT_PUBLIC_API_URL=https://api.agentics.dev/v1    # API endpoint
-NEXT_PUBLIC_SUPABASE_URL=...                       # Supabase URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...                  # Supabase anon key
+NEXT_PUBLIC_API_URL=https://api.agentics.dev/v1
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-### CLI
+### CLI (Optional Override)
+
 ```bash
-AGENTICS_ENDPOINT=https://api.agentics.dev/v1     # Override default endpoint
-AGENTICS_API_KEY=agentics_sk_...                  # Direct API key auth
+AGENTICS_ENDPOINT=https://api.agentics.dev/v1
+AGENTICS_API_KEY=agentics_sk_...  # Skip browser auth
 ```
+
+---
+
+## Security Considerations
+
+1. **Domain Validation**: CLI rejects URLs not on `agentics.dev` domain
+2. **Session Codes**: 8-character user-visible code for verification
+3. **Device Codes**: 32-character secret for CLI polling
+4. **API Key Format**: `agentics_sk_cli_<random_hex_32>`
+5. **One-Time Key Display**: API key shown once, then cleared from server
+6. **Session Expiry**: 10 minutes
+7. **JWT Required**: Authorization requires valid Supabase JWT (not API key)
+
+---
 
 ## Troubleshooting
 
-### Common Issues
+### "Verification URL uses incorrect domain"
 
-1. **"Session Not Found" Error**
-   - Session code is invalid or already used
-   - Solution: Run `agentics login` again
+**Symptom**: CLI shows error about wrong domain (e.g., `agentics.org`)
 
-2. **"Session Expired" Error**
-   - Authentication took longer than 10 minutes
-   - Solution: Run `agentics login` again
+**Cause**: API server's `AGENTICS_PLATFORM_URL` or `PLATFORM_URL` is misconfigured
 
-3. **Verification URL Points to Wrong Host**
-   - API server has incorrect `PLATFORM_URL`
-   - Solution: Set `PLATFORM_URL=https://app.agentics.dev`
+**Fix**: Set the correct environment variable on the API server:
+```bash
+AGENTICS_PLATFORM_URL=https://app.agentics.dev
+```
 
-4. **API Calls Fail with 404**
-   - `NEXT_PUBLIC_API_URL` may have incorrect path
-   - Solution: Ensure it's set to `https://api.agentics.dev/v1`
+### "Platform URL not configured"
 
-5. **Browser Doesn't Open**
-   - Use `agentics login --no-browser` and open URL manually
+**Symptom**: API server fails to start with this error
 
-### Validation Steps
+**Cause**: No `AGENTICS_PLATFORM_URL` or `PLATFORM_URL` environment variable in production
 
-1. **Test Session Creation:**
-   ```bash
-   curl -X POST https://api.agentics.dev/v1/cli/auth/sessions \
-     -H "Content-Type: application/json" \
-     -d '{"cli_name": "test", "scopes": ["platform:read"]}'
-   ```
-   Should return `verification_url` pointing to `https://app.agentics.dev/cli/auth?code=...`
+**Fix**: Set the environment variable before starting the server:
+```bash
+export AGENTICS_PLATFORM_URL=https://app.agentics.dev
+npm start
+```
 
-2. **Test UI Route:**
-   Open `https://app.agentics.dev/cli/auth?code=TESTCODE` - should show "Session Not Found" (expected for invalid code)
+### "Session Not Found" in Browser
 
-3. **Full Flow Test:**
-   ```bash
-   agentics login --no-browser
-   # Copy URL, open in browser, complete auth
-   # Should complete within 60 seconds
-   ```
+**Symptom**: Opening verification URL shows "Session Not Found"
 
-## Root Cause of Previous Failure
+**Causes**:
+1. Session code is invalid or already used
+2. Session has expired (10 minute limit)
+3. URL parameter name mismatch (use `?code=` or `?session=`)
 
-The CLI auth flow was failing because:
+**Fix**: Run `agentics login` again to get a new session
 
-1. **Backend Issue**: `PLATFORM_URL` defaulted to `https://agentics.dev` instead of `https://app.agentics.dev`
-   - Result: CLI printed URLs that didn't resolve to valid pages
+---
 
-2. **UI Issue**: `NEXT_PUBLIC_API_URL` handling could double-up `/v1` prefix
-   - Result: API calls went to wrong paths
+## Validation Steps
 
-## Changes Made
+### Test API Session Creation
 
-1. **`packages/api/src/routes/cli-auth.ts`**
-   - Changed default `PLATFORM_URL` from `https://agentics.dev` to `https://app.agentics.dev`
+```bash
+curl -X POST https://api.agentics.dev/v1/cli/auth/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"cli_name": "test"}'
+```
 
-2. **`packages/ui/src/app/cli/auth/page.tsx`**
-   - Added regex to strip trailing `/v1` from `NEXT_PUBLIC_API_URL` to prevent double-prefixing
+Expected response:
+```json
+{
+  "session_code": "ABCD1234",
+  "device_code": "...",
+  "verification_url": "https://app.agentics.dev/cli/auth?code=ABCD1234",
+  ...
+}
+```
 
-3. **`packages/cli/src/commands/login.ts`**
-   - Added endpoint validation with warnings for localhost/HTTP
-   - Added verification URL validation with helpful error messages
-   - Improved URL display with bold/underline formatting
+**Verify**: `verification_url` MUST contain `app.agentics.dev`, NOT `agentics.org` or any other domain.
+
+### Test UI Route
+
+Open `https://app.agentics.dev/cli/auth?code=TESTCODE`
+
+Expected: "Session Not Found" error (normal for invalid code)
+
+### Full Flow Test
+
+```bash
+agentics login --no-browser
+# Copy URL, open in browser
+# Complete authentication
+# CLI should receive API key within 60 seconds
+```
+
+---
+
+## Architectural Rationale
+
+### Why Prohibit Inferred Domains?
+
+1. **Production Incidents**: Silent fallbacks to incorrect domains caused authentication failures
+2. **Domain Confusion**: `agentics.dev` vs `agentics.org` vs `app.agentics.dev` caused routing issues
+3. **Security**: Incorrect domains could lead to credential exposure
+4. **Auditability**: Explicit configuration is traceable and auditable
+
+### Why Use Fail-Fast?
+
+1. **Early Detection**: Configuration errors surface at startup, not runtime
+2. **Clear Messages**: Error messages explain exactly what to fix
+3. **No Silent Failures**: System refuses to operate with misconfiguration
+4. **M&A Compliance**: Auditors can verify configuration is explicit
+
+### Single Source of Truth
+
+The canonical domain is defined in exactly one place per package:
+- `@agentics/shared/constants/urls.ts` - Shared configuration
+- `packages/cli/src/config.ts` - CLI configuration
+- `packages/api/src/routes/cli-auth.ts` - API configuration
+- `packages/ui/src/app/cli/auth/page.tsx` - UI configuration
+
+All domain references derive from these constants.
+
+---
 
 ## References
 
 - [GitHub CLI Device Flow](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow)
 - [OAuth 2.0 Device Authorization Grant (RFC 8628)](https://datatracker.ietf.org/doc/html/rfc8628)
+- ADR-006: CLI as Thin Client
+- `DEPENDENCY_GRAPH.md`: Layer 5 CLI constraints
+
+---
+
+*This document is authoritative for CLI authentication flow. It defines URL ownership, configuration requirements, and the prohibition on inferred domains. Changes require architectural review and CTO approval.*

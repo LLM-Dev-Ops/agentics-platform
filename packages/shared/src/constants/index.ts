@@ -387,3 +387,16 @@ export const ERROR_MESSAGES = {
   NOT_FOUND: 'Resource not found',
   CONFLICT: 'Resource already exists',
 } as const;
+
+// URL Configuration (Single Source of Truth)
+export {
+  AGENTICS_DOMAIN,
+  URL_PATTERNS,
+  URL_ENV_VARS,
+  validateUrl,
+  getPlatformUrl,
+  getApiUrl,
+  isAgenticsDomain,
+  createCliAuthUrl,
+} from './urls.js';
+export type { UrlValidationResult } from './urls.js';

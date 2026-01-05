@@ -110,4 +110,14 @@ export {
   CACHE_TTL,
   HTTP_STATUS,
   ERROR_MESSAGES,
+  // URL Configuration (Single Source of Truth)
+  AGENTICS_DOMAIN,
+  URL_PATTERNS,
+  URL_ENV_VARS,
+  validateUrl,
+  getPlatformUrl,
+  getApiUrl,
+  isAgenticsDomain,
+  createCliAuthUrl,
 } from './constants/index.js';
+export type { UrlValidationResult } from './constants/index.js';

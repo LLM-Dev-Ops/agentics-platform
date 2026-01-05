@@ -20,8 +20,40 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSupabaseAuth } from '@/lib/supabase-auth';
 
-// API base URL without /v1 suffix - the routes will add the /v1 prefix
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/v1\/?$/, '') || 'http://localhost:8000';
+/**
+ * Canonical domain for Agentics Platform
+ * This should match the domain in @agentics/shared and backend
+ */
+const AGENTICS_DOMAIN = 'agentics.dev';
+
+/**
+ * Get the API base URL with validation
+ * Strips /v1 suffix if present to avoid double-prefixing
+ */
+function getApiBaseUrl(): string {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  if (envUrl) {
+    // Strip /v1 suffix to normalize
+    return envUrl.replace(/\/v1\/?$/, '');
+  }
+
+  // Development default
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:8000';
+  }
+
+  // Production - require explicit configuration
+  console.error(
+    '[CLI Auth] NEXT_PUBLIC_API_URL not configured. ' +
+    `Set it to the API URL (e.g., https://api.${AGENTICS_DOMAIN}/v1).`
+  );
+
+  // Fallback to production URL pattern (will fail visibly if wrong)
+  return `https://api.${AGENTICS_DOMAIN}`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 interface CliSessionInfo {
   session_code: string;

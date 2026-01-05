@@ -10,12 +10,86 @@
  * 4. Platform creates API key and marks session as completed
  * 5. CLI polls GET /v1/cli/auth/sessions/:device_code until authorized
  * 6. CLI receives API key and stores it locally
+ *
+ * ARCHITECTURAL CONSTRAINT:
+ * The platform URL MUST be explicitly configured via AGENTICS_PLATFORM_URL or PLATFORM_URL
+ * environment variable. Implicit defaults are prohibited in production to prevent
+ * domain misconfiguration (e.g., agentics.org vs agentics.dev).
  */
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import crypto from 'crypto';
 import { db } from '../db.js';
 import { verifySupabaseJWT, getOrCreateOrg, hashApiKey } from '../middleware/auth.js';
+
+/**
+ * Canonical domain for Agentics Platform
+ * This is the ONLY place the production domain should be defined
+ */
+const AGENTICS_DOMAIN = 'agentics.dev';
+
+/**
+ * Environment variable names for platform URL configuration
+ */
+const PLATFORM_URL_ENV_VARS = ['AGENTICS_PLATFORM_URL', 'PLATFORM_URL'] as const;
+
+/**
+ * Get the platform URL with fail-fast validation
+ *
+ * In production, this REQUIRES an environment variable to be set.
+ * This prevents silent fallback to incorrect domains.
+ *
+ * @throws Error if URL is not configured in production
+ */
+function getPlatformUrl(): string {
+  // Check environment variables in priority order
+  for (const envVar of PLATFORM_URL_ENV_VARS) {
+    const url = process.env[envVar];
+    if (url) {
+      // Validate URL format
+      try {
+        const parsed = new URL(url);
+        // Validate protocol
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          throw new Error(`Invalid protocol: ${parsed.protocol}. Must be http or https.`);
+        }
+        return url;
+      } catch (err) {
+        throw new Error(
+          `Invalid ${envVar} value "${url}": ${err instanceof Error ? err.message : 'Invalid URL format'}`
+        );
+      }
+    }
+  }
+
+  // In development/test, allow default
+  const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+  if (isDevelopment) {
+    return `https://app.${AGENTICS_DOMAIN}`;
+  }
+
+  // In production, FAIL FAST - do not silently use a default
+  throw new Error(
+    `Platform URL not configured. ` +
+    `Set ${PLATFORM_URL_ENV_VARS[0]} or ${PLATFORM_URL_ENV_VARS[1]} environment variable ` +
+    `to the public platform URL (e.g., https://app.${AGENTICS_DOMAIN}). ` +
+    `Implicit defaults are prohibited in production to prevent domain misconfiguration. ` +
+    `See architecture/CLI_AUTH_FLOW.md for details.`
+  );
+}
+
+/**
+ * Validate platform URL configuration at module load time
+ * This ensures fast failure before any requests are processed
+ */
+let _cachedPlatformUrl: string | null = null;
+function getValidatedPlatformUrl(): string {
+  if (_cachedPlatformUrl === null) {
+    _cachedPlatformUrl = getPlatformUrl();
+    console.log(`[CLI Auth] Platform URL configured: ${_cachedPlatformUrl}`);
+  }
+  return _cachedPlatformUrl;
+}
 
 /**
  * Generate a cryptographically secure random string
@@ -109,9 +183,9 @@ async function createSessionHandler(
 
     const session = result.rows[0];
 
-    // Build the verification URL
-    // PLATFORM_URL must point to the deployed UI (e.g., https://app.agentics.dev)
-    const platformUrl = process.env.PLATFORM_URL || 'https://app.agentics.dev';
+    // Build the verification URL using validated platform URL
+    // This will fail fast if AGENTICS_PLATFORM_URL or PLATFORM_URL is not configured in production
+    const platformUrl = getValidatedPlatformUrl();
     const verificationUrl = `${platformUrl}/cli/auth?code=${session.session_code}`;
 
     return reply.code(201).send({

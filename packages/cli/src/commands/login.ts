@@ -17,7 +17,7 @@
 
 import { Command } from 'commander';
 import { createClient, handleError } from '../client.js';
-import { setApiKey, setIdentity, getEndpoint } from '../config.js';
+import { setApiKey, setIdentity, getEndpoint, AGENTICS_DOMAIN } from '../config.js';
 import { success, spinner, info, error as displayError, warning } from '../output.js';
 import { hostname } from 'os';
 
@@ -232,14 +232,30 @@ async function browserLoginHandler(options: {
   try {
     const verifyUrl = new URL(session.verification_url);
 
+    // Check if URL uses the canonical agentics.dev domain
+    const isAgenticsDomain = verifyUrl.hostname.endsWith(`.${AGENTICS_DOMAIN}`) || verifyUrl.hostname === AGENTICS_DOMAIN;
+    const isLocalhost = verifyUrl.hostname === 'localhost' || verifyUrl.hostname === '127.0.0.1';
+
+    // Error on wrong domain (e.g., agentics.org instead of agentics.dev)
+    if (!isAgenticsDomain && !isLocalhost) {
+      displayError(`Verification URL uses incorrect domain: ${verifyUrl.hostname}`);
+      displayError(`Expected domain: ${AGENTICS_DOMAIN} (e.g., app.${AGENTICS_DOMAIN})`);
+      displayError('');
+      displayError('This indicates the API server has an incorrect AGENTICS_PLATFORM_URL or PLATFORM_URL');
+      displayError('environment variable set. Contact your administrator to fix this.');
+      displayError('');
+      displayError('See architecture/CLI_AUTH_FLOW.md for details on URL configuration.');
+      process.exit(1);
+    }
+
     // Warn if verification URL points to localhost (likely misconfigured server)
-    if (verifyUrl.hostname === 'localhost' || verifyUrl.hostname === '127.0.0.1') {
+    if (isLocalhost) {
       warning('Verification URL points to localhost - this may be a server misconfiguration.');
-      warning('If you expected a production URL, check the PLATFORM_URL on the API server.');
+      warning('If you expected a production URL, check the AGENTICS_PLATFORM_URL on the API server.');
     }
 
     // Warn if protocol doesn't match (security concern)
-    if (verifyUrl.protocol === 'http:' && verifyUrl.hostname !== 'localhost' && verifyUrl.hostname !== '127.0.0.1') {
+    if (verifyUrl.protocol === 'http:' && !isLocalhost) {
       warning('Verification URL uses insecure HTTP. This may be a misconfiguration.');
     }
   } catch {

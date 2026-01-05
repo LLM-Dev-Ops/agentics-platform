@@ -3,6 +3,11 @@
  *
  * Handles reading and writing CLI configuration including API keys,
  * endpoint settings, and user preferences using the 'conf' package.
+ *
+ * ARCHITECTURAL CONSTRAINT:
+ * All URLs use the canonical agentics.dev domain. The domain is defined
+ * in one place (AGENTICS_DOMAIN) to prevent misconfiguration.
+ * See architecture/CLI_AUTH_FLOW.md for URL ownership and rationale.
  */
 
 import Conf from 'conf';
@@ -27,9 +32,23 @@ interface ConfigSchema {
 }
 
 /**
- * Default API endpoint
+ * Canonical domain for Agentics Platform
+ * This is the SINGLE SOURCE OF TRUTH for the production domain.
+ * All URL defaults derive from this value.
  */
-export const DEFAULT_ENDPOINT = 'https://api.agentics.dev/v1';
+export const AGENTICS_DOMAIN = 'agentics.dev';
+
+/**
+ * Default API endpoint
+ * Derives from the canonical domain to ensure consistency
+ */
+export const DEFAULT_ENDPOINT = `https://api.${AGENTICS_DOMAIN}/v1`;
+
+/**
+ * Default platform URL (UI)
+ * Used for browser-based authentication flows
+ */
+export const DEFAULT_PLATFORM_URL = `https://app.${AGENTICS_DOMAIN}`;
 
 /**
  * Config directory path
