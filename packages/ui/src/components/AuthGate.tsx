@@ -17,7 +17,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useSupabaseAuth } from '@/lib/supabase-auth';
 
 // Routes that don't require authentication
-const PUBLIC_ROUTES = ['/login', '/auth/callback'];
+// /cli/auth needs to be public so unauthenticated users can see the login form
+// before being redirected - the page handles its own auth flow
+const PUBLIC_ROUTES = ['/login', '/auth/callback', '/cli/auth'];
 
 interface AuthGateProps {
   children: ReactNode;

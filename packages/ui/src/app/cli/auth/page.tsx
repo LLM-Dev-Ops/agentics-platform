@@ -4,15 +4,16 @@
  * CLI Authentication Page
  *
  * This page handles browser-based authentication for CLI tools.
- * It mirrors the Claude.ai and GitHub CLI authentication experience:
+ * It mirrors the Claude.ai CLI authentication experience:
  *
  * 1. CLI opens this page with ?code=<session_code>
  * 2. User authenticates with Supabase (if not already logged in)
  * 3. User reviews CLI details and approves access
  * 4. Platform generates an API key bound to user/org
- * 5. CLI polls and receives the key
+ * 5. User copies the API key and pastes it back into the CLI
  *
- * The user never needs to copy-paste the key - it's securely transmitted to CLI.
+ * SECURITY: The API key is displayed exactly once and is never stored in
+ * browser storage. Refreshing the page will not show the key again.
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -46,6 +47,10 @@ export default function CliAuthPage() {
   const [sessionInfo, setSessionInfo] = useState<CliSessionInfo | null>(null);
   const [error, setError] = useState<string>('');
   const [keyName, setKeyName] = useState('');
+
+  // API key is held in memory only - never persisted to storage
+  const [generatedApiKey, setGeneratedApiKey] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Login form state
   const [email, setEmail] = useState('');
@@ -177,10 +182,46 @@ export default function CliAuthPage() {
         throw new Error(errorData.error || 'Authorization failed');
       }
 
+      const data = await response.json();
+
+      // Store API key in memory only (never in localStorage/sessionStorage)
+      // This key is shown exactly once - refreshing the page will not show it again
+      if (data.api_key?.key) {
+        setGeneratedApiKey(data.api_key.key);
+      }
+
       setPageState('success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authorization failed');
       setPageState('error');
+    }
+  };
+
+  // Copy API key to clipboard
+  const handleCopyKey = async () => {
+    if (!generatedApiKey) return;
+
+    try {
+      await navigator.clipboard.writeText(generatedApiKey);
+      setCopySuccess(true);
+      // Reset copy success after 3 seconds
+      setTimeout(() => setCopySuccess(false), 3000);
+    } catch (err) {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = generatedApiKey;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 3000);
+      } catch {
+        setError('Failed to copy to clipboard');
+      }
+      document.body.removeChild(textArea);
     }
   };
 
@@ -500,7 +541,7 @@ export default function CliAuthPage() {
 
         {/* Success */}
         {pageState === 'success' && (
-          <div className="text-center py-8">
+          <div className="text-center py-6">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
               <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -508,16 +549,73 @@ export default function CliAuthPage() {
             </div>
             <h2 className="mt-4 text-xl font-semibold text-gray-900">CLI Authorized!</h2>
             <p className="mt-2 text-gray-600">
-              Your CLI has been successfully authenticated.
+              Copy your API key and paste it into your terminal.
             </p>
-            <p className="mt-4 text-sm text-gray-500">
-              You can close this window and return to your terminal.
-            </p>
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600">
-                Your API key has been securely sent to your CLI.
-                It will be stored at <code className="bg-gray-200 px-1.5 py-0.5 rounded">~/.agentics/credentials.json</code>
-              </p>
+
+            {/* API Key Display - shown once, never stored */}
+            {generatedApiKey && (
+              <div className="mt-6">
+                <div className="bg-gray-900 rounded-lg p-4 text-left">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-400 uppercase tracking-wide">Your API Key</span>
+                    <button
+                      onClick={handleCopyKey}
+                      className={`flex items-center text-sm px-3 py-1 rounded transition-colors ${
+                        copySuccess
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                      }`}
+                    >
+                      {copySuccess ? (
+                        <>
+                          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <code className="text-green-400 text-sm font-mono break-all select-all">
+                    {generatedApiKey}
+                  </code>
+                </div>
+
+                {/* Security Warning */}
+                <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <div className="flex">
+                    <svg className="h-5 w-5 text-amber-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-amber-800">This key is shown once</p>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Copy it now and paste it into your terminal. This key will not be shown again after you leave or refresh this page.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Fallback if key was already retrieved */}
+            {!generatedApiKey && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  Your CLI has been authorized. If you need a new API key, please revoke this one and run <code className="bg-gray-200 px-1.5 py-0.5 rounded">agentics login</code> again.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 text-sm text-gray-500">
+              <p>Return to your terminal to complete setup.</p>
             </div>
           </div>
         )}

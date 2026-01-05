@@ -521,10 +521,10 @@ async function authorizeSessionHandler(
         api_key: {
           id: apiKey.id,
           name: apiKey.name,
+          key: plaintextKey, // Return key for browser display (shown once, then user copies it)
           scopes: apiKey.scopes,
           created_at: apiKey.created_at,
         },
-        // Do NOT return the plaintext key here - CLI will poll for it
       });
     } catch (error) {
       await client.query('ROLLBACK');
