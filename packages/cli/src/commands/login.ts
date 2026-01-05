@@ -155,6 +155,31 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
+ * Validate that the endpoint URL is properly configured
+ */
+function validateEndpoint(endpoint: string): void {
+  // Check for localhost/internal URLs in production contexts
+  const url = new URL(endpoint);
+
+  // Warn about localhost if not explicitly set via env var
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    if (!process.env.AGENTICS_ENDPOINT) {
+      warning('Using localhost endpoint. Set AGENTICS_ENDPOINT for production use.');
+    }
+  }
+
+  // Validate URL scheme
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw new Error(`Invalid endpoint protocol: ${url.protocol}. Must be http or https.`);
+  }
+
+  // Warn about non-HTTPS in production
+  if (url.protocol === 'http:' && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') {
+    warning('Using insecure HTTP endpoint. Consider using HTTPS for production.');
+  }
+}
+
+/**
  * Browser-based login handler
  * Implements device flow similar to Claude.ai and GitHub CLI
  */
@@ -162,6 +187,16 @@ async function browserLoginHandler(options: {
   noBrowser?: boolean;
 }): Promise<void> {
   const endpoint = getEndpoint();
+
+  // Validate endpoint configuration
+  try {
+    validateEndpoint(endpoint);
+  } catch (err) {
+    displayError(`Invalid endpoint configuration: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    displayError(`Current endpoint: ${endpoint}`);
+    displayError('Set AGENTICS_ENDPOINT environment variable to override.');
+    process.exit(1);
+  }
 
   // Create a new CLI auth session
   const initSpinner = spinner('Initializing authentication...');
@@ -193,13 +228,33 @@ async function browserLoginHandler(options: {
     throw err;
   }
 
-  // Display the verification URL
+  // Validate the verification URL
+  try {
+    const verifyUrl = new URL(session.verification_url);
+
+    // Warn if verification URL points to localhost (likely misconfigured server)
+    if (verifyUrl.hostname === 'localhost' || verifyUrl.hostname === '127.0.0.1') {
+      warning('Verification URL points to localhost - this may be a server misconfiguration.');
+      warning('If you expected a production URL, check the PLATFORM_URL on the API server.');
+    }
+
+    // Warn if protocol doesn't match (security concern)
+    if (verifyUrl.protocol === 'http:' && verifyUrl.hostname !== 'localhost' && verifyUrl.hostname !== '127.0.0.1') {
+      warning('Verification URL uses insecure HTTP. This may be a misconfiguration.');
+    }
+  } catch {
+    displayError('Server returned invalid verification URL');
+    displayError(`Received: ${session.verification_url}`);
+    process.exit(1);
+  }
+
+  // Display the verification URL with clear formatting
   console.log('');
   console.log('  To authenticate, visit:');
   console.log('');
-  console.log(`    ${session.verification_url}`);
+  console.log(`  \x1b[1m\x1b[4m${session.verification_url}\x1b[0m`);
   console.log('');
-  console.log(`  Session code: ${session.session_code}`);
+  console.log(`  Session code: \x1b[1m${session.session_code}\x1b[0m`);
   console.log('');
 
   // Try to open browser automatically (unless --no-browser flag)

@@ -20,7 +20,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSupabaseAuth } from '@/lib/supabase-auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// API base URL without /v1 suffix - the routes will add the /v1 prefix
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/v1\/?$/, '') || 'http://localhost:8000';
 
 interface CliSessionInfo {
   session_code: string;

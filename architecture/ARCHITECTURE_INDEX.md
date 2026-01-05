@@ -327,6 +327,7 @@ Reference Direction:
 | FORBIDDEN_PATHS.md | 1.3 | Canonical | 2025-01-04 |
 | REPO_CLASSIFICATION.md | 1.2 | Canonical | 2025-01-04 |
 | CLI_COMMAND_OWNERSHIP.md | 1.0 | Canonical | 2025-01-03 |
+| CLI_AUTH_FLOW.md | 1.0 | Operational | 2025-01-05 |
 | DEPENDENCY_DIAGRAM.md | 1.1 | Canonical | 2025-01-03 |
 
 ### Future Additions
@@ -378,6 +379,7 @@ All architectural decisions are closed, intentional choices—not evolving exper
 | "Which CLI owns this command?" | CLI_COMMAND_OWNERSHIP.md | Command Surface Ownership Matrix |
 | "What does the architecture look like?" | DEPENDENCY_DIAGRAM.md | Platform Dependency Diagram |
 | "How do simulations reference ERP?" | DEPENDENCY_GRAPH.md | Integration Surface Repositories (erp-surface) |
+| "How does CLI authentication work?" | CLI_AUTH_FLOW.md | Authentication Sequence |
 
 ### Critical Rules Summary
 

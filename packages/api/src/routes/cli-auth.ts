@@ -110,7 +110,8 @@ async function createSessionHandler(
     const session = result.rows[0];
 
     // Build the verification URL
-    const platformUrl = process.env.PLATFORM_URL || 'https://agentics.dev';
+    // PLATFORM_URL must point to the deployed UI (e.g., https://app.agentics.dev)
+    const platformUrl = process.env.PLATFORM_URL || 'https://app.agentics.dev';
     const verificationUrl = `${platformUrl}/cli/auth?code=${session.session_code}`;
 
     return reply.code(201).send({
