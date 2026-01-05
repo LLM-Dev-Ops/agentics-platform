@@ -17,6 +17,7 @@ import { registerKeyRoutes } from './routes/keys.js';
 import { registerMeRoute } from './routes/me.js';
 import { handleRequest } from './handlers/request-lifecycle.js';
 import { registerEnterpriseRoutes } from './routes/enterprise.js';
+import { registerCliAuthRoutes } from './routes/cli-auth.js';
 
 export interface ErrorResponse {
   error: string;
@@ -96,6 +97,12 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
   // Enterprise gate routes — Stripe webhook (verified via signature, no auth)
   // This is CORE INFRASTRUCTURE - controls binary enterprise entitlement
   await registerEnterpriseRoutes(server);
+
+  // CLI auth routes — Public (device flow for CLI authentication)
+  // This enables browser-based authentication for CLI tools
+  await server.register(async (cliAuth) => {
+    await registerCliAuthRoutes(cliAuth);
+  }, { prefix: '/v1' });
 
   // Dashboard routes — Supabase JWT auth (NO API key auth)
   await server.register(async (dashboard) => {

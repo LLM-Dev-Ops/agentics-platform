@@ -162,3 +162,112 @@ export interface ListApiKeysResponse {
   /** Array of API keys */
   api_keys: ApiKey[];
 }
+
+// ============================================================================
+// CLI Authentication Types (Browser-based device flow)
+// ============================================================================
+
+/**
+ * CLI auth session status
+ * Tracks the lifecycle of a CLI authentication request
+ */
+export type CliAuthSessionStatus = 'pending' | 'authorized' | 'completed' | 'expired' | 'cancelled';
+
+/**
+ * Request to create a new CLI auth session
+ * Sent by CLI when initiating browser-based auth
+ */
+export interface CreateCliAuthSessionRequest {
+  /** Name of the CLI tool */
+  cli_name?: string;
+  /** Version of the CLI tool */
+  cli_version?: string;
+  /** Hostname of the machine running the CLI */
+  hostname?: string;
+  /** Scopes requested by the CLI */
+  scopes?: string[];
+}
+
+/**
+ * Response when creating a CLI auth session
+ * Contains codes for browser verification and CLI polling
+ */
+export interface CreateCliAuthSessionResponse {
+  /** Short code displayed in browser URL for user verification */
+  session_code: string;
+  /** Secret code used by CLI to poll for session completion */
+  device_code: string;
+  /** Full URL for user to visit in browser */
+  verification_url: string;
+  /** ISO 8601 timestamp when the session expires */
+  expires_at: string;
+  /** Number of seconds until expiration */
+  expires_in_seconds: number;
+  /** Recommended polling interval in seconds */
+  poll_interval_seconds: number;
+  /** Human-readable message for display */
+  message: string;
+}
+
+/**
+ * CLI auth session information
+ * Returned when browser requests session details
+ */
+export interface CliAuthSessionInfo {
+  /** Session code for display */
+  session_code: string;
+  /** Name of the CLI tool */
+  cli_name: string;
+  /** Version of the CLI tool */
+  cli_version?: string;
+  /** Hostname of the requesting machine */
+  hostname?: string;
+  /** IP address of the requesting machine */
+  ip_address?: string;
+  /** Scopes requested by the CLI */
+  requested_scopes: string[];
+  /** ISO 8601 timestamp when session was created */
+  created_at: string;
+  /** ISO 8601 timestamp when session expires */
+  expires_at: string;
+}
+
+/**
+ * Response when CLI polls for session status
+ */
+export interface CliAuthPollResponse {
+  /** Current status of the session */
+  status: CliAuthSessionStatus;
+  /** API key (only present when status is 'completed') */
+  api_key?: string;
+  /** Human-readable message */
+  message: string;
+}
+
+/**
+ * Request to authorize a CLI session
+ * Sent by browser after user authenticates
+ */
+export interface AuthorizeCliSessionRequest {
+  /** Custom name for the API key */
+  key_name?: string;
+  /** Override scopes (must be subset of requested scopes) */
+  scopes?: string[];
+}
+
+/**
+ * Response after authorizing a CLI session
+ */
+export interface AuthorizeCliSessionResponse {
+  /** Whether authorization was successful */
+  success: boolean;
+  /** Human-readable message */
+  message: string;
+  /** Created API key metadata (plaintext key is sent to CLI via polling) */
+  api_key?: {
+    id: string;
+    name: string;
+    scopes: string[];
+    created_at: string;
+  };
+}
