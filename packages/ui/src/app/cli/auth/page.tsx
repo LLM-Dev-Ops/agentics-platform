@@ -39,7 +39,8 @@ type PageState = 'loading' | 'session-not-found' | 'session-expired' | 'unauthen
 export default function CliAuthPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionCode = searchParams.get('code');
+  // Support both 'code' (new format) and 'session' (legacy format) parameters
+  const sessionCode = searchParams.get('code') || searchParams.get('session');
 
   const { session, isAuthenticated, isAuthReady, signIn, signInWithGitHub, signUp } = useSupabaseAuth();
   const hasFetchedRef = useRef(false);
@@ -63,9 +64,12 @@ export default function CliAuthPage() {
   // Fetch session info when page loads
   useEffect(() => {
     if (!sessionCode) {
+      console.log('[CLI Auth] No session code in URL');
       setPageState('session-not-found');
       return;
     }
+
+    console.log('[CLI Auth] Session code:', sessionCode, 'isAuthReady:', isAuthReady);
 
     if (!isAuthReady) {
       return;
@@ -75,8 +79,11 @@ export default function CliAuthPage() {
     hasFetchedRef.current = true;
 
     const fetchSession = async () => {
+      const apiUrl = `${API_BASE_URL}/v1/cli/auth/sessions/verify/${sessionCode}`;
+      console.log('[CLI Auth] Fetching session from:', apiUrl);
+
       try {
-        const response = await fetch(`${API_BASE_URL}/v1/cli/auth/sessions/verify/${sessionCode}`);
+        const response = await fetch(apiUrl);
 
         if (!response.ok) {
           const errorData = await response.json();
@@ -104,7 +111,9 @@ export default function CliAuthPage() {
           setPageState('unauthenticated');
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load session');
+        console.error('[CLI Auth] Fetch error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load session';
+        setError(`${errorMessage}. API URL: ${API_BASE_URL}`);
         setPageState('error');
       }
     };
