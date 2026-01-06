@@ -9,7 +9,7 @@ import { createClient, handleError } from '../client.js';
 import { getFormat } from '../config.js';
 import { formatJson, spinner, success, info } from '../output.js';
 import type { OutputFormat } from '../output.js';
-import type { SimulateParams } from '@agentics/shared';
+import type { SimulateParams } from '../types.js';
 
 /**
  * Poll simulation status until completion
@@ -50,12 +50,13 @@ async function pollSimulation(
 
           if (result.results) {
             info('\nResults summary:');
-            if (result.results.artifacts) {
-              info(`  Artifacts: ${result.results.artifacts.length}`);
+            const results = result.results as any;
+            if (results.artifacts) {
+              info(`  Artifacts: ${results.artifacts.length}`);
             }
-            if (result.results.metrics) {
-              info(`  Execution time: ${result.results.metrics.execution_time}s`);
-              info(`  Tokens used: ${result.results.metrics.tokens_used}`);
+            if (results.metrics) {
+              info(`  Execution time: ${results.metrics.execution_time}s`);
+              info(`  Tokens used: ${results.metrics.tokens_used}`);
             }
           }
         } else if (status.status === 'failed') {

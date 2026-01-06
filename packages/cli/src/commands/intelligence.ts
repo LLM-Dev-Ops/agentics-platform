@@ -9,7 +9,7 @@ import { createClient, handleError } from '../client.js';
 import { getFormat } from '../config.js';
 import { formatJson, formatTable, spinner, info } from '../output.js';
 import type { OutputFormat } from '../output.js';
-import type { CompletionParams } from '@agentics/shared';
+import type { CompletionParams } from '../types.js';
 
 /**
  * Completions command handler

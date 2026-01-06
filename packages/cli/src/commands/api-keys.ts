@@ -9,7 +9,7 @@ import { createClient, handleError } from '../client.js';
 import { getFormat } from '../config.js';
 import { formatJson, formatTable, spinner, success, info, warning } from '../output.js';
 import type { OutputFormat } from '../output.js';
-import { Scope } from '@agentics/shared';
+import { Scope } from '../types.js';
 
 /**
  * API keys list command handler

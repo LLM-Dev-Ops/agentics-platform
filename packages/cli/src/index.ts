@@ -8,7 +8,7 @@
  */
 
 import { Command } from 'commander';
-import { setApiKey, setEndpoint, setFormat } from './config.js';
+import { setApiKey, setEndpoint, setFormat, DEFAULT_ENDPOINT } from './config.js';
 import { createLoginCommand } from './commands/login.js';
 import { createWhoamiCommand } from './commands/whoami.js';
 import { createSimulateCommand } from './commands/simulate.js';
@@ -34,10 +34,9 @@ function createProgram(): Command {
     .option('--api-key <key>', 'API key for authentication')
     .option(
       '--endpoint <url>',
-      'API endpoint URL',
-      'https://api.agentics.dev/v1'
+      `API endpoint URL (default: ${DEFAULT_ENDPOINT})`
     )
-    .option('--format <format>', 'Default output format (json, table)', 'table')
+    .option('--format <format>', 'Default output format (json, table)')
     .hook('preAction', (thisCommand) => {
       // Process global options before running any command
       const opts = thisCommand.opts();
@@ -46,10 +45,12 @@ function createProgram(): Command {
         setApiKey(opts.apiKey);
       }
 
+      // Only set endpoint if explicitly provided
       if (opts.endpoint) {
         setEndpoint(opts.endpoint);
       }
 
+      // Only set format if explicitly provided
       if (opts.format) {
         setFormat(opts.format as 'json' | 'table');
       }

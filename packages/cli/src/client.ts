@@ -27,7 +27,7 @@ import type {
   UsageHistory,
   CurrentUsage,
   ErrorResponse,
-} from '@agentics/shared';
+} from './types.js';
 
 /**
  * API Client error

@@ -15,7 +15,7 @@ import {
   info,
 } from '../output.js';
 import type { OutputFormat } from '../output.js';
-import { UsagePeriod, UsageGranularity } from '@agentics/shared';
+import type { UsagePeriod, UsageGranularity } from '../types.js';
 
 /**
  * Usage current command handler
@@ -86,7 +86,7 @@ async function summaryHandler(options: {
     const loadingSpinner = spinner('Fetching usage summary...');
 
     const summary = await client.getUsageSummary({
-      period: (options.period as UsagePeriod) || 'monthly',
+      period: (options.period as UsagePeriod) || 'month',
       by_resource: options.byResource,
       by_core: options.byCore,
     });
