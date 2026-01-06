@@ -42,7 +42,7 @@ export const AGENTICS_DOMAIN = 'agentics.dev';
  * Default API endpoint
  * Derives from the canonical domain to ensure consistency
  */
-export const DEFAULT_ENDPOINT = `https://api.${AGENTICS_DOMAIN}/v1`;
+export const DEFAULT_ENDPOINT = `https://platform.${AGENTICS_DOMAIN}/v1`;
 
 /**
  * Default platform URL (UI)
