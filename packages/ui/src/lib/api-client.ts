@@ -124,6 +124,75 @@ export interface CreateKeyResponse {
   created_at: string;
 }
 
+// ============================================================================
+// Usage Types - Consumed from agentics-usage-ledger
+// ============================================================================
+
+export interface UsagePeriod {
+  type: 'current-month' | 'last-7-days' | 'last-30-days';
+  start: string;
+  end: string;
+}
+
+export interface UsageQuota {
+  used: number;
+  limit: number | null;
+  remaining: number | null;
+  percentUsed: number | null;
+}
+
+export interface UsageSummary {
+  userId: string;
+  tier: string;
+  period: UsagePeriod;
+  usage: {
+    requests: {
+      total: number;
+      byEndpoint: Record<string, number>;
+    };
+    tokens: {
+      total: number;
+      byEndpoint: Record<string, number>;
+    };
+  };
+  quota: {
+    requests: UsageQuota;
+    tokens: UsageQuota;
+  };
+}
+
+export interface UsageDataPoint {
+  timestamp: string;
+  requests: number;
+  tokens: number;
+  endpointBreakdown: Record<string, { requests: number; tokens: number }>;
+}
+
+export interface UsageHistory {
+  userId: string;
+  granularity: 'hourly' | 'daily' | 'monthly';
+  period: {
+    start: string;
+    end: string;
+  };
+  dataPoints: UsageDataPoint[];
+  summary: {
+    totalRequests: number;
+    totalTokens: number;
+    dataPointCount: number;
+  };
+}
+
+export interface UsageCurrentResponse {
+  success: boolean;
+  data: UsageSummary;
+}
+
+export interface UsageHistoryResponse {
+  success: boolean;
+  data: UsageHistory;
+}
+
 export interface ListKeysResponse {
   keys: ApiKey[];
 }
@@ -170,10 +239,47 @@ export async function revokeKey(keyId: string): Promise<void> {
   });
 }
 
+// ============================================================================
+// Usage API Methods - Data from agentics-usage-ledger
+// ============================================================================
+
+/**
+ * GET /v1/usage/current
+ * Get current usage summary for the authenticated user
+ * Org scoping handled server-side via IAM
+ */
+export async function getUsageCurrent(
+  period: 'current-month' | 'last-7-days' | 'last-30-days' = 'current-month'
+): Promise<UsageSummary> {
+  const response = await request<UsageCurrentResponse>(
+    `/v1/usage/current?period=${period}`
+  );
+  return response.data;
+}
+
+/**
+ * GET /v1/usage/history
+ * Get historical usage data with specified granularity
+ * Org scoping handled server-side via IAM
+ */
+export async function getUsageHistory(
+  start: string,
+  end: string,
+  granularity: 'hourly' | 'daily' | 'monthly' = 'daily'
+): Promise<UsageHistory> {
+  const params = new URLSearchParams({ start, end, granularity });
+  const response = await request<UsageHistoryResponse>(
+    `/v1/usage/history?${params}`
+  );
+  return response.data;
+}
+
 // Export for convenience
 export const apiClient = {
   getMe,
   listKeys,
   createKey,
   revokeKey,
+  getUsageCurrent,
+  getUsageHistory,
 };
