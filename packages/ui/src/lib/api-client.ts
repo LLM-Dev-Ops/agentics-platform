@@ -104,6 +104,7 @@ export interface OrgInfo {
   user_id: string;
   org_id: string;
   email?: string;
+  stripe_metering_enabled: boolean;
 }
 
 export interface ApiKey {

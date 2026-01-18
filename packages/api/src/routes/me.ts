@@ -10,6 +10,7 @@
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { verifySupabaseJWT, getOrCreateOrg } from '../middleware/auth.js';
+import { db } from '../db.js';
 
 /**
  * GET /v1/me
@@ -45,10 +46,26 @@ async function meHandler(
   // Get or create organization
   const orgId = await getOrCreateOrg(user.sub);
 
+  // Fetch organization details including Stripe metering status
+  let stripeMeteringEnabled = false;
+  try {
+    const result = await db.query(
+      'SELECT stripe_metering_enabled FROM organizations WHERE id = $1',
+      [orgId]
+    );
+    if (result.rows.length > 0) {
+      stripeMeteringEnabled = result.rows[0].stripe_metering_enabled ?? false;
+    }
+  } catch (error) {
+    // Log but don't fail - default to false
+    console.error('Failed to fetch org metering status:', error);
+  }
+
   return reply.code(200).send({
     user_id: user.sub,
     org_id: orgId,
     email: user.email,
+    stripe_metering_enabled: stripeMeteringEnabled,
   });
 }
 

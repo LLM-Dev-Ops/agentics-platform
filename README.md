@@ -1,6 +1,44 @@
+<div align="center">
+
 # Agentics Platform — Layer 4
 
+<img src="https://img.shields.io/badge/Layer_4-Control_Plane-0ea5e9?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBvbHlnb24gcG9pbnRzPSIxMiAyIDIgNyAxMiAxMiAyMiA3IDEyIDIiPjwvcG9seWdvbj48cG9seWxpbmUgcG9pbnRzPSIyIDE3IDEyIDIyIDIyIDE3Ij48L3BvbHlsaW5lPjxwb2x5bGluZSBwb2ludHM9IjIgMTIgMTIgMTcgMjIgMTIiPjwvcG9seWxpbmU+PC9zdmc+" alt="Layer 4">
+<img src="https://img.shields.io/badge/TypeScript-5.3-3178c6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+<img src="https://img.shields.io/badge/Next.js-14-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js">
+<img src="https://img.shields.io/badge/Fastify-4.x-000000?style=for-the-badge&logo=fastify&logoColor=white" alt="Fastify">
+<img src="https://img.shields.io/badge/Supabase-Auth-3fcf8e?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+
+<br/>
+
+<img src="https://img.shields.io/badge/8_Layer_3_Cores-Integrated-22c55e?style=flat-square" alt="8 Cores">
+<img src="https://img.shields.io/badge/Usage_Analytics-Real_Time-a855f7?style=flat-square" alt="Usage Analytics">
+<img src="https://img.shields.io/badge/Stripe_Metering-Supported-6366f1?style=flat-square" alt="Stripe Metering">
+<img src="https://img.shields.io/badge/Architecture-Frozen_v1.0.0-ef4444?style=flat-square" alt="Architecture Frozen">
+
+<br/><br/>
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│     █████╗  ██████╗ ███████╗███╗   ██╗████████╗██╗ ██████╗███████╗         │
+│    ██╔══██╗██╔════╝ ██╔════╝████╗  ██║╚══██╔══╝██║██╔════╝██╔════╝         │
+│    ███████║██║  ███╗█████╗  ██╔██╗ ██║   ██║   ██║██║     ███████╗         │
+│    ██╔══██║██║   ██║██╔══╝  ██║╚██╗██║   ██║   ██║██║     ╚════██║         │
+│    ██║  ██║╚██████╔╝███████╗██║ ╚████║   ██║   ██║╚██████╗███████║         │
+│    ╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚═╝ ╚═════╝╚══════╝         │
+│                                                                             │
+│                    Unified Control Plane & API Gateway                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 **The unified control plane and product surface for the Agentics.dev platform.**
+
+[Getting Started](#getting-started) • [API Reference](#unified-api-surface) • [CLI Commands](#command-line-interface) • [SDK Documentation](#software-development-kit) • [Architecture](#architecture-overview)
+
+</div>
+
+---
 
 Layer 4 is the externally facing gateway through which all platform capabilities are accessed. It provides a single API, CLI, SDK, and minimal web UI that expose intelligence, simulation, security, automation, governance, data, ecosystem, and research operations to external consumers. Layer 4 handles authentication, authorization, rate limiting, usage tracking, and request routing. It does not implement any business logic, intelligence algorithms, simulation engines, or analytics computation—those responsibilities belong to the underlying Layer 3 consolidation cores.
 
@@ -8,12 +46,14 @@ Layer 4 is the externally facing gateway through which all platform capabilities
 
 ## Table of Contents
 
+- [Platform Capabilities](#platform-capabilities)
 - [Architecture Overview](#architecture-overview)
   - [Dependency Graph](#dependency-graph)
   - [Enforcement Artifacts](#enforcement-artifacts)
 - [Architecture Freeze](#architecture-freeze)
 - [Layer 3 Backend Services](#layer-3-backend-services)
 - [Unified API Surface](#unified-api-surface)
+- [Usage Dashboard & Analytics](#usage-dashboard--analytics)
 - [Command-Line Interface](#command-line-interface)
 - [Software Development Kit](#software-development-kit)
 - [Simulation Workflow](#simulation-workflow)
@@ -23,6 +63,46 @@ Layer 4 is the externally facing gateway through which all platform capabilities
 - [Repository Structure](#repository-structure)
 - [Configuration](#configuration)
 - [License](#license)
+
+---
+
+## Platform Capabilities
+
+<div align="center">
+
+| Capability | Status | Description |
+|:-----------|:------:|:------------|
+| **API Gateway** | ✅ | Unified REST API with authentication, rate limiting, and routing |
+| **Web Dashboard** | ✅ | Next.js 14 UI for account management and usage monitoring |
+| **Usage Analytics** | ✅ | Real-time usage tracking with interactive charts |
+| **CLI Authentication** | ✅ | Device flow OAuth for secure CLI login |
+| **API Key Management** | ✅ | Self-service key creation, scoping, and revocation |
+| **Stripe Metering** | ✅ | Usage-based billing integration with metering status |
+| **8 Layer 3 Cores** | ✅ | Intelligence, Security, Automation, Governance, Data, Ecosystem, Research, Interface |
+
+</div>
+
+### Key Features
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           PLATFORM FEATURES                                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  🔐 AUTHENTICATION          📊 USAGE ANALYTICS        💳 BILLING             │
+│  ├─ Supabase JWT (UI)       ├─ Real-time tracking     ├─ Stripe metering    │
+│  ├─ API Keys (Machine)      ├─ Interactive charts     ├─ Tier management    │
+│  ├─ Device Flow (CLI)       ├─ Time range selectors   └─ Status visibility  │
+│  └─ Scope-based access      └─ Per-user/command view                        │
+│                                                                              │
+│  🚀 API GATEWAY             🖥️ WEB DASHBOARD          📦 SDK & CLI           │
+│  ├─ Request routing         ├─ Usage dashboard        ├─ TypeScript SDK     │
+│  ├─ Rate limiting           ├─ API key management     ├─ Node.js CLI        │
+│  ├─ Usage recording         ├─ Account settings       └─ Browser support    │
+│  └─ Error handling          └─ Platform status                              │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -259,6 +339,84 @@ Successful responses return JSON with the requested data. Error responses follow
 ```
 
 Error codes include `AUTHENTICATION_REQUIRED`, `AUTHORIZATION_DENIED`, `RATE_LIMIT_EXCEEDED`, `QUOTA_EXCEEDED`, `INVALID_REQUEST`, `UPSTREAM_ERROR`, and `SERVICE_UNAVAILABLE`.
+
+---
+
+## Usage Dashboard & Analytics
+
+The platform includes a comprehensive usage dashboard with real-time analytics, interactive charts, and detailed breakdowns.
+
+### Dashboard Components
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          USAGE DASHBOARD                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│  │ Executions  │ │ Total Cost  │ │ Failure Rate│ │ Tokens Used │           │
+│  │   12,456    │ │   $234.56   │ │    2.3%     │ │   1.2M      │           │
+│  │ Last 30 days│ │ Last 30 days│ │  28 failures│ │ Last 30 days│           │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘           │
+│                                                                             │
+│  ┌─────────────────────────────┐  ┌─────────────────────────────┐          │
+│  │   Command Usage Bar Chart   │  │   Daily Usage Time Series   │          │
+│  │   ████████████ completions  │  │      📈 Executions         │          │
+│  │   ████████ embeddings       │  │      📈 Cost               │          │
+│  │   ██████ chat               │  │                             │          │
+│  │   ████ scan                 │  │   [Interactive Recharts]    │          │
+│  └─────────────────────────────┘  └─────────────────────────────┘          │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────┐           │
+│  │                    User Usage Table                          │           │
+│  │   Principal          │ Executions │ Cost    │ Failures      │           │
+│  │   user@example.com   │    5,234   │ $123.45 │     12        │           │
+│  │   api-key-prod       │    4,122   │  $89.32 │      8        │           │
+│  └─────────────────────────────────────────────────────────────┘           │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Usage API Endpoints
+
+The platform exposes usage data through dedicated proxy endpoints:
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /v1/api/usage/summary` | Aggregated totals (executions, cost, failures, tokens) |
+| `GET /v1/api/usage/by-command` | Breakdown by command/operation type |
+| `GET /v1/api/usage/by-day` | Daily time series for trend analysis |
+| `GET /v1/api/usage/by-user` | Per-user breakdown (read-only) |
+
+### Time Range Selection
+
+All usage views support configurable time ranges:
+
+- **Last 7 days** — Recent activity snapshot
+- **Last 30 days** — Monthly overview (default)
+- **Last 90 days** — Quarterly trends
+
+### Chart Library
+
+The dashboard uses [Recharts](https://recharts.org/) for interactive data visualization:
+
+- **Bar Charts** — Command usage distribution
+- **Line Charts** — Daily execution and cost trends
+- **Dual Axis** — Correlate executions with cost over time
+- **Tooltips** — Detailed data on hover
+
+### Platform Status
+
+The settings page displays read-only platform status indicators:
+
+```
+Platform Status
+─────────────────────────────────────────────────────
+Stripe Usage Metering                    ● Active
+Tracks API usage for billing purposes
+```
+
+This allows operators to confirm Stripe metering is active without exposing billing UI, invoices, or payment methods.
 
 ---
 
@@ -748,39 +906,59 @@ Layer 4 is explicitly scoped to access control, routing, and user experience. Th
 ```
 agentics-platform/
 ├── packages/
-│   ├── api/                 # API Gateway (Fastify server)
-│   │   ├── src/
-│   │   │   ├── handlers/    # Request handlers for each domain
-│   │   │   ├── middleware/  # Auth, rate limiting, observability
-│   │   │   ├── routes/      # Route definitions
-│   │   │   ├── services/    # Identity, entitlements, observability
-│   │   │   └── router/      # Layer 3 routing logic
-│   │   └── package.json
-│   ├── cli/                 # Command-line interface
-│   │   ├── src/
-│   │   │   ├── commands/    # Individual CLI commands
-│   │   │   ├── client.ts    # HTTP client for API calls
-│   │   │   └── config.ts    # Configuration management
-│   │   └── package.json
-│   ├── sdk/                 # TypeScript SDK
-│   │   ├── src/
-│   │   │   ├── resources/   # API resource wrappers
-│   │   │   ├── client.ts    # Main client class
-│   │   │   └── errors.ts    # Error classes
-│   │   └── package.json
-│   ├── ui/                  # Next.js web interface
-│   │   ├── src/
-│   │   │   ├── app/         # Page components
-│   │   │   ├── components/  # Reusable UI components
-│   │   │   └── lib/         # Auth and API utilities
-│   │   └── package.json
-│   └── shared/              # Shared TypeScript types
-│       ├── src/types/       # API and domain types
-│       └── package.json
-├── plans/                   # Architecture documentation
-│   └── layer-4-platform-sparc.md
-├── package.json             # Workspace configuration
-└── tsconfig.base.json       # Shared TypeScript config
+│   ├── api/                       # API Gateway (Fastify server)
+│   │   ├── migrations/            # PostgreSQL migrations
+│   │   │   ├── 001_organizations.sql
+│   │   │   ├── 002_api_keys.sql
+│   │   │   ├── 003_enterprise_gate.sql
+│   │   │   ├── 004_cli_auth_sessions.sql
+│   │   │   └── 005_stripe_metering.sql
+│   │   └── src/
+│   │       ├── handlers/          # Request handlers
+│   │       │   ├── usage.ts       # Usage summary handlers
+│   │       │   ├── usage-proxy.ts # Usage ledger proxy
+│   │       │   └── billing.ts     # Stripe billing handlers
+│   │       ├── middleware/        # Auth, rate limiting, observability
+│   │       ├── routes/            # Route definitions
+│   │       │   ├── usage.ts       # Usage routes
+│   │       │   ├── usage-proxy.ts # Usage proxy routes
+│   │       │   └── keys.ts        # API key management
+│   │       ├── services/          # Identity, entitlements, observability
+│   │       └── router/            # Layer 3 routing logic
+│   ├── cli/                       # Command-line interface
+│   │   └── src/
+│   │       ├── commands/          # Individual CLI commands
+│   │       ├── client.ts          # HTTP client for API calls
+│   │       └── config.ts          # Configuration management
+│   ├── sdk/                       # TypeScript SDK
+│   │   └── src/
+│   │       ├── resources/         # API resource wrappers
+│   │       ├── client.ts          # Main client class
+│   │       └── errors.ts          # Error classes
+│   ├── ui/                        # Next.js web interface
+│   │   └── src/
+│   │       ├── app/               # Page components
+│   │       │   ├── usage/         # Usage dashboard page
+│   │       │   ├── settings/      # Account settings
+│   │       │   └── api-keys/      # API key management
+│   │       ├── components/
+│   │       │   ├── usage/         # Usage overview components
+│   │       │   └── usage-graphs/  # Recharts visualizations
+│   │       │       ├── UsageSummaryCards.tsx
+│   │       │       ├── CommandUsageBarChart.tsx
+│   │       │       ├── DailyUsageTimeSeries.tsx
+│   │       │       ├── UserUsageTable.tsx
+│   │       │       └── TimeRangeSelector.tsx
+│   │       └── lib/               # Auth and API utilities
+│   │           ├── api-client.ts  # API client with Supabase JWT
+│   │           └── supabase.ts    # Supabase configuration
+│   └── shared/                    # Shared TypeScript types
+├── architecture/                  # Architecture documentation
+│   ├── DEPENDENCY_GRAPH.md
+│   ├── FORBIDDEN_PATHS.md
+│   └── ARCHITECTURE_DECISIONS.md
+├── package.json                   # Workspace configuration
+└── tsconfig.base.json             # Shared TypeScript config
 ```
 
 ---
@@ -789,15 +967,37 @@ agentics-platform/
 
 Layer 4 is configured via environment variables:
 
+### Core Configuration
+
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | API server port | `3000` |
 | `HOST` | API server host | `0.0.0.0` |
 | `NODE_ENV` | Environment mode | `development` |
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+
+### Authentication
+
+| Variable | Description | Default |
+|----------|-------------|---------|
 | `JWT_SECRET` | JWT signing secret | Required |
 | `JWT_ISSUER` | JWT issuer claim | `agentics.dev` |
+| `SUPABASE_URL` | Supabase project URL | Required |
+| `SUPABASE_ANON_KEY` | Supabase anonymous key | Required |
+
+### Billing & Metering
+
+| Variable | Description | Default |
+|----------|-------------|---------|
 | `STRIPE_SECRET_KEY` | Stripe API key | Optional |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook secret | Optional |
+| `STRIPE_ENABLED` | Enable Stripe integration | `false` |
+| `USAGE_LEDGER_URL` | Usage ledger service URL | `http://localhost:3009` |
+
+### Layer 3 Core Endpoints
+
+| Variable | Description | Default |
+|----------|-------------|---------|
 | `INTELLIGENCE_CORE_URL` | LLM-Intelligence-Core endpoint | Required |
 | `SECURITY_CORE_URL` | LLM-Security-Core endpoint | Required |
 | `AUTOMATION_CORE_URL` | LLM-Automation-Core endpoint | Required |
@@ -806,6 +1006,14 @@ Layer 4 is configured via environment variables:
 | `ECOSYSTEM_CORE_URL` | LLM-Ecosystem-Core endpoint | Required |
 | `RESEARCH_CORE_URL` | LLM-Research-Core endpoint | Required |
 | `INTERFACE_CORE_URL` | LLM-Interface-Core endpoint | Required |
+
+### UI Configuration
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | API base URL for UI | `http://localhost:8000` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase URL for UI | Required |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key for UI | Required |
 
 ---
 
