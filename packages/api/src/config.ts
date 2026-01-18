@@ -43,6 +43,9 @@ export interface Config {
     metricsUrl: string;
   };
 
+  // Usage Ledger Service
+  usageLedgerUrl: string;
+
   // Stripe Configuration
   stripe: {
     secretKey: string;
@@ -105,6 +108,9 @@ const config: Config = {
     level: process.env.LOG_LEVEL || 'info',
     pretty: process.env.LOG_PRETTY === 'true' || process.env.NODE_ENV === 'development',
   },
+
+  // Usage Ledger Service URL
+  usageLedgerUrl: process.env.USAGE_LEDGER_URL || 'http://localhost:3009',
 };
 
 export default config;

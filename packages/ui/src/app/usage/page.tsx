@@ -4,8 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   UsageSummary,
   UsageHistory,
+  UsageProxySummary,
+  CommandUsageItem,
+  DailyUsageItem,
+  UserUsageItem,
+  TimeRange,
   getUsageCurrent,
   getUsageHistory,
+  getUsageSummary,
+  getUsageByCommand,
+  getUsageByDay,
+  getUsageByUser,
   ApiError,
 } from '@/lib/api-client';
 import {
@@ -16,6 +25,13 @@ import {
   UsageBlockedList,
   UsageFilters,
 } from '@/components/usage';
+import {
+  UsageSummaryCards,
+  CommandUsageBarChart,
+  DailyUsageTimeSeries,
+  UserUsageTable,
+  TimeRangeSelector,
+} from '@/components/usage-graphs';
 
 type Period = 'current-month' | 'last-7-days' | 'last-30-days';
 type Granularity = 'hourly' | 'daily' | 'monthly';
@@ -32,6 +48,15 @@ export default function UsagePage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [granularity, setGranularity] = useState<Granularity>('daily');
+
+  // New usage ledger states
+  const [timeRange, setTimeRange] = useState<TimeRange>('30');
+  const [usageSummary, setUsageSummary] = useState<UsageProxySummary | null>(null);
+  const [commandUsage, setCommandUsage] = useState<CommandUsageItem[]>([]);
+  const [dailyUsage, setDailyUsage] = useState<DailyUsageItem[]>([]);
+  const [userUsage, setUserUsage] = useState<UserUsageItem[]>([]);
+  const [ledgerLoading, setLedgerLoading] = useState(true);
+  const [ledgerError, setLedgerError] = useState<string | null>(null);
 
   // Fetch current usage summary
   const fetchCurrentUsage = useCallback(async () => {
@@ -69,6 +94,39 @@ export default function UsagePage() {
     []
   );
 
+  // Fetch usage ledger data (all endpoints in parallel)
+  const fetchLedgerData = useCallback(async (range: TimeRange) => {
+    try {
+      setLedgerLoading(true);
+      setLedgerError(null);
+
+      const [summary, byCommand, byDay, byUser] = await Promise.all([
+        getUsageSummary(range),
+        getUsageByCommand(range),
+        getUsageByDay(range),
+        getUsageByUser(range),
+      ]);
+
+      setUsageSummary(summary);
+      setCommandUsage(byCommand);
+      setDailyUsage(byDay);
+      setUserUsage(byUser);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setLedgerError(err.message);
+      } else {
+        setLedgerError('Failed to load usage data from ledger.');
+      }
+      // Clear data on error
+      setUsageSummary(null);
+      setCommandUsage([]);
+      setDailyUsage([]);
+      setUserUsage([]);
+    } finally {
+      setLedgerLoading(false);
+    }
+  }, []);
+
   // Load initial data
   useEffect(() => {
     fetchCurrentUsage();
@@ -81,6 +139,15 @@ export default function UsagePage() {
     start.setDate(end.getDate() - 30);
     fetchUsageHistory(start.toISOString(), end.toISOString(), granularity);
   }, [fetchUsageHistory, granularity]);
+
+  // Load usage ledger data
+  useEffect(() => {
+    fetchLedgerData(timeRange);
+  }, [fetchLedgerData, timeRange]);
+
+  const handleTimeRangeChange = (newRange: TimeRange) => {
+    setTimeRange(newRange);
+  };
 
   const handlePeriodChange = (newPeriod: Period) => {
     setPeriod(newPeriod);
@@ -103,6 +170,43 @@ export default function UsagePage() {
             Monitor your platform usage and billing metrics
           </p>
         </div>
+        <TimeRangeSelector value={timeRange} onChange={handleTimeRangeChange} />
+      </div>
+
+      {/* Summary Cards - Real Data from Usage Ledger */}
+      <UsageSummaryCards
+        data={usageSummary}
+        loading={ledgerLoading}
+        error={ledgerError}
+        timeRange={timeRange}
+      />
+
+      {/* Charts Row: Command Usage and Daily Trends */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CommandUsageBarChart
+          data={commandUsage}
+          loading={ledgerLoading}
+          error={ledgerError}
+        />
+        <DailyUsageTimeSeries
+          data={dailyUsage}
+          loading={ledgerLoading}
+          error={ledgerError}
+        />
+      </div>
+
+      {/* User Usage Table */}
+      <UserUsageTable
+        data={userUsage}
+        loading={ledgerLoading}
+        error={ledgerError}
+      />
+
+      {/* Divider */}
+      <div className="border-t border-gray-200 pt-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          Quota & Entitlements
+        </h2>
       </div>
 
       {/* Period Filter */}

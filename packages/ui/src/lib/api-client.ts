@@ -198,6 +198,48 @@ export interface ListKeysResponse {
 }
 
 // ============================================================================
+// Usage Proxy Types - From agentics-usage-ledger via proxy
+// ============================================================================
+
+export interface UsageProxySummary {
+  org_id: string;
+  period: {
+    start_date: string;
+    end_date: string;
+  };
+  totals: {
+    executions: number;
+    cost_usd: number;
+    failures: number;
+    tokens_used: number;
+  };
+  failure_rate: number;
+}
+
+export interface CommandUsageItem {
+  command: string;
+  executions: number;
+  cost_usd: number;
+  failures: number;
+  avg_duration_ms: number;
+}
+
+export interface DailyUsageItem {
+  date: string;
+  executions: number;
+  cost_usd: number;
+  failures: number;
+  tokens_used: number;
+}
+
+export interface UserUsageItem {
+  principal: string;
+  executions: number;
+  cost_usd: number;
+  failures: number;
+}
+
+// ============================================================================
 // API Methods
 // ============================================================================
 
@@ -274,6 +316,69 @@ export async function getUsageHistory(
   return response.data;
 }
 
+// ============================================================================
+// Usage Proxy API Methods - Data proxied from agentics-usage-ledger
+// ============================================================================
+
+export type TimeRange = '7' | '30' | '90';
+
+function getDateRange(days: TimeRange): { start_date: string; end_date: string } {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(end.getDate() - parseInt(days));
+  return {
+    start_date: start.toISOString().split('T')[0],
+    end_date: end.toISOString().split('T')[0],
+  };
+}
+
+/**
+ * GET /v1/api/usage/summary
+ * Get aggregated usage summary from usage ledger
+ */
+export async function getUsageSummary(days: TimeRange = '30'): Promise<UsageProxySummary> {
+  const { start_date, end_date } = getDateRange(days);
+  return request<UsageProxySummary>(
+    `/v1/api/usage/summary?start_date=${start_date}&end_date=${end_date}`
+  );
+}
+
+/**
+ * GET /v1/api/usage/by-command
+ * Get usage breakdown by command from usage ledger
+ */
+export async function getUsageByCommand(days: TimeRange = '30'): Promise<CommandUsageItem[]> {
+  const { start_date, end_date } = getDateRange(days);
+  const response = await request<{ data: CommandUsageItem[] }>(
+    `/v1/api/usage/by-command?start_date=${start_date}&end_date=${end_date}`
+  );
+  return response.data || [];
+}
+
+/**
+ * GET /v1/api/usage/by-day
+ * Get daily usage breakdown from usage ledger
+ */
+export async function getUsageByDay(days: TimeRange = '30'): Promise<DailyUsageItem[]> {
+  const { start_date, end_date } = getDateRange(days);
+  const response = await request<{ data: DailyUsageItem[] }>(
+    `/v1/api/usage/by-day?start_date=${start_date}&end_date=${end_date}`
+  );
+  return response.data || [];
+}
+
+/**
+ * GET /v1/api/usage/by-user
+ * Get usage breakdown by user from usage ledger
+ */
+export async function getUsageByUser(days: TimeRange = '30'): Promise<UserUsageItem[]> {
+  const { start_date, end_date } = getDateRange(days);
+  const response = await request<{ data: UserUsageItem[] }>(
+    `/v1/api/usage/by-user?start_date=${start_date}&end_date=${end_date}`
+  );
+  return response.data || [];
+}
+
 // Export for convenience
 export const apiClient = {
   getMe,
@@ -282,4 +387,8 @@ export const apiClient = {
   revokeKey,
   getUsageCurrent,
   getUsageHistory,
+  getUsageSummary,
+  getUsageByCommand,
+  getUsageByDay,
+  getUsageByUser,
 };

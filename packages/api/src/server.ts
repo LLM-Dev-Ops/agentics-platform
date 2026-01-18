@@ -15,6 +15,7 @@ import { registerLayer3HealthRoutes } from './routes/health.js';
 import { registerProtectedExampleRoutes } from './routes/protected-example.js';
 import { registerKeyRoutes } from './routes/keys.js';
 import { registerMeRoute } from './routes/me.js';
+import { registerUsageProxyRoutes } from './routes/usage-proxy.js';
 import { handleRequest } from './handlers/request-lifecycle.js';
 import { registerEnterpriseRoutes } from './routes/enterprise.js';
 import { registerCliAuthRoutes } from './routes/cli-auth.js';
@@ -108,6 +109,7 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
   await server.register(async (dashboard) => {
     await registerMeRoute(dashboard);
     await registerKeyRoutes(dashboard);
+    await registerUsageProxyRoutes(dashboard);
   }, { prefix: '/v1' });
 
   // Machine routes — API key auth enforced
