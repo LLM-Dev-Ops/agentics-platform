@@ -12,6 +12,8 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@agentics/agents": "*",
+    "@agentics/contracts": "*",
     "@fastify/cors": "^8.4.0",
     "@fastify/helmet": "^11.1.1",
     "@fastify/rate-limit": "^9.0.0",

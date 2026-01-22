@@ -19,6 +19,7 @@ import { registerUsageProxyRoutes } from './routes/usage-proxy.js';
 import { handleRequest } from './handlers/request-lifecycle.js';
 import { registerEnterpriseRoutes } from './routes/enterprise.js';
 import { registerCliAuthRoutes } from './routes/cli-auth.js';
+import { registerAgentRoutes } from './routes/agents.js';
 
 export interface ErrorResponse {
   error: string;
@@ -116,6 +117,12 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
   await server.register(async (api) => {
     api.addHook('onRequest', handleRequest);
     await registerProtectedExampleRoutes(api);
+  }, { prefix: '/v1' });
+
+  // Agent routes — Decision synthesis, executive reporting, risk scoring
+  // These routes are for agentics-dev-platform agents
+  await server.register(async (agents) => {
+    await registerAgentRoutes(agents);
   }, { prefix: '/v1' });
 
   // Request logging

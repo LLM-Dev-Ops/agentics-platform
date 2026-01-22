@@ -41,32 +41,20 @@ pnpm-debug.log*
 .vercel
 .eslintcache
 
-# Claude Code metrics (auto-generated)
-.claude-flow/metrics/
-
-# Claude Flow generated files
-.claude/settings.local.json
-.mcp.json
+# Claude Code and Claude Flow
+.claude/
+.claude-flow/
+.claude-*
 claude-flow.config.json
+.mcp.json
 .swarm/
 .hive-mind/
-.claude-flow/
+hive-mind-prompt-*.txt
 memory/
 coordination/
-memory/claude-flow-data.json
-memory/sessions/*
-!memory/sessions/README.md
-memory/agents/*
-!memory/agents/README.md
-coordination/memory_bank/*
-coordination/subtasks/*
-coordination/orchestration/*
 *.db
 *.db-journal
 *.db-wal
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal
-claude-flow
-# Removed Windows wrapper files per user request
-hive-mind-prompt-*.txt
