@@ -95,6 +95,12 @@ ENV HOST=0.0.0.0
 ENV SERVICE_NAME=agentics-agents
 ENV SERVICE_VERSION=0.1.0
 
+# Apex layer configuration
+# These identify this service as an Apex control-plane agent
+ENV AGENT_NAME=agentics-agents
+ENV AGENT_PHASE=apex
+ENV AGENT_LAYER=layer5
+
 # Expose port
 EXPOSE 8080
 

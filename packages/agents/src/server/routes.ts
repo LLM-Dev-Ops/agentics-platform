@@ -56,27 +56,95 @@ export async function registerAgentRoutes(
     return reply.send({ status: 'healthy' });
   });
 
-  // Ready check
+  // Ready check - STRICT mode for Apex layer
   server.get('/ready', async (_request: FastifyRequest, reply: FastifyReply) => {
     // Check ruvector connectivity
+    // For Apex agents, Ruvector is REQUIRED - not optional
     try {
       const ruvectorUrl = process.env.RUVECTOR_SERVICE_URL;
-      if (!ruvectorUrl) {
-        return reply.send({ status: 'ready', ruvector: 'not_configured' });
+      const ruvectorKey = process.env.RUVECTOR_API_KEY;
+
+      if (!ruvectorUrl || !ruvectorKey) {
+        // In Apex layer, missing Ruvector config is a failure
+        return reply.status(503).send({
+          status: 'not_ready',
+          ruvector: 'not_configured',
+          error: 'RUVECTOR_SERVICE_URL and RUVECTOR_API_KEY are required for Apex agents',
+          apex: {
+            phase: process.env.AGENT_PHASE || 'apex',
+            layer: process.env.AGENT_LAYER || 'layer5',
+          },
+        });
       }
 
-      const client = new RuvectorClient({ baseUrl: ruvectorUrl });
-      // Simple connectivity check
+      const client = new RuvectorClient({
+        baseUrl: ruvectorUrl,
+        apiKey: ruvectorKey,
+      });
+
+      // Perform health check
       await client.health();
-      return reply.send({ status: 'ready', ruvector: 'connected' });
+
+      return reply.send({
+        status: 'ready',
+        ruvector: 'connected',
+        apex: {
+          phase: process.env.AGENT_PHASE || 'apex',
+          layer: process.env.AGENT_LAYER || 'layer5',
+          agent_name: process.env.AGENT_NAME || 'agentics-agents',
+        },
+      });
     } catch (error) {
       return reply.status(503).send({
         status: 'not_ready',
         ruvector: 'disconnected',
         error: error instanceof Error ? error.message : 'Unknown error',
+        apex: {
+          phase: process.env.AGENT_PHASE || 'apex',
+          layer: process.env.AGENT_LAYER || 'layer5',
+        },
       });
     }
   });
+}
+
+/**
+ * Get validated agent configuration.
+ * REQUIRES startup validation to have completed.
+ */
+function getAgentConfig(): {
+  ruvector: { baseUrl: string; apiKey?: string };
+  telemetry: { enabled: boolean; endpoint?: string };
+} {
+  const ruvectorUrl = process.env.RUVECTOR_SERVICE_URL;
+  const ruvectorKey = process.env.RUVECTOR_API_KEY;
+
+  // These should always be set after startup validation
+  // If not, fail explicitly
+  if (!ruvectorUrl) {
+    throw new Error(
+      'RUVECTOR_SERVICE_URL not configured. ' +
+      'Startup validation should have caught this.'
+    );
+  }
+
+  if (!ruvectorKey) {
+    throw new Error(
+      'RUVECTOR_API_KEY not configured. ' +
+      'Startup validation should have caught this.'
+    );
+  }
+
+  return {
+    ruvector: {
+      baseUrl: ruvectorUrl,
+      apiKey: ruvectorKey,
+    },
+    telemetry: {
+      enabled: true,
+      endpoint: process.env.TELEMETRY_ENDPOINT,
+    },
+  };
 }
 
 /**
@@ -85,16 +153,6 @@ export async function registerAgentRoutes(
 async function registerRiskScoringRoutes(
   server: FastifyInstance
 ): Promise<void> {
-  const getAgentConfig = () => ({
-    ruvector: {
-      baseUrl: process.env.RUVECTOR_SERVICE_URL || 'http://localhost:8080',
-      apiKey: process.env.RUVECTOR_API_KEY,
-    },
-    telemetry: {
-      enabled: true,
-      endpoint: process.env.TELEMETRY_ENDPOINT,
-    },
-  });
 
   /**
    * POST /risk-scoring/score
@@ -211,20 +269,14 @@ async function registerRiskScoringRoutes(
  * Register Decision Agent routes
  *
  * PROMPT 3 Implementation: Wire Decision Agent into platform
+ *
+ * APEX AGENTS:
+ * - Decision Agent: Synthesizes DecisionEvents into recommendations
+ * - These agents coordinate and synthesize, never execute
  */
 async function registerDecisionAgentRoutes(
   server: FastifyInstance
 ): Promise<void> {
-  const getAgentConfig = () => ({
-    ruvector: {
-      baseUrl: process.env.RUVECTOR_SERVICE_URL || 'http://localhost:8080',
-      apiKey: process.env.RUVECTOR_API_KEY,
-    },
-    telemetry: {
-      enabled: true,
-      endpoint: process.env.TELEMETRY_ENDPOINT,
-    },
-  });
 
   /**
    * POST /decision/decide
