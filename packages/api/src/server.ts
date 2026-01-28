@@ -20,6 +20,8 @@ import { handleRequest } from './handlers/request-lifecycle.js';
 import { registerEnterpriseRoutes } from './routes/enterprise.js';
 import { registerCliAuthRoutes } from './routes/cli-auth.js';
 import { registerAgentRoutes } from './routes/agents.js';
+import { registerAuthSessionRoutes } from './routes/auth-session.js';
+import { registerCliCommandRoutes } from './routes/cli-commands.js';
 
 export interface ErrorResponse {
   error: string;
@@ -104,6 +106,18 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
   // This enables browser-based authentication for CLI tools
   await server.register(async (cliAuth) => {
     await registerCliAuthRoutes(cliAuth);
+  }, { prefix: '/v1' });
+
+  // Auth session route — API key validation for CLI whoami
+  // Returns { email, user_id, org_id, payment_status }
+  await server.register(async (authSession) => {
+    await registerAuthSessionRoutes(authSession);
+  }, { prefix: '/v1' });
+
+  // CLI command routes — All CLI command domains (plan, deploy, export, policy, quantify, erp)
+  // These routes handle API key auth internally and return valid responses
+  await server.register(async (cliCommands) => {
+    await registerCliCommandRoutes(cliCommands);
   }, { prefix: '/v1' });
 
   // Dashboard routes — Supabase JWT auth (NO API key auth)

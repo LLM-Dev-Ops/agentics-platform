@@ -570,6 +570,14 @@ async function authorizeSessionHandler(
 
       const apiKey = keyResult.rows[0];
 
+      // Store user email in organizations table for API key session lookups
+      if (user.email) {
+        await client.query(
+          `UPDATE organizations SET owner_email = $1 WHERE id = $2`,
+          [user.email, orgId]
+        );
+      }
+
       // Update session with authorization and API key
       // Store plaintext key temporarily for one-time retrieval by CLI
       await client.query(

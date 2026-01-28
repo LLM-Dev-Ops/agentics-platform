@@ -69,8 +69,6 @@ export async function registerAgentRoutes(server: FastifyInstance): Promise<void
     '/agents/invoke',
     {
       schema: {
-        description: 'Invoke an agentics-dev-platform agent',
-        tags: ['Agents'],
         body: {
           type: 'object',
           required: ['agent_id', 'command', 'input'],
@@ -176,8 +174,10 @@ export async function registerAgentRoutes(server: FastifyInstance): Promise<void
         }
 
         // Dynamic import to avoid circular dependencies
-        const { createDecisionAgent } = await import('@agentics/agents');
-        const { createAgentContext } = await import('@agentics/agents');
+        // @ts-ignore - @agentics/agents is resolved at runtime in the agents service
+        const { createDecisionAgent } = await import(/* webpackIgnore: true */ '@agentics/agents') as any;
+        // @ts-ignore
+        const { createAgentContext } = await import(/* webpackIgnore: true */ '@agentics/agents') as any;
 
         // Create agent based on ID
         let agent;
@@ -314,8 +314,6 @@ export async function registerAgentRoutes(server: FastifyInstance): Promise<void
    */
   server.get('/agents', {
     schema: {
-      description: 'List all registered agentics-dev-platform agents',
-      tags: ['Agents'],
       response: {
         200: {
           type: 'object',
@@ -364,8 +362,6 @@ export async function registerAgentRoutes(server: FastifyInstance): Promise<void
     Params: { agentId: string };
   }>('/agents/:agentId/contract', {
     schema: {
-      description: 'Get agent contract',
-      tags: ['Agents'],
       params: {
         type: 'object',
         properties: {
@@ -377,7 +373,8 @@ export async function registerAgentRoutes(server: FastifyInstance): Promise<void
     const { agentId } = request.params;
 
     try {
-      const { createDecisionAgent } = await import('@agentics/agents');
+      // @ts-ignore - @agentics/agents resolved at runtime
+      const { createDecisionAgent } = await import(/* webpackIgnore: true */ '@agentics/agents') as any;
 
       let contract;
       switch (agentId) {

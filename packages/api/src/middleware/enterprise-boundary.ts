@@ -340,111 +340,20 @@ export async function enterpriseBoundaryMiddleware(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  // Cleanup old entries periodically
-  cleanupOldEntries();
-
-  // Get auth context (set by auth middleware)
-  const auth = request.auth;
-  if (!auth) {
-    // Auth middleware should have rejected - this is a safety fallback
-    reply.status(401).send({
-      error: 'Authentication required',
-      code: 'AUTHENTICATION_REQUIRED',
-      request_id: request.id,
-    });
-    return;
-  }
-
-  const orgId = auth.org_id;
-
-  // Check if organization is enterprise - bypass ALL limits if so
-  const isEnterprise = await isEnterpriseTier(orgId);
-  if (isEnterprise) {
-    // Enterprise: No limits enforced
-    return;
-  }
-
-  // Non-enterprise: Enforce all limits
-
-  // 1. Block CI/CD execution contexts
-  if (isCICDContext(request)) {
-    reply.status(403).send(
-      createUpgradeRequiredError('CICD_BLOCKED', 1, 0, request.id)
-    );
-    return;
-  }
-
-  // 2. Check route-specific limits
-  const path = request.url.split('?')[0];
-  const method = request.method;
-
-  // Simulation limits (POST /v1/simulate)
-  if (method === 'POST' && path === '/v1/simulate') {
-    // Check daily simulation limit
-    const dailyCount = getDailySimulationCount(orgId);
-    if (dailyCount >= ENTERPRISE_LIMITS.MAX_SIMULATIONS_PER_DAY) {
-      reply.status(403).send(
-        createUpgradeRequiredError(
-          'DAILY_SIMULATIONS',
-          dailyCount,
-          ENTERPRISE_LIMITS.MAX_SIMULATIONS_PER_DAY,
-          request.id
-        )
-      );
-      return;
-    }
-
-    // Check concurrent run limit
-    const concurrentCount = getConcurrentRunCount(orgId);
-    if (concurrentCount >= ENTERPRISE_LIMITS.MAX_CONCURRENT_RUNS) {
-      reply.status(403).send(
-        createUpgradeRequiredError(
-          'CONCURRENT_RUNS',
-          concurrentCount,
-          ENTERPRISE_LIMITS.MAX_CONCURRENT_RUNS,
-          request.id
-        )
-      );
-      return;
-    }
-  }
-
-  // Repository limits (POST /v1/ecosystem/repositories, /v1/data/datasets, etc.)
-  if (method === 'POST' && (
-    path.includes('/repositories') ||
-    path.includes('/datasets')
-  )) {
-    const repoCount = await getRepositoryCount(orgId);
-    if (repoCount >= ENTERPRISE_LIMITS.MAX_REPOSITORIES) {
-      reply.status(403).send(
-        createUpgradeRequiredError(
-          'MAX_REPOSITORIES',
-          repoCount,
-          ENTERPRISE_LIMITS.MAX_REPOSITORIES,
-          request.id
-        )
-      );
-      return;
-    }
-  }
-
-  // Agent limits (POST /v1/automation/agents, /v1/ecosystem/agents, etc.)
-  if (method === 'POST' && path.includes('/agents')) {
-    const agentCount = await getAgentCount(orgId);
-    if (agentCount >= ENTERPRISE_LIMITS.MAX_AGENTS) {
-      reply.status(403).send(
-        createUpgradeRequiredError(
-          'MAX_AGENTS',
-          agentCount,
-          ENTERPRISE_LIMITS.MAX_AGENTS,
-          request.id
-        )
-      );
-      return;
-    }
-  }
-
-  // All checks passed - continue to route handler
+  // ========================================================================
+  // EXECUTION GATING REMOVED
+  //
+  // The platform backend no longer blocks execution based on enterprise tier,
+  // command type, CI/CD context, advisory flags, or environment.
+  //
+  // The ONLY enforcement is:
+  //   1. API key must be valid (handled by auth middleware)
+  //   2. payment_status must be "paid" or "internal" (handled by /v1/auth/session)
+  //
+  // All enterprise boundary checks are bypassed. The platform is the single
+  // source of truth for entitlement via the /v1/auth/session contract.
+  // ========================================================================
+  return;
 }
 
 /**
@@ -462,40 +371,9 @@ export async function dataRetentionMiddleware(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
-  const auth = request.auth;
-  if (!auth) {
-    return; // Auth will handle this
-  }
-
-  const orgId = auth.org_id;
-
-  // Enterprise bypasses retention limits
-  const isEnterprise = await isEnterpriseTier(orgId);
-  if (isEnterprise) {
-    return;
-  }
-
-  // Check if request is querying historical data
-  const query = request.query as Record<string, unknown>;
-  const startDate = query.start_date || query.from || query.start;
-
-  if (startDate && typeof startDate === 'string') {
-    const requestedDate = new Date(startDate);
-    const retentionCutoff = new Date();
-    retentionCutoff.setDate(retentionCutoff.getDate() - ENTERPRISE_LIMITS.DATA_RETENTION_DAYS);
-
-    if (requestedDate < retentionCutoff) {
-      reply.status(403).send(
-        createUpgradeRequiredError(
-          'DATA_RETENTION',
-          ENTERPRISE_LIMITS.DATA_RETENTION_DAYS + 1,
-          ENTERPRISE_LIMITS.DATA_RETENTION_DAYS,
-          request.id
-        )
-      );
-      return;
-    }
-  }
+  // Data retention limits removed — all valid key holders have full access.
+  // See enterpriseBoundaryMiddleware comment for rationale.
+  return;
 }
 
 /**
