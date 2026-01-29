@@ -11,6 +11,7 @@ export default function Navigation() {
   const navItems = [
     { href: '/dashboard/keys', label: 'API Keys' },
     { href: '/usage', label: 'Usage' },
+    { href: '/coherence', label: 'Coherence' },
   ];
 
   return (

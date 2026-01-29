@@ -129,6 +129,15 @@ The canonical ADR index is maintained in [`ARCHITECTURE_DECISIONS.md`](../ARCHIT
 | [ADR-008](../ARCHITECTURE_DECISIONS.md#adr-008-consolidation-cores-own-all-business-logic) | Consolidation Cores Own All Business Logic | Accepted |
 | [ADR-009](ADR-009-simulation-abstraction.md) | Simulation Abstraction and Organization-Agnostic Design | Accepted |
 
+### Domain-Driven Design (DDD) Framework ADRs
+
+The following ADRs define the conceptual architecture and governance framework using Domain-Driven Design principles:
+
+| ADR/DDD | Title | Status |
+|---------|-------|--------|
+| [ADR/DDD-005](ADR-DDD-005-system-coherence-drift-detection-self-governance.md) | System Coherence, Drift Detection, and Self-Governance | Accepted |
+| [ADR/DDD-006](ADR-DDD-006-ui-control-surface-architecture.md) | UI Control Surface Architecture Aligned with Claude-Flow and Claude-Code | Accepted |
+
 ---
 
 ## Amendment Process

@@ -97,6 +97,96 @@ export type {
 } from './types/layer3.js';
 export { Layer3Core } from './types/layer3.js';
 
+// Coherence Domain Types (ADR/DDD #005)
+export type {
+  // Drift Domain
+  DriftFinding,
+  DriftSource,
+  DriftState,
+  // Coherence Domain
+  CoherenceAssessment,
+  CoherenceSummary,
+  AssessmentScope,
+  // Lineage Domain
+  LineageRecord,
+  ArtifactReference,
+  DerivationOperation,
+  GovernanceContext,
+  // Human Oversight Domain
+  DecisionRecord,
+  DecisionSubject,
+  ImpactAssessment,
+  DecisionContext,
+  HistoricalContext,
+  IntegrationState,
+  PrecedentDecision,
+  DecisionAuditEntry,
+  // Invariant Types
+  SystemInvariant,
+  InvariantValidationResult,
+  InvariantViolation,
+  // Alert Types
+  CoherenceAlert,
+  AlertSource,
+  // Comparison Types
+  StateDiff,
+  StateSnapshot,
+  Difference,
+  DiffSummary,
+} from './types/coherence.js';
+export {
+  DriftType,
+  DriftSeverity,
+  CoherenceStatus,
+  ArtifactType,
+  DecisionCategory,
+  DecisionStatus,
+  InvariantCategory,
+  AlertType,
+} from './types/coherence.js';
+
+// Intent Domain Types (ADR/DDD #006)
+export type {
+  // Core Intent Types
+  Intent,
+  IntentOperation,
+  ControlSurfaceWorkflow,
+  WorkflowTransition,
+  // Governance Types
+  GovernanceValidationResult,
+  GovernanceConstraint,
+  GovernanceWarning,
+  // Confirmation Types
+  ConfirmationRequirement,
+  ConfirmationStep,
+  ConfirmationAcknowledgment,
+  // Preview Types
+  PreviewData,
+  ProposedChange,
+  ImpactSummary,
+  AffectedResource,
+  // Execution Types
+  ExecutionResult,
+  ExecutionError,
+  ActualChange,
+  // Audit Types
+  IntentAuditEntry,
+  IntentAuditAction,
+  // Request/Response Types
+  DeclareIntentRequest,
+  ConfirmIntentRequest,
+  ExecuteIntentRequest,
+  CancelIntentRequest,
+} from './types/intent.js';
+export {
+  IntentCategory,
+  IntentStatus,
+  WorkflowPhase,
+  EntryPoint,
+  IntentDomain,
+  ConfirmationType,
+} from './types/intent.js';
+
 // Constants
 export {
   API_VERSION,
