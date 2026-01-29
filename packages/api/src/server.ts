@@ -22,6 +22,7 @@ import { registerCliAuthRoutes } from './routes/cli-auth.js';
 import { registerAgentRoutes } from './routes/agents.js';
 import { registerAuthSessionRoutes } from './routes/auth-session.js';
 import { registerCliCommandRoutes } from './routes/cli-commands.js';
+import { registerCoherenceRoutes } from './routes/coherence.js';
 
 export interface ErrorResponse {
   error: string;
@@ -138,6 +139,11 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
   await server.register(async (agents) => {
     await registerAgentRoutes(agents);
   }, { prefix: '/v1' });
+
+  // Coherence routes — ADR/DDD #005: System Coherence, Drift Detection, Self-Governance
+  // These routes provide observation-only access to coherence domain services
+  // CRITICAL: These routes do NOT trigger automatic remediation (INV-C3)
+  registerCoherenceRoutes(server);
 
   // Request logging
   server.addHook('onRequest', async (request, reply) => {
