@@ -15,6 +15,7 @@ describe('erp references command', () => {
     correlationId: 'test-correlation-id',
     timestamp: new Date().toISOString(),
     dryRun: false,
+    confirmed: false,
   };
 
   beforeEach(() => {

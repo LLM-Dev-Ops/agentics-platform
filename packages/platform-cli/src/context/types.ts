@@ -9,6 +9,7 @@ export interface CliFlags {
   org?: string;
   env?: string;
   dryRun?: boolean;
+  confirmed?: boolean;
   format?: 'json' | 'table';
 }
 

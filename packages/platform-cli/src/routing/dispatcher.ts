@@ -9,6 +9,7 @@ import { validateOrThrow } from '../policy/validator.js';
 import { withInterceptors } from './interceptor.js';
 import { forward } from '../delegation/forwarder.js';
 import { executeDryRun, type DryRunAction } from '../delegation/dry-run.js';
+import { enforceRiskGate } from './risk-gate.js';
 
 /** Command handler function type */
 export type CommandHandler = (
@@ -77,11 +78,16 @@ export async function dispatch(
       correlationId: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
       dryRun: flags.dryRun ?? false,
+      confirmed: flags.confirmed ?? false,
     };
   }
 
-  // Override dry-run from flags
+  // Override flags from CLI
   context.dryRun = flags.dryRun ?? false;
+  context.confirmed = flags.confirmed ?? false;
+
+  // Enforce risk gate before any side-effects
+  enforceRiskGate(commandName, context);
 
   // Validate against policy if path specified
   if (command.policyPath) {

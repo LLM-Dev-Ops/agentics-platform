@@ -23,6 +23,7 @@ export interface ExecutionContext {
   correlationId: string;
   timestamp: string;
   dryRun: boolean;
+  confirmed: boolean;
 }
 
 /** Context source priority */

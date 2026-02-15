@@ -134,6 +134,24 @@ export class LifecycleStateError extends PlatformCliError {
   }
 }
 
+/** Confirmation-required errors (HTTP 409 equivalent) */
+export class ConfirmationRequiredError extends PlatformCliError {
+  constructor(
+    public readonly commandPath: string,
+    public readonly riskLevel: 'high' | 'critical'
+  ) {
+    super(
+      `Command '${commandPath}' is a ${riskLevel}-risk operation and requires explicit confirmation.\n\n` +
+      `To execute this command, add the --confirmed flag:\n` +
+      `  agentics-platform ${commandPath} --confirmed\n\n` +
+      `Or set confirmed: true in a structured input payload.`,
+      'CONFIRMATION_REQUIRED',
+      9  // exit code 9 = confirmation required (maps to HTTP 409)
+    );
+    this.name = 'ConfirmationRequiredError';
+  }
+}
+
 /** Architecture document parsing errors */
 export class ArchitectureParseError extends PlatformCliError {
   constructor(

@@ -148,6 +148,7 @@ export async function resolveContext(flags: CliFlags): Promise<ResolvedContext> 
     correlationId: randomUUID(),
     timestamp: new Date().toISOString(),
     dryRun: flags.dryRun ?? false,
+    confirmed: flags.confirmed ?? false,
   };
 
   return {

@@ -17,7 +17,7 @@ import { artifactPlan, artifactInspect, artifactDiff, artifactList } from './com
 import { intentSubmit, intentStatus, intentApprove, intentReject, intentList, intentPromote } from './commands/intent/index.js';
 import { archLayers, archBoundaries, archRepos, archValidate } from './commands/architecture/index.js';
 import { erpDomains, erpEvents, erpReferences } from './commands/erp/index.js';
-import { formatError, getExitCode, PlatformCliError } from './errors.js';
+import { formatError, getExitCode, PlatformCliError, ConfirmationRequiredError } from './errors.js';
 import { VERSION, CLI_NAME } from './index.js';
 import type { CliFlags } from './context/types.js';
 import type { ExecutionContext } from './types/context.js';
@@ -26,6 +26,23 @@ const program = new Command();
 
 // Global error handler
 function handleError(error: unknown): never {
+  // Confirmation-required gets structured JSON output (HTTP 409 equivalent)
+  if (error instanceof ConfirmationRequiredError) {
+    const payload = {
+      error: 'confirmation_required',
+      reason: 'confirmation_required',
+      command: error.commandPath,
+      risk_level: error.riskLevel,
+      message: error.message,
+    };
+    if (process.stdout.isTTY) {
+      console.error(chalk.yellow(formatError(error)));
+    } else {
+      process.stdout.write(JSON.stringify(payload) + '\n');
+    }
+    process.exit(getExitCode(error));
+  }
+
   if (error instanceof PlatformCliError) {
     console.error(chalk.red(formatError(error)));
     process.exit(getExitCode(error));
@@ -49,6 +66,7 @@ async function getContext(options: Record<string, unknown>): Promise<ExecutionCo
     org: options['org'] as string | undefined,
     env: options['env'] as string | undefined,
     dryRun: options['dryRun'] as boolean | undefined,
+    confirmed: options['confirmed'] as boolean | undefined,
     format: options['format'] as 'json' | 'table' | undefined,
   };
 
@@ -64,6 +82,7 @@ function getMinimalContext(options: Record<string, unknown>): ExecutionContext {
     correlationId: crypto.randomUUID(),
     timestamp: new Date().toISOString(),
     dryRun: options['dryRun'] as boolean ?? false,
+    confirmed: options['confirmed'] as boolean ?? false,
   };
 }
 
@@ -75,6 +94,7 @@ program
   .option('--org <org-id>', 'Override organization context')
   .option('--env <env-id>', 'Override environment context')
   .option('--dry-run', 'Show what would happen without executing')
+  .option('--confirmed', 'Confirm execution of high-risk commands')
   .option('--format <format>', 'Output format (json|table)', 'table');
 
 // ============ ORG COMMANDS ============
