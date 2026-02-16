@@ -23,6 +23,21 @@ import { db } from '../db.js';
 import { verifySupabaseJWT, getOrCreateOrg, hashApiKey } from '../middleware/auth.js';
 
 /**
+ * Determine payment_status for an org based on stripe_metering_enabled and email
+ */
+function resolvePaymentStatus(org: { stripe_metering_enabled?: boolean; owner_email?: string | null }): 'paid' | 'unpaid' | 'trial' | 'internal' {
+  // Internal testing emails
+  if (org.owner_email && /^dev@agentics\.local$/i.test(org.owner_email)) {
+    return 'internal';
+  }
+  if (org.stripe_metering_enabled) {
+    return 'paid';
+  }
+  // Default: treat valid key holders as trial until billing is wired
+  return 'trial';
+}
+
+/**
  * Canonical domain for Agentics Platform
  * This is the ONLY place the production domain should be defined
  */
@@ -231,9 +246,12 @@ async function pollSessionHandler(
         s.status,
         s.expires_at,
         s.authorized_org_id,
-        k.id as api_key_id
+        k.id as api_key_id,
+        o.owner_email,
+        o.stripe_metering_enabled
       FROM cli_auth_sessions s
       LEFT JOIN api_keys k ON k.id = s.api_key_id
+      LEFT JOIN organizations o ON o.id = s.authorized_org_id
       WHERE s.device_code = $1
       `,
       [device_code]
@@ -307,9 +325,19 @@ async function pollSessionHandler(
           [session.id]
         );
 
+        // Build enriched response with user identity
+        const paymentStatus = resolvePaymentStatus({
+          stripe_metering_enabled: session.stripe_metering_enabled,
+          owner_email: session.owner_email,
+        });
+
         return reply.code(200).send({
           status: 'completed',
           api_key: apiKey,
+          email: session.owner_email || null,
+          payment_status: paymentStatus,
+          org: session.authorized_org_id || null,
+          role: 'owner',
           message: 'Authentication successful',
         });
 

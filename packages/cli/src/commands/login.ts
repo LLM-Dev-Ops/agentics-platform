@@ -115,6 +115,10 @@ interface CliAuthSessionResponse {
 interface CliAuthPollResponse {
   status: 'pending' | 'authorized' | 'completed';
   api_key?: string;
+  email?: string;
+  payment_status?: 'paid' | 'unpaid' | 'trial' | 'internal';
+  org?: string;
+  role?: string;
   message: string;
 }
 
@@ -337,25 +341,43 @@ async function browserLoginHandler(options: {
         // Store the API key
         setApiKey(pollResult.api_key);
 
-        // Verify and fetch identity
-        const client = createClient();
-        try {
-          const identity = await client.whoami();
+        // Use identity from poll response if available, otherwise fetch via whoami
+        if (pollResult.email) {
           setIdentity({
-            user_id: identity.user_id,
-            email: identity.email,
+            user_id: pollResult.org || '',
+            email: pollResult.email,
           });
 
           console.log('');
           success('Logged in successfully!');
-          info(`Email: ${identity.email}`);
+          info(`Email: ${pollResult.email}`);
+          if (pollResult.payment_status) {
+            info(`Payment status: ${pollResult.payment_status}`);
+          }
           info('API key has been saved to ~/.agentics/credentials.json');
           console.log('');
           info('You can now use Agentics CLI commands.');
-        } catch (err) {
-          // Key was saved but couldn't verify - still successful
-          success('Logged in successfully!');
-          warning('Could not verify identity. Your API key has been saved.');
+        } else {
+          // Fallback: fetch identity via whoami
+          const client = createClient();
+          try {
+            const identity = await client.whoami();
+            setIdentity({
+              user_id: identity.user_id,
+              email: identity.email,
+            });
+
+            console.log('');
+            success('Logged in successfully!');
+            info(`Email: ${identity.email}`);
+            info('API key has been saved to ~/.agentics/credentials.json');
+            console.log('');
+            info('You can now use Agentics CLI commands.');
+          } catch (err) {
+            // Key was saved but couldn't verify - still successful
+            success('Logged in successfully!');
+            warning('Could not verify identity. Your API key has been saved.');
+          }
         }
 
         return;
