@@ -60,24 +60,36 @@ export async function handleRequest(
   const startTime = Date.now();
 
   try {
-    // credentials = extractCredentials(request)
-    const credentials = extractCredentials(request);
+    // Use auth context from global gate if already set, otherwise authenticate here
+    let auth: AuthContext;
+    let identity: Identity | undefined;
 
-    // result = validateCredentials(credentials)
-    const result = await validateCredentials(credentials);
+    if (request.auth && request.identity) {
+      auth = request.auth;
+      identity = request.identity;
+    } else if (request.auth) {
+      auth = request.auth;
+    } else {
+      // credentials = extractCredentials(request)
+      const credentials = extractCredentials(request);
 
-    // IF result IS NULL: RETURN errorResponse(401, "AUTHENTICATION_REQUIRED", correlationId)
-    if (!result) {
-      const error = createErrorResponse(
-        401,
-        'AUTHENTICATION_REQUIRED',
-        'Valid API key required. Use Authorization: Bearer <api_key>',
-        correlationId
-      );
-      return reply.status(error.statusCode).send(error.response);
+      // result = validateCredentials(credentials)
+      const result = await validateCredentials(credentials);
+
+      // IF result IS NULL: RETURN errorResponse(401, "AUTHENTICATION_REQUIRED", correlationId)
+      if (!result) {
+        const error = createErrorResponse(
+          401,
+          'AUTHENTICATION_REQUIRED',
+          'Valid API key required. Use Authorization: Bearer <api_key> or X-API-Key header',
+          correlationId
+        );
+        return reply.status(error.statusCode).send(error.response);
+      }
+
+      auth = result.auth;
+      identity = result.identity;
     }
-
-    const { auth, identity } = result;
 
     // endpoint = parseEndpoint(request.path)
     const endpoint = `${request.method} ${getRequestPath(request.url)}`;
@@ -100,8 +112,20 @@ export async function handleRequest(
       return reply.status(error.statusCode).send(error.response);
     }
 
+    // Build identity for rate limiting if not already set
+    const effectiveIdentity: Identity = identity || {
+      userId: auth.org_id,
+      scopes: auth.scopes,
+      entitlements: {
+        plan: 'developer',
+        maxRequests: 10000,
+        maxTokens: 1000000,
+        maxApiKeys: 10,
+      },
+    };
+
     // IF isRateLimited(identity, endpoint): RETURN errorResponse(429, "RATE_LIMIT_EXCEEDED", correlationId)
-    const rateLimitResult = isRateLimited(identity, getRequestPath(request.url));
+    const rateLimitResult = isRateLimited(effectiveIdentity, getRequestPath(request.url));
 
     // Add rate limit headers
     reply.header('X-RateLimit-Limit', rateLimitResult.limit.toString());

@@ -96,27 +96,96 @@ export function hashApiKey(key: string): string {
 }
 
 /**
- * Extract API key from Authorization header
- * Format: Authorization: Bearer <api_key>
+ * Extract API key from request headers.
+ *
+ * Checks in order:
+ * 1. Authorization: Bearer agentics_* (existing path)
+ * 2. X-API-Key header with agentics_sk_* or agentics_internal_* prefix
  */
 export function extractCredentials(request: FastifyRequest): Credentials | null {
+  // 1. Check Authorization: Bearer header
   const authHeader = request.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7).trim();
+
+    if (token.startsWith('agentics_')) {
+      return {
+        type: 'api_key',
+        value: token,
+      };
+    }
   }
 
-  const token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix
-
-  // API keys must start with 'agentics_' prefix
-  if (token.startsWith('agentics_')) {
+  // 2. Check X-API-Key header
+  const xApiKey = request.headers['x-api-key'] as string | undefined;
+  if (xApiKey && (xApiKey.startsWith('agentics_sk_') || xApiKey.startsWith('agentics_internal_'))) {
     return {
       type: 'api_key',
-      value: token,
+      value: xApiKey,
     };
   }
 
   return null;
+}
+
+// GCP JWKS client for identity token verification
+// Supports developers/CI who authenticate with gcloud identity tokens
+const gcpJwks = jwksClient({
+  jwksUri: 'https://www.googleapis.com/oauth2/v3/certs',
+  cache: true,
+  cacheMaxAge: 600000,
+  rateLimit: true,
+  jwksRequestsPerMinute: 10,
+  timeout: 30000,
+});
+
+/**
+ * GCP identity token payload
+ */
+export interface GcpIdentityPayload {
+  sub: string;
+  email?: string;
+  email_verified?: boolean;
+  iss: string;
+  aud: string;
+  exp: number;
+  iat: number;
+}
+
+/**
+ * Verify a GCP identity token against Google's JWKS
+ * Returns the token payload if valid, null otherwise.
+ *
+ * This preserves the existing behavior for developers/CI who use
+ * `gcloud auth print-identity-token` to authenticate requests.
+ */
+export async function verifyGcpIdentityToken(token: string): Promise<GcpIdentityPayload | null> {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    const headerBase64 = parts[0];
+    const header = JSON.parse(Buffer.from(headerBase64, 'base64url').toString());
+
+    if (!header.kid) {
+      return null;
+    }
+
+    const signingKey = await gcpJwks.getSigningKey(header.kid);
+    const publicKey = signingKey.getPublicKey();
+
+    const payload = jwt.verify(token, publicKey, {
+      algorithms: ['RS256'],
+      issuer: ['https://accounts.google.com', 'accounts.google.com'],
+    }) as GcpIdentityPayload;
+
+    return payload;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -218,7 +287,7 @@ async function lookupApiKey(keyValue: string): Promise<ApiKeyRecord | null> {
  * Lookup organization entitlements
  * MVP: Returns default developer tier
  */
-async function lookupEntitlements(orgId: string): Promise<Entitlements> {
+export async function lookupEntitlements(orgId: string): Promise<Entitlements> {
   // MVP: Return from in-memory store or default
   // Production: Query from entitlement database
 
@@ -313,21 +382,39 @@ export async function getOrCreateOrg(userId: string): Promise<string | null> {
  * Authentication middleware for Fastify
  *
  * Auth order:
- * 1. Check if Supabase JWT (for UI routes)
- * 2. Check if API key (for machine routes)
- * 3. Reject if neither
+ * 1. Skip if already authenticated (request.auth set by global gate)
+ * 2. Check if Supabase JWT (for UI routes)
+ * 3. Check if API key via Bearer or X-API-Key (for machine routes)
+ * 4. Reject if neither
  */
 export async function authMiddleware(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<void> {
+  // If already authenticated by the global gate, skip
+  if (request.auth) {
+    return;
+  }
+
   const authHeader = request.headers.authorization;
 
+  // Check X-API-Key fallback if no Authorization header
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Try X-API-Key header before rejecting
+    const credentials = extractCredentials(request);
+    if (credentials) {
+      const result = await validateCredentials(credentials);
+      if (result) {
+        request.auth = result.auth;
+        request.identity = result.identity;
+        return;
+      }
+    }
+
     reply.status(401).send({
       error: 'Authentication required',
       code: 'AUTHENTICATION_REQUIRED',
-      message: 'Authorization header required',
+      message: 'Authorization header or X-API-Key required',
       request_id: request.id,
     });
     return;

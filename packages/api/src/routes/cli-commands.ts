@@ -30,6 +30,11 @@ async function authGuard(
   request: FastifyRequest,
   reply: FastifyReply
 ): Promise<boolean> {
+  // If already authenticated by the global gate, skip
+  if (request.auth) {
+    return true;
+  }
+
   const credentials = extractCredentials(request);
   const result = await validateCredentials(credentials);
 

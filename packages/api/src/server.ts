@@ -23,6 +23,7 @@ import { registerAgentRoutes } from './routes/agents.js';
 import { registerAuthSessionRoutes } from './routes/auth-session.js';
 import { registerCliCommandRoutes } from './routes/cli-commands.js';
 import { registerCoherenceRoutes } from './routes/coherence.js';
+import { apiKeyGate } from './middleware/api-key-gate.js';
 
 export interface ErrorResponse {
   error: string;
@@ -65,7 +66,7 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
     origin: true, // Allow all origins in development (should be restricted in production)
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-API-Key', 'X-Correlation-ID'],
     exposedHeaders: ['X-Request-Id', 'Retry-After'],
   });
 
@@ -92,6 +93,11 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
 
   // Register observability middleware (correlation ID, metrics, usage)
   registerObservabilityMiddleware(server);
+
+  // Global authentication gate
+  // Runs before any route-specific hooks. Validates Bearer tokens and X-API-Key headers.
+  // Public routes (health, ready, POST /v1/cli/auth/sessions) are exempt.
+  server.addHook('onRequest', apiKeyGate);
 
   // Register observability routes (/metrics, /audit, /usage)
   registerObservabilityRoutes(server);
