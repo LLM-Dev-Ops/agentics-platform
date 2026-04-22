@@ -65,9 +65,8 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-        const response = await fetch(`${apiUrl}/v1/me`, {
+        // Same-origin request — Next.js rewrites proxy to the real API.
+        const response = await fetch(`/v1/me`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${accessToken}`,

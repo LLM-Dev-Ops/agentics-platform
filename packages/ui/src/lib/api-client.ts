@@ -10,7 +10,9 @@
  * - Backend continues to accept both Supabase JWT (for humans) and API keys (for machines)
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Browser always makes same-origin requests; Next.js rewrites (next.config.mjs)
+// proxy /v1/* to the real API server-side, avoiding CORS preflight entirely.
+const API_BASE_URL = '';
 
 /**
  * Get the current Supabase session access token

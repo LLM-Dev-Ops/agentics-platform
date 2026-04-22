@@ -4,10 +4,11 @@ const nextConfig = {
   output: 'standalone',
   transpilePackages: ['@agentics/sdk'],
   async rewrites() {
+    const apiOrigin = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     return [
       {
-        source: '/api/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/v1/:path*',
+        source: '/v1/:path*',
+        destination: `${apiOrigin}/v1/:path*`,
       },
     ]
   },
