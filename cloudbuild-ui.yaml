@@ -10,7 +10,7 @@ steps:
       - '-f'
       - 'packages/ui/Dockerfile'
       - '--build-arg'
-      - 'NEXT_PUBLIC_API_URL=https://agentics-platform-1062287243982.us-central1.run.app'
+      - 'NEXT_PUBLIC_API_URL=https://platform.agentics.dev'
       - '.'
 
   # Push the image
