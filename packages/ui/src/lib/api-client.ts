@@ -63,9 +63,13 @@ async function request<T>(
 
   const url = `${API_BASE_URL}${endpoint}`;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     'Authorization': `Bearer ${accessToken}`,
   };
+  // Only set Content-Type when there's a body — fastify rejects requests
+  // with Content-Type: application/json and empty body (FST_ERR_CTP_EMPTY_JSON_BODY).
+  if (options.body !== undefined && options.body !== null) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const response = await fetch(url, {
     ...options,
