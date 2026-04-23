@@ -128,6 +128,9 @@ The canonical ADR index is maintained in [`ARCHITECTURE_DECISIONS.md`](../ARCHIT
 | [ADR-007](../ARCHITECTURE_DECISIONS.md#adr-007-simulation-repositories-isolated-from-production) | Simulation Repositories Isolated from Production | Accepted |
 | [ADR-008](../ARCHITECTURE_DECISIONS.md#adr-008-consolidation-cores-own-all-business-logic) | Consolidation Cores Own All Business Logic | Accepted |
 | [ADR-009](ADR-009-simulation-abstraction.md) | Simulation Abstraction and Organization-Agnostic Design | Accepted |
+| [ADR-010](ADR-010-ui-brand-and-telemetry-design-system.md) | UI Brand and Telemetry Design System | Accepted |
+| [ADR-011](ADR-011-realtime-simulation-telemetry-transport.md) | Real-Time Simulation Telemetry Transport | Accepted |
+| [ADR-012](ADR-012-simulation-live-console-ui-surface.md) | Simulation Live Console UI Surface | Accepted |
 
 ### Domain-Driven Design (DDD) Framework ADRs
 

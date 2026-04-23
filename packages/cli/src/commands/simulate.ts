@@ -6,10 +6,95 @@
 
 import { Command } from 'commander';
 import { createClient, handleError } from '../client.js';
-import { getFormat } from '../config.js';
+import { getApiKey, getEndpoint, getFormat } from '../config.js';
 import { formatJson, spinner, success, info } from '../output.js';
 import type { OutputFormat } from '../output.js';
 import type { SimulateParams } from '../types.js';
+import { consumeSse } from '../sse.js';
+
+/**
+ * ADR-012 — live-view URL printed to end users after a simulation is
+ * created. AGENTICS_UI_URL overrides for dev.
+ */
+function getLiveViewUrl(simulationId: string): string {
+  const base =
+    process.env.AGENTICS_UI_URL ||
+    process.env.AGENTICS_APP_URL ||
+    'https://app.agentics.dev';
+  return `${base.replace(/\/$/, '')}/simulations/${encodeURIComponent(simulationId)}`;
+}
+
+/**
+ * ADR-011 — stream simulation events via SSE. Kept polling path under
+ * --poll for air-gapped debugging.
+ */
+async function streamSimulation(simulationId: string): Promise<void> {
+  const endpoint = getEndpoint();
+  const apiKey = getApiKey();
+  const url = `${endpoint}/v1/simulations/${encodeURIComponent(simulationId)}/events`;
+
+  const loadingSpinner = spinner('Live stream...');
+  let terminalKind: string | null = null;
+  const abort = new AbortController();
+
+  try {
+    await consumeSse({
+      url,
+      headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : {},
+      signal: abort.signal,
+      shouldStop: () => terminalKind !== null,
+      onMessage: async (msg) => {
+        if (!msg.event || msg.event === 'end') {
+          if (msg.event === 'end') abort.abort();
+          return;
+        }
+        let envelope: any = {};
+        try { envelope = msg.data ? JSON.parse(msg.data) : {}; } catch { /* ignore */ }
+        const p = envelope.payload ?? {};
+
+        switch (msg.event) {
+          case 'simulation.step.started':
+            loadingSpinner.text = `Running step: ${p.step ?? '?'}`;
+            break;
+          case 'simulation.step.completed':
+            loadingSpinner.text = `Completed step: ${p.step ?? '?'}`;
+            break;
+          case 'simulation.metric':
+            if (p.name) loadingSpinner.text = `${p.name}: ${p.value}${p.unit ? ' ' + p.unit : ''}`;
+            break;
+          case 'simulation.log':
+            if (p.level === 'error' || p.level === 'warn') {
+              info(`[${p.level}] ${p.message ?? ''}`);
+            }
+            break;
+          case 'simulation.completed':
+            terminalKind = msg.event;
+            loadingSpinner.succeed('Simulation completed');
+            abort.abort();
+            break;
+          case 'simulation.failed':
+            terminalKind = msg.event;
+            loadingSpinner.fail(`Simulation failed: ${p.error ?? 'unknown error'}`);
+            abort.abort();
+            break;
+          case 'simulation.cancelled':
+            terminalKind = msg.event;
+            loadingSpinner.warn('Simulation cancelled');
+            abort.abort();
+            break;
+        }
+      },
+    });
+  } catch (err) {
+    loadingSpinner.fail('Live stream error');
+    throw err;
+  }
+
+  if (terminalKind === null) {
+    loadingSpinner.stop();
+    info('Stream ended before terminal event.');
+  }
+}
 
 /**
  * Poll simulation status until completion
@@ -92,6 +177,7 @@ async function simulateHandler(options: {
   users?: number;
   output?: string;
   follow?: boolean;
+  poll?: boolean;
   format?: OutputFormat;
   name?: string;
   verbose?: boolean;
@@ -141,11 +227,16 @@ async function simulateHandler(options: {
 
     success(`Simulation ID: ${result.simulation_id}`);
     info(`Status: ${result.status}`);
+    info(`View live: ${getLiveViewUrl(result.simulation_id)}`);
 
     if (options.follow) {
-      // Poll for completion
       console.log('');
-      await pollSimulation(result.simulation_id);
+      if (options.poll) {
+        // Legacy polling path, retained for air-gapped debugging.
+        await pollSimulation(result.simulation_id);
+      } else {
+        await streamSimulation(result.simulation_id);
+      }
     } else {
       info('\nTo check status, run:');
       info(`  agentics simulate status ${result.simulation_id}`);
@@ -236,7 +327,8 @@ export function createSimulateCommand(): Command {
     .option('--duration <seconds>', 'Simulation duration', parseInt)
     .option('--users <count>', 'Number of simulated users', parseInt)
     .option('--output <path>', 'Save results to file')
-    .option('--follow', 'Wait and display results when complete')
+    .option('--follow', 'Stream live events until simulation completes (ADR-011 SSE)')
+    .option('--poll', 'With --follow, use polling instead of SSE (air-gapped)')
     .option('--format <format>', 'Output format (json, table)', 'table')
     .option('--name <name>', 'Name for this simulation')
     .option('--verbose', 'Show detailed progress updates')

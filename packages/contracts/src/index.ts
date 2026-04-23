@@ -18,3 +18,6 @@ export * from './telemetry/index.js';
 
 // Validation utilities
 export * from './validation.js';
+
+// ADR-011 — simulation telemetry events
+export * from './simulation-events.js';

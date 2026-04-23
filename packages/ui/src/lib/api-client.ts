@@ -259,6 +259,28 @@ export async function getMe(): Promise<OrgInfo> {
 }
 
 /**
+ * ADR-012 — simulation list hydration for the Simulations page.
+ * Accepts both `{ simulations: [...] }` and bare array responses from
+ * Research Core variants.
+ */
+export interface SimulationListItem {
+  simulation_id: string;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  name?: string;
+  created_at?: string;
+  updated_at?: string;
+  progress?: number;
+}
+
+export async function listSimulations(): Promise<SimulationListItem[]> {
+  const body = await request<{ simulations?: SimulationListItem[] } | SimulationListItem[]>(
+    '/v1/simulate'
+  );
+  if (Array.isArray(body)) return body;
+  return body?.simulations ?? [];
+}
+
+/**
  * GET /v1/keys
  * List all API keys for the current organization
  */

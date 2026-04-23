@@ -23,6 +23,7 @@ import { registerAgentRoutes } from './routes/agents.js';
 import { registerAuthSessionRoutes } from './routes/auth-session.js';
 import { registerCliCommandRoutes } from './routes/cli-commands.js';
 import { registerCoherenceRoutes } from './routes/coherence.js';
+import { registerSimulationEventsRoutes } from './routes/simulation-events.js';
 import { apiKeyGate } from './middleware/api-key-gate.js';
 
 export interface ErrorResponse {
@@ -150,6 +151,10 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
   // These routes provide observation-only access to coherence domain services
   // CRITICAL: These routes do NOT trigger automatic remediation (INV-C3)
   registerCoherenceRoutes(server);
+
+  // ADR-011 — Real-time simulation telemetry SSE.
+  // GET /v1/simulations/:id/events. Auth enforced by authMiddleware.
+  await registerSimulationEventsRoutes(server);
 
   // Request logging
   server.addHook('onRequest', async (request, reply) => {

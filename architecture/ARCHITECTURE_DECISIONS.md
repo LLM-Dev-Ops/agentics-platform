@@ -29,8 +29,11 @@ These decisions represent closed, intentional choices—not evolving experiments
 | ADR-007 | Simulation repositories isolated from production | Compliance & Safety |
 | ADR-008 | Consolidation cores own all business logic | Domain Ownership |
 | ADR-009 | Simulation abstraction and organization-agnostic design | Product Architecture |
+| ADR-010 | UI brand and telemetry design system | UI / Product Architecture |
+| ADR-011 | Real-time simulation telemetry transport (SSE) | API / Distribution |
+| ADR-012 | Simulation live console UI surface | UI / Product Architecture |
 
-**Note**: ADR-009 is documented in full in [`adr/ADR-009-simulation-abstraction.md`](adr/ADR-009-simulation-abstraction.md).
+**Note**: ADR-009 is documented in full in [`adr/ADR-009-simulation-abstraction.md`](adr/ADR-009-simulation-abstraction.md). ADRs 010, 011, and 012 are documented in full in their respective files under [`adr/`](adr/).
 
 ---
 

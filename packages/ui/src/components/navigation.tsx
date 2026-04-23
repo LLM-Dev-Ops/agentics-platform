@@ -9,6 +9,7 @@ export default function Navigation() {
   const pathname = usePathname();
 
   const navItems = [
+    { href: '/simulations', label: 'Simulations' },
     { href: '/dashboard/keys', label: 'API Keys' },
     { href: '/usage', label: 'Usage' },
     { href: '/coherence', label: 'Coherence' },
