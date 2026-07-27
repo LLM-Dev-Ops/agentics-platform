@@ -64,8 +64,8 @@ export function routeToCore(endpoint: string): Layer3Core | null {
       url: config.layer3Endpoints.research,
     },
     '/v1/simulate': {
-      name: 'LLM-Research-Core',
-      url: config.layer3Endpoints.research,
+      name: 'agentics-orchestration-engine',
+      url: config.layer3Endpoints.orchestration,
     },
     '/v1/interface': {
       name: 'LLM-Interface-Core',

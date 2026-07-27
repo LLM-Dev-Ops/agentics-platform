@@ -3,7 +3,7 @@
 **Version**: 1.1
 **Status**: Canonical
 **Classification**: Security & Authentication Architecture
-**Last Updated**: 2025-01-05
+**Last Updated**: 2026-01-05
 **Governing Constraint**: ADR-006 (CLI as Thin Client)
 
 ---

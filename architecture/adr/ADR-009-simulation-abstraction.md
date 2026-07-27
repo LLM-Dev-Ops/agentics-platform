@@ -1,7 +1,7 @@
 # ADR-009: Simulation Abstraction and Organization-Agnostic Design
 
 **Status**: Accepted
-**Date**: 2025-01-03
+**Date**: 2026-01-03
 **Category**: Product Architecture
 **Relates to**: ADR-001, ADR-002, ADR-007
 

@@ -12,6 +12,13 @@ export interface Layer3Endpoints {
   ecosystem: string;
   research: string;
   interface: string;
+
+  // Layer 3.5 execution spine (ADR-013). Grouped with the Layer 3 cores because
+  // `forwardRequest` keys off `keyof Layer3Endpoints`; the tier distinction is
+  // enforced by REPO_CLASSIFICATION.md, not by this type.
+  orchestration: string;
+  resultsIndex: string;
+  simulationRunner: string;
 }
 
 export interface RateLimitConfig {
@@ -76,6 +83,11 @@ const config: Config = {
     ecosystem: process.env.ECOSYSTEM_CORE_URL || 'http://localhost:3006',
     research: process.env.RESEARCH_CORE_URL || 'http://localhost:3007',
     interface: process.env.INTERFACE_CORE_URL || 'http://localhost:3008',
+
+    // Layer 3.5 execution spine (ADR-013)
+    orchestration: process.env.ORCHESTRATION_ENGINE_URL || 'http://localhost:3010',
+    resultsIndex: process.env.RESULTS_INDEX_URL || 'http://localhost:3011',
+    simulationRunner: process.env.SIMULATION_RUNNER_URL || 'http://localhost:3012',
   },
 
   // Authentication

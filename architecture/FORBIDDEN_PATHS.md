@@ -1,9 +1,9 @@
 # Forbidden Dependency Paths
 
-**Version**: 1.3
+**Version**: 1.4
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
-**Last Updated**: 2025-01-04
+**Last Updated**: 2026-07-27
 **Canonical Reference**: [`DEPENDENCY_GRAPH.md`](DEPENDENCY_GRAPH.md)
 
 ---
@@ -28,6 +28,7 @@ Violations of any path listed below represent architectural failures that must b
 | Platform CLI | `agentics-platform-cli` | Apex orchestration CLI |
 | External Consumers | `@agentics/sdk`, `@agentics/ui` | SDK and UI for third-party distribution |
 | Consolidation Cores | `LLM-*-Core` | Business logic domains |
+| Execution Spine | `agentics-orchestration-engine`, `agentics-execution-engine`, `agentics-results-index`, `agentics-usage-ledger`, `agentics-deployment-intent` | Layer 3.5 simulation execution and recording |
 | Infrastructure | `infra-*` | Deployment, provisioning, operations |
 | Services | `services-*` | Internal microservices |
 | Integrations | `integrations-*` | Third-party adapters |
@@ -124,13 +125,31 @@ The platform is Layer 4 and must not bypass Layer 3. It exposes read-only, simul
 |---------------------|-----------|
 | Layer 2 services (direct) | Must route through Layer 3 |
 | Layer 1 engines (direct) | Must route through Layer 3 |
+| Layer 3 cores (direct, for simulation execution) | Simulation must route through Layer 3.5 (ADR-013) |
+| Execution Spine repositories (runtime import) | Reachable over internal HTTP only, never linked |
 | `agentics-simulation-*` (execution) | Platform does not execute simulations |
 | `agentics-diligence-*` (execution) | Platform does not generate diligence artifacts |
 | `infra-*` | Platform is application logic, not infrastructure |
 
-**Allowed**: Layer 3 cores (via HTTP), `@agentics/shared`
+**Allowed**: Layer 3 cores (via HTTP), Execution Spine (via HTTP), `@agentics/shared`
 
-**Simulation Boundary**: The platform may expose APIs that allow authorized clients to query simulation status or retrieve immutable simulation outputs, but it must never initiate, schedule, or execute simulation runs. Simulation orchestration is the exclusive responsibility of simulation repositories (`agentics-simulation-planner`, `agentics-simulation-runner`).
+**Simulation Boundary**: The platform may expose APIs that allow authorized clients to request, query, or cancel simulations, but it must never execute simulation logic itself. Requests are compiled into a validated `SimulationSpecification` and delegated to `agentics-orchestration-engine`; status resolves against `agentics-results-index` and cancellation against `agentics-simulation-runner` (ADR-013). Routing simulation execution directly at a Layer 3 core is forbidden.
+
+---
+
+### 2b. Execution Spine (Layer 3.5)
+
+The execution spine sits below Layer 4 and above the Layer 3 cores it dispatches to. It sequences and records execution; it does not own domain business logic.
+
+| Forbidden Dependency | Rationale |
+|---------------------|-----------|
+| `agentics-platform` (Layer 4) | Upward dependency; violates downward-only rule (ADR-004) |
+| `@agentics/sdk`, `@agentics/ui` (Layer 5) | Upward dependency |
+| `agentics-cli`, `agentics-platform-cli` | Upward dependency |
+| `infra-*` (mutation) | Spine is application logic, not infrastructure |
+| Domain business logic implementation | Owned by Layer 3 consolidation cores (ADR-008) |
+
+**Allowed**: Other Execution Spine repositories (via HTTP), Layer 3 cores (via HTTP), Layer 4 simulation repositories (via HTTP), `agentics-contracts`
 
 ---
 
@@ -285,24 +304,26 @@ Integration surface repositories define canonical capability and event contracts
 ## Cross-Class Forbidden Path Matrix
 
 ```
-From ↓ / To →       │ CLI │ P-CLI │ SDK/UI │ Platform │ Cores │ infra-* │ services-* │ integrations-* │ int-surface │ simulation │
-────────────────────┼─────┼───────┼────────┼──────────┼───────┼─────────┼────────────┼────────────────┼─────────────┼────────────│
-CLI (agentics-cli)  │  -  │   ⇢   │   ✓    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
-Platform CLI        │  ✕  │   -   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
-SDK/UI              │  ✕  │   ✕   │   ◆    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
-Platform            │  ✕  │   ✕   │   ✕    │    -     │   ✓   │    ✕    │     ✕      │       ✕        │      ✕      │     △      │
-Cores               │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✓      │       ✕        │      ✕      │     ✕      │
-infra-*             │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✓    │     ✕      │       ✕        │      ✕      │     ✕      │
-services-*          │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✓      │       ⇨        │      ✕      │     ✕      │
-integrations-*      │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✓        │      ✕      │     ✕      │
-int-surface         │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │    ✕    │     ✕      │       ✕        │      ⊘      │     ✕      │
-simulation          │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ☐      │     ✓      │
-diligence           │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │    ✕    │     ✕      │       ✕        │      ☐      │     ▽      │
-────────────────────┴─────┴───────┴────────┴──────────┴───────┴─────────┴────────────┴────────────────┴─────────────┴────────────┘
+From ↓ / To →       │ CLI │ P-CLI │ SDK/UI │ Platform │ Spine │ Cores │ infra-* │ services-* │ integrations-* │ int-surface │ simulation │
+────────────────────┼─────┼───────┼────────┼──────────┼───────┼───────┼─────────┼────────────┼────────────────┼─────────────┼────────────│
+CLI (agentics-cli)  │  -  │   ⇢   │   ✓    │    ◇     │   ✕   │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
+Platform CLI        │  ✕  │   -   │   ✕    │    ◇     │   ✕   │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
+SDK/UI              │  ✕  │   ✕   │   ◆    │    ◇     │   ✕   │   ✕   │    ✕    │     ✕      │       ✕        │      ✕      │     ✕      │
+Platform            │  ✕  │   ✕   │   ✕    │    -     │   ✓   │   ❖   │    ✕    │     ✕      │       ✕        │      ✕      │     △      │
+Execution Spine     │  ✕  │   ✕   │   ✕    │    ✕     │   ✓   │   ✓   │    ✕    │     ✕      │       ✕        │      ☐      │     ✓      │
+Cores               │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │   ✕   │    ✕    │     ✓      │       ✕        │      ✕      │     ✕      │
+infra-*             │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │   ✕   │    ✓    │     ✕      │       ✕        │      ✕      │     ✕      │
+services-*          │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │   ✕   │    ✕    │     ✓      │       ⇨        │      ✕      │     ✕      │
+integrations-*      │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │   ✕   │    ✕    │     ✕      │       ✓        │      ✕      │     ✕      │
+int-surface         │  ✕  │   ✕   │   ✕    │    ✕     │   ✕   │   ✕   │    ✕    │     ✕      │       ✕        │      ⊘      │     ✕      │
+simulation          │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │   ✕   │    ✕    │     ✕      │       ✕        │      ☐      │     ✓      │
+diligence           │  ✕  │   ✕   │   ✕    │    ◇     │   ✕   │   ✕   │    ✕    │     ✕      │       ✕        │      ☐      │     ▽      │
+────────────────────┴─────┴───────┴────────┴──────────┴───────┴───────┴─────────┴────────────┴────────────────┴─────────────┴────────────┘
 
 Legend:
   ✓  Allowed (within class or designated path)
   ✕  Forbidden (architectural violation)
+  ❖  Allowed, except simulation execution (must route through the Execution Spine)
   ◇  Allowed via Layer 4 API only (not direct import)
   ◆  SDK may be used by UI; both may use @agentics/shared
   ⇢  CLI may delegate to Platform CLI via spawn (forward())

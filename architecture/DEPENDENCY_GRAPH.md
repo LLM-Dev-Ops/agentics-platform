@@ -1,9 +1,9 @@
 # Agentics Platform Dependency Graph
 
-**Version**: 1.4
+**Version**: 1.5
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
-**Last Updated**: 2025-01-04
+**Last Updated**: 2026-07-27
 
 ---
 
@@ -119,6 +119,30 @@ This constraint ensures both CLIs remain thin remote controls that can be distri
 
 ---
 
+### Layer 3.5: Execution Spine
+
+**Description**: Services that sequence, execute, and record simulation runs on behalf of Layer 4. The spine sits below Layer 4 and above the Layer 3 cores it dispatches to. Introduced by ADR-013.
+
+**Repositories**:
+
+| Repository | Responsibility Domain |
+|------------|----------------------|
+| `agentics-orchestration-engine` | Conducts simulation execution; sole spine entry point for `POST /v1/simulate`; delegates planning, execution, and persistence |
+| `agentics-execution-engine` | Executes the hierarchical execution graph and mints execution identifiers |
+| `agentics-results-index` | Read model for completed runs; serves run status, results, and artifacts |
+| `agentics-usage-ledger` | Records usage and cost events emitted during execution |
+| `agentics-deployment-intent` | Records declared deployment intent produced by simulation output |
+
+**Characteristics**:
+- Reached by Layer 4 over internal HTTP only
+- Does not implement domain business logic; that remains in Layer 3 cores (ADR-008)
+- Validates its request and result payloads against `agentics-contracts` schemas
+- May not depend on Layer 4 or Layer 5 under the downward-only rule (ADR-004)
+
+**Note**: `agentics-simulation-planner` and `agentics-simulation-runner` remain classified as Simulation repositories at Layer 4. The spine dispatches to them; they are not part of it.
+
+---
+
 ### Layer 3: Consolidation Cores
 
 **Description**: Domain-specific consolidation cores that own all business logic within their respective capability areas. Each core orchestrates underlying Layer 1 and Layer 2 components.
@@ -231,6 +255,43 @@ This constraint ensures both CLIs remain thin remote controls that can be distri
 - Layer 4 passes pre-validated identity context via headers
 - Layer 4 receives responses and returns to clients unmodified
 
+**Forbidden**: Layer 4 → Layer 3 direct for *simulation execution*. Simulation must route through Layer 3.5 (ADR-013).
+
+**Protocol**: Internal HTTP/HTTPS with correlation ID propagation
+
+---
+
+### Layer 4 → Layer 3.5 → Layer 3 (ALLOWED)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Layer 4: agentics-platform                   │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                │ Internal HTTP (mTLS optional)
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  Layer 3.5: Execution Spine                     │
+│  Orchestration • Execution • Results Index                     │
+│  Usage Ledger • Deployment Intent                              │
+└─────────────────────────────────────────────────────────────────┘
+                                │
+                                │ Internal HTTP (mTLS optional)
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Layer 3: Consolidation Cores                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Allowed**:
+- Layer 4 compiles and validates a `SimulationSpecification`, then delegates execution to `agentics-orchestration-engine`
+- Layer 4 resolves simulation reads against `agentics-results-index` and cancellation against `agentics-simulation-runner`
+- Layer 3.5 dispatches to Layer 3 cores and Layer 4 simulation repositories
+
+**Forbidden**:
+- Layer 3.5 → Layer 4 (upward dependency, ADR-004)
+- Layer 4 → Layer 3 direct for simulation execution
+
 **Protocol**: Internal HTTP/HTTPS with correlation ID propagation
 
 ---
@@ -317,6 +378,9 @@ The following dependency paths are **strictly prohibited** and represent archite
     Layer 3 ───✕──→ Layer 4
     Layer 3 ───✕──→ Layer 5
 
+    Layer 3.5 ─✕──→ Layer 4
+    Layer 3.5 ─✕──→ Layer 5
+
     Layer 4 ───✕──→ Layer 5
 ```
 
@@ -329,6 +393,7 @@ The following dependency paths are **strictly prohibited** and represent archite
 ```
     Layer 4 ───✕──→ Layer 2  (must go through Layer 3)
     Layer 4 ───✕──→ Layer 1  (must go through Layer 3)
+    Layer 4 ───✕──→ Layer 3  (for simulation execution; must go through Layer 3.5)
     Layer 5 ───✕──→ Layer 3  (must go through Layer 4)
     Layer 5 ───✕──→ Layer 2  (must go through Layer 4 → Layer 3)
     Layer 5 ───✕──→ Layer 1  (must go through Layer 4 → Layer 3)
@@ -511,19 +576,21 @@ No other CLI, SDK, or external consumer may implement these governance operation
 ## Visual Dependency Matrix
 
 ```
-                    │ L5 │ L4 │ L3 │ L2 │ L1 │
-────────────────────┼────┼────┼────┼────┼────│
-Layer 5 (External)  │  - │  ✓ │  ✕ │  ✕ │  ✕ │
-Layer 4 (Gateway)   │  ✕ │  - │  ✓ │  ✕ │  ✕ │
-Layer 3 (Cores)     │  ✕ │  ✕ │  ◇ │  ✓ │  ✓ │
-Layer 2 (Tools)     │  ✕ │  ✕ │  ✕ │  - │  ✓ │
-Layer 1 (Engines)   │  ✕ │  ✕ │  ✕ │  ✕ │  - │
-────────────────────┴────┴────┴────┴────┴────┘
+                    │ L5 │ L4 │L3.5│ L3 │ L2 │ L1 │
+────────────────────┼────┼────┼────┼────┼────┼────│
+Layer 5 (External)  │  - │  ✓ │  ✕ │  ✕ │  ✕ │  ✕ │
+Layer 4 (Gateway)   │  ✕ │  - │  ✓ │  ◆ │  ✕ │  ✕ │
+Layer 3.5 (Spine)   │  ✕ │  ✕ │  ✓ │  ✓ │  ✕ │  ✓ │
+Layer 3 (Cores)     │  ✕ │  ✕ │  ✕ │  ◇ │  ✓ │  ✓ │
+Layer 2 (Tools)     │  ✕ │  ✕ │  ✕ │  ✕ │  - │  ✓ │
+Layer 1 (Engines)   │  ✕ │  ✕ │  ✕ │  ✕ │  ✕ │  - │
+────────────────────┴────┴────┴────┴────┴────┴────┘
 
 Legend:
   ✓  Allowed dependency direction
   ✕  Forbidden dependency direction
   ◇  Conditional (cross-core must route through L4)
+  ◆  Conditional (allowed except simulation execution, which must route through L3.5)
   -  Self-reference (N/A)
 ```
 

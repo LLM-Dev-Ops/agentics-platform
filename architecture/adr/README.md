@@ -3,7 +3,7 @@
 **Version**: 1.0
 **Status**: Canonical
 **Classification**: Governance Documentation
-**Last Updated**: 2025-01-03
+**Last Updated**: 2026-01-03
 
 ---
 
@@ -131,6 +131,7 @@ The canonical ADR index is maintained in [`ARCHITECTURE_DECISIONS.md`](../ARCHIT
 | [ADR-010](ADR-010-ui-brand-and-telemetry-design-system.md) | UI Brand and Telemetry Design System | Accepted |
 | [ADR-011](ADR-011-realtime-simulation-telemetry-transport.md) | Real-Time Simulation Telemetry Transport | Accepted |
 | [ADR-012](ADR-012-simulation-live-console-ui-surface.md) | Simulation Live Console UI Surface | Accepted |
+| [ADR-013](ADR-013-simulation-execution-via-orchestration-spine.md) | Simulation Execution Routes Through the Orchestration Spine | Proposed |
 
 ### Domain-Driven Design (DDD) Framework ADRs
 

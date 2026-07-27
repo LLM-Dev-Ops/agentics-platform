@@ -3,7 +3,7 @@
  *
  * This module defines the schema for simulation specifications and provides
  * validation functions. Per SPARC, Layer 4 does NOT execute simulations,
- * only validates and compiles specifications for LLM-Research-Core.
+ * only validates and compiles specifications for agentics-orchestration-engine.
  */
 
 export interface SimulationSpecification {

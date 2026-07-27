@@ -3,7 +3,8 @@
  *
  * Per SPARC: This service compiles simulation inputs from various sources
  * (specification, cli_flags, prompt) into validated SimulationSpecifications.
- * Layer 4 does NOT execute simulations - all execution happens in LLM-Research-Core.
+ * Layer 4 does NOT execute simulations - all execution happens in the Layer 3.5
+ * orchestration spine (agentics-orchestration-engine) per ADR-013.
  */
 
 import {
