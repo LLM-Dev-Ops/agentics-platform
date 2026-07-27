@@ -2,7 +2,7 @@
  * Simulation Compiler - Converts various input formats to SimulationSpecification
  *
  * Per SPARC: Layer 4 does NOT execute simulations, only compiles inputs into
- * validated specifications that are forwarded to LLM-Research-Core.
+ * validated specifications that are forwarded to agentics-orchestration-engine.
  */
 
 import {

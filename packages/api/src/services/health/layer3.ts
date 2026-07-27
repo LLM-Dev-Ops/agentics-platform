@@ -56,6 +56,9 @@ const SERVICE_DISPLAY_NAMES: Record<Layer3ServiceName, string> = {
   ecosystem: 'ecosystem-core',
   research: 'research-core',
   interface: 'interface-core',
+  orchestration: 'agentics-orchestration-engine',
+  resultsIndex: 'agentics-results-index',
+  simulationRunner: 'agentics-simulation-runner',
 };
 
 /**

@@ -1,7 +1,7 @@
 # Agentics Platform Architecture Version Declaration
 
 **Frozen Version**: architecture-v1.0.0
-**Freeze Date**: 2025-01-03
+**Freeze Date**: 2026-01-03
 **Status**: FROZEN
 **Authority**: Immutable until ADR-based Amendment
 **Classification**: Governance Document
@@ -120,7 +120,16 @@ CI enforcement mechanisms must be updated to reflect approved changes:
 
 | Version | Date | Description | Approver |
 |---------|------|-------------|----------|
-| architecture-v1.0.0 | 2025-01-03 | Initial architectural freeze; first locked and auditable release | Platform Architecture Team |
+| architecture-v1.0.0 | 2026-01-03 | Initial architectural freeze; first locked and auditable release | Platform Architecture Team |
+
+### Amendment History
+
+| Amendment | Date | Description | Status |
+|-----------|------|-------------|--------|
+| Date correction | 2026-07-27 | The `2025-01-0X` dates carried by this document and the rest of the governance set were a transposition of the intended `2026-01-0X`; the declared freeze predated this repository's first commit (`b764443`, 2025-12-18) and was therefore not auditable. Corrected across `ARCHITECTURE_VERSION.md`, `ARCHITECTURE_INDEX.md`, `ARCHITECTURE_DECISIONS.md`, `DEPENDENCY_GRAPH.md`, `FORBIDDEN_PATHS.md`, `REPO_CLASSIFICATION.md`, `CLI_COMMAND_OWNERSHIP.md`, `CLI_AUTH_FLOW.md`, `DEPENDENCY_DIAGRAM.md`, `adr/README.md`, `ADR-009`, and `releases/RELEASE-v1.0.0.md`. Recorded per ADR-013 Finding 4. | Applied |
+| ADR-013 amendment | 2026-07-27 | Introduces Layer 3.5 (Execution Spine) and classifies seven previously unclassified fleet repositories, amending `REPO_CLASSIFICATION.md`, `DEPENDENCY_GRAPH.md`, and `FORBIDDEN_PATHS.md` — all artifacts frozen under architecture-v1.0.0. | Applied, pending re-baseline |
+
+**Outstanding — re-baseline not performed.** ADR-013 step 9 also calls for re-freezing at `architecture-v1.1.0` against a real, taggable commit. That has deliberately *not* been done here: per this document's Amendment Procedure the freeze is owned by the Platform Architecture Team with mandatory CTO approval, and ADR-013's own Risks section records that "correcting the freeze date is a governance action, not an edit." Declaring `architecture-v1.1.0` before the corresponding git tag exists would reproduce exactly the unauditable state Finding 4 identifies. `Frozen Version` and `Git Tag` above therefore still read `architecture-v1.0.0`; the freeze owner should bump both and cut the tag when this amendment is approved, and update `EXPECTED_FROZEN_VERSION` in `ci/check-architecture.sh` to match.
 
 ---
 

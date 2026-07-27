@@ -1,11 +1,12 @@
 /**
  * Simulate Handler
  *
- * Routes simulation requests to LLM-Research-Core after compilation.
+ * Routes simulation requests to the Layer 3.5 execution spine after compilation (ADR-013).
  * Handles all input types: specification, cli_flags, and prompt.
  *
  * CRITICAL: This handler implements NO simulation execution logic.
- * It only compiles inputs and forwards to Layer 3 Research Core.
+ * Execution is delegated to agentics-orchestration-engine; reads resolve against
+ * agentics-results-index and cancellation against agentics-simulation-runner.
  * Natural language prompts require an extra hop to Intelligence Core.
  */
 
@@ -16,6 +17,13 @@ import {
   SimulationServiceError,
   type SimulationInput
 } from '../services/simulation/index.js';
+import {
+  toOrchestrationSimulateRequest,
+  fromOrchestrationSimulateResponse,
+  fromResultsIndexRun,
+  fromResultsIndexRunList,
+  fromRunnerAbortResponse,
+} from '../services/simulation/orchestration-adapter.js';
 import config from '../config.js';
 
 // Initialize SimulationService with Intelligence Core config
@@ -26,15 +34,22 @@ const simulationService = new SimulationService({
   }
 });
 
+function upstreamFailure(reply: FastifyReply, error: unknown, correlationId: string): void {
+  reply.code(502).send({
+    error: error instanceof Error ? error.message : 'Failed to reach the execution spine',
+    code: 'UPSTREAM_ERROR',
+    request_id: correlationId,
+  });
+}
+
 /**
  * POST /v1/simulate
  *
- * Compiles and executes a simulation.
- * Per SPARC:
+ * Compiles a simulation and delegates execution to agentics-orchestration-engine.
  * 1. Extract input type (specification, cli_flags, or prompt)
  * 2. Call SimulationService.compileSimulation(input)
  * 3. If prompt: SimulationService forwards to Intelligence Core for interpretation
- * 4. Forward compiled spec to Research Core
+ * 4. Map the compiled spec onto the orchestration engine's SimulateRequest
  * 5. Return simulation_id, status, results
  */
 export async function createSimulationHandler(
@@ -62,18 +77,21 @@ export async function createSimulationHandler(
       correlationId
     );
 
-    // Step 4: Forward compiled specification to Research Core for execution
-    const response = await forwardRequest('research', {
+    // Step 4: Delegate execution to the orchestration engine
+    const response = await forwardRequest('orchestration', {
       method: 'POST',
-      path: '/simulations',
-      body: { specification },
+      path: '/v1/simulate',
+      body: toOrchestrationSimulateRequest(specification),
       correlationId,
       userId: identity.userId,
       scopes: identity.scopes,
     });
 
-    // Step 5: Return response from Research Core
-    reply.code(response.statusCode).headers(response.headers).send(response.body);
+    // Step 5: Adapt the spine response onto Layer 4's public contract
+    reply
+      .code(response.statusCode)
+      .headers(response.headers)
+      .send(fromOrchestrationSimulateResponse(response.body));
   } catch (error) {
     // Handle simulation service errors
     if (error instanceof SimulationServiceError) {
@@ -85,22 +103,15 @@ export async function createSimulationHandler(
       });
     }
 
-    // Handle upstream errors
-    reply.code(502).send({
-      error: error instanceof Error ? error.message : 'Failed to reach research core',
-      code: 'UPSTREAM_ERROR',
-      request_id: correlationId,
-    });
+    upstreamFailure(reply, error, correlationId);
   }
 }
 
 /**
  * GET /v1/simulate/:id
  *
- * Gets simulation status and results.
- * Per SPARC:
- * 1. Forward to Research Core to get status
- * 2. Return simulation_id, status, progress, results
+ * Gets simulation status and results from agentics-results-index.
+ * Returns simulation_id, status, progress, results.
  */
 export async function getSimulationHandler(
   request: FastifyRequest<{ Params: { id: string } }>,
@@ -119,31 +130,32 @@ export async function getSimulationHandler(
   }
 
   try {
-    // Forward to Research Core to get simulation status
-    const response = await forwardRequest('research', {
+    const response = await forwardRequest('resultsIndex', {
       method: 'GET',
-      path: `/simulations/${request.params.id}`,
+      path: `/api/v1/runs/${encodeURIComponent(request.params.id)}`,
       query: request.query as Record<string, any>,
       correlationId,
       userId: identity.userId,
       scopes: identity.scopes,
     });
 
-    reply.code(response.statusCode).headers(response.headers).send(response.body);
+    if (response.statusCode >= 400) {
+      return reply.code(response.statusCode).headers(response.headers).send(response.body);
+    }
+
+    reply
+      .code(response.statusCode)
+      .headers(response.headers)
+      .send(fromResultsIndexRun(response.body));
   } catch (error) {
-    reply.code(502).send({
-      error: error instanceof Error ? error.message : 'Failed to reach research core',
-      code: 'UPSTREAM_ERROR',
-      request_id: correlationId,
-    });
+    upstreamFailure(reply, error, correlationId);
   }
 }
 
 /**
  * GET /v1/simulate
  *
- * Lists simulations for the authenticated user.
- * Forwards to Research Core for listing.
+ * Lists simulations for the authenticated user from agentics-results-index.
  */
 export async function listSimulationsHandler(
   request: FastifyRequest,
@@ -153,30 +165,32 @@ export async function listSimulationsHandler(
   const identity = getIdentity(request);
 
   try {
-    const response = await forwardRequest('research', {
+    const response = await forwardRequest('resultsIndex', {
       method: 'GET',
-      path: '/simulations',
+      path: '/api/v1/runs',
       query: request.query as Record<string, any>,
       correlationId,
       userId: identity.userId,
       scopes: identity.scopes,
     });
 
-    reply.code(response.statusCode).headers(response.headers).send(response.body);
+    if (response.statusCode >= 400) {
+      return reply.code(response.statusCode).headers(response.headers).send(response.body);
+    }
+
+    reply
+      .code(response.statusCode)
+      .headers(response.headers)
+      .send(fromResultsIndexRunList(response.body));
   } catch (error) {
-    reply.code(502).send({
-      error: error instanceof Error ? error.message : 'Failed to reach research core',
-      code: 'UPSTREAM_ERROR',
-      request_id: correlationId,
-    });
+    upstreamFailure(reply, error, correlationId);
   }
 }
 
 /**
  * DELETE /v1/simulate/:id
  *
- * Cancels or deletes a simulation.
- * Forwards to Research Core for cancellation.
+ * Cancels a simulation via agentics-simulation-runner.
  */
 export async function deleteSimulationHandler(
   request: FastifyRequest<{ Params: { id: string } }>,
@@ -195,20 +209,20 @@ export async function deleteSimulationHandler(
   }
 
   try {
-    const response = await forwardRequest('research', {
-      method: 'DELETE',
-      path: `/simulations/${request.params.id}`,
+    const response = await forwardRequest('simulationRunner', {
+      method: 'POST',
+      path: `/v1/runner/abort/${encodeURIComponent(request.params.id)}`,
+      body: { reason: 'Cancelled via Layer 4 DELETE /v1/simulate/:id' },
       correlationId,
       userId: identity.userId,
       scopes: identity.scopes,
     });
 
-    reply.code(response.statusCode).headers(response.headers).send(response.body);
+    reply
+      .code(response.statusCode)
+      .headers(response.headers)
+      .send(fromRunnerAbortResponse(request.params.id, response.body));
   } catch (error) {
-    reply.code(502).send({
-      error: error instanceof Error ? error.message : 'Failed to reach research core',
-      code: 'UPSTREAM_ERROR',
-      request_id: correlationId,
-    });
+    upstreamFailure(reply, error, correlationId);
   }
 }

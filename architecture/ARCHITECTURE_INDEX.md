@@ -1,9 +1,9 @@
 # Architecture Index
 
-**Version**: 1.3
+**Version**: 1.4
 **Status**: Canonical
 **Classification**: Master Architecture Enforcement Document
-**Last Updated**: 2025-01-04
+**Last Updated**: 2026-07-27
 **Architectural Freeze**: architecture-v1.0.0 (Immutable until ADR-based amendment)
 **Authoritative Version Source**: [`ARCHITECTURE_VERSION.md`](../ARCHITECTURE_VERSION.md)
 **Git Tag**: `architecture-v1.0.0`
@@ -321,14 +321,14 @@ Reference Direction:
 
 | Document | Version | Status | Last Updated |
 |----------|---------|--------|--------------|
-| ARCHITECTURE_INDEX.md (this document) | 1.3 | Canonical | 2025-01-04 |
-| DEPENDENCY_GRAPH.md | 1.4 | Canonical | 2025-01-04 |
-| ARCHITECTURE_DECISIONS.md | 1.1 | Canonical | 2025-01-03 |
-| FORBIDDEN_PATHS.md | 1.3 | Canonical | 2025-01-04 |
-| REPO_CLASSIFICATION.md | 1.2 | Canonical | 2025-01-04 |
-| CLI_COMMAND_OWNERSHIP.md | 1.0 | Canonical | 2025-01-03 |
-| CLI_AUTH_FLOW.md | 1.0 | Operational | 2025-01-05 |
-| DEPENDENCY_DIAGRAM.md | 1.1 | Canonical | 2025-01-03 |
+| ARCHITECTURE_INDEX.md (this document) | 1.4 | Canonical | 2026-07-27 |
+| DEPENDENCY_GRAPH.md | 1.5 | Canonical | 2026-07-27 |
+| ARCHITECTURE_DECISIONS.md | 1.2 | Canonical | 2026-07-27 |
+| FORBIDDEN_PATHS.md | 1.4 | Canonical | 2026-07-27 |
+| REPO_CLASSIFICATION.md | 1.3 | Canonical | 2026-07-27 |
+| CLI_COMMAND_OWNERSHIP.md | 1.0 | Canonical | 2026-01-03 |
+| CLI_AUTH_FLOW.md | 1.0 | Operational | 2026-01-05 |
+| DEPENDENCY_DIAGRAM.md | 1.1 | Canonical | 2026-01-03 |
 
 ### Future Additions
 

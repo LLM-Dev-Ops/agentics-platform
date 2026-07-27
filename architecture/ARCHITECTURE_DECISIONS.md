@@ -1,9 +1,9 @@
 # Architecture Decisions Record
 
-**Version**: 1.1
+**Version**: 1.2
 **Status**: Canonical
 **Classification**: Diligence Documentation
-**Last Updated**: 2025-01-03
+**Last Updated**: 2026-07-27
 **Canonical Reference**: [`DEPENDENCY_GRAPH.md`](DEPENDENCY_GRAPH.md)
 
 ---
@@ -32,8 +32,9 @@ These decisions represent closed, intentional choices—not evolving experiments
 | ADR-010 | UI brand and telemetry design system | UI / Product Architecture |
 | ADR-011 | Real-time simulation telemetry transport (SSE) | API / Distribution |
 | ADR-012 | Simulation live console UI surface | UI / Product Architecture |
+| ADR-013 | Simulation execution routes through the orchestration spine | Platform Architecture / Fleet Integration |
 
-**Note**: ADR-009 is documented in full in [`adr/ADR-009-simulation-abstraction.md`](adr/ADR-009-simulation-abstraction.md). ADRs 010, 011, and 012 are documented in full in their respective files under [`adr/`](adr/).
+**Note**: ADR-009 is documented in full in [`adr/ADR-009-simulation-abstraction.md`](adr/ADR-009-simulation-abstraction.md). ADRs 010 through 013 are documented in full in their respective files under [`adr/`](adr/).
 
 ---
 

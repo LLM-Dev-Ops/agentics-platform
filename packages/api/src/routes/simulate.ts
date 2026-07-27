@@ -7,7 +7,7 @@
  * Per SPARC:
  * - POST /v1/simulate requires research:write scope
  * - GET /v1/simulate/:id requires research:read scope
- * - Layer 4 compiles inputs and forwards to LLM-Research-Core
+ * - Layer 4 compiles inputs and forwards to agentics-orchestration-engine (ADR-013)
  * - Natural language prompts are sent to LLM-Intelligence-Core first
  */
 

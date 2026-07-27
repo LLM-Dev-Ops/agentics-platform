@@ -47,7 +47,7 @@ readonly ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 readonly ARCH_DIR="${ROOT_DIR}/architecture"
 
 # Expected architecture document version (from ARCHITECTURE_INDEX.md)
-readonly EXPECTED_ARCH_VERSION="1.2"
+readonly EXPECTED_ARCH_VERSION="1.4"
 
 # Expected frozen architecture version (from ARCHITECTURE_VERSION.md)
 readonly EXPECTED_FROZEN_VERSION="architecture-v1.0.0"
@@ -101,6 +101,7 @@ declare -a LAYER1_ENGINES=()
 declare -a LAYER4_PLATFORM=()
 declare -a LAYER5_CLI=()
 declare -a SIMULATION_REPOS=()
+declare -a EXECUTION_SPINE_REPOS=()
 declare -a INFRA_REPOS=()
 declare -a INTEGRATION_REPOS=()
 
@@ -461,6 +462,18 @@ parse_repo_classifications() {
         fi
     done < <(echo "$content" | grep -E '\|\s*Simulation\s*\|')
 
+    # Parse Execution Spine repositories (Layer 3.5, ADR-013)
+    # Anchored to the first table cell: spine rows name `agentics-contracts` in their
+    # dependency columns, and an unanchored `.*` would capture that instead.
+    while IFS= read -r line; do
+        local repo
+        repo=$(echo "$line" | sed -n 's/^|[[:space:]]*`\(agentics-[^`]*\)`.*/\1/p')
+        if [[ -n "$repo" ]]; then
+            EXECUTION_SPINE_REPOS+=("$repo")
+            EXECUTION_SPINE_REPOS+=("@agentics/${repo#agentics-}")
+        fi
+    done < <(echo "$content" | grep -E '\|\s*Execution Spine\s*\|')
+
     # Parse Infrastructure repositories
     while IFS= read -r line; do
         local repo
@@ -487,6 +500,7 @@ parse_repo_classifications() {
     log_verbose "Parsed ${#LAYER2_SERVICES[@]} Layer 2 services"
     log_verbose "Parsed ${#LAYER1_ENGINES[@]} Layer 1 engines"
     log_verbose "Parsed ${#SIMULATION_REPOS[@]} simulation repos"
+    log_verbose "Parsed ${#EXECUTION_SPINE_REPOS[@]} execution spine repos"
     log_verbose "Parsed ${#INFRA_REPOS[@]} infrastructure repos"
     log_verbose "Parsed ${#INTEGRATION_REPOS[@]} integration repos"
 }
@@ -872,6 +886,7 @@ check_cli_forbidden_deps() {
     # Build forbidden list from parsed classifications
     local -a forbidden_for_cli=()
     forbidden_for_cli+=("${SIMULATION_REPOS[@]}")
+    forbidden_for_cli+=("${EXECUTION_SPINE_REPOS[@]}")
     forbidden_for_cli+=("${LAYER2_SERVICES[@]}")
     forbidden_for_cli+=("${INFRA_REPOS[@]}")
     forbidden_for_cli+=("${LAYER1_ENGINES[@]}")
@@ -1256,6 +1271,7 @@ check_infrastructure_isolation() {
         forbidden_in_infra+=("${LAYER4_PLATFORM[@]}")
         forbidden_in_infra+=("${LAYER3_CORES[@]}")
         forbidden_in_infra+=("${SIMULATION_REPOS[@]}")
+        forbidden_in_infra+=("${EXECUTION_SPINE_REPOS[@]}")
 
         for forbidden in "${forbidden_in_infra[@]}"; do
             if echo "$deps" | grep -qxF "$forbidden"; then

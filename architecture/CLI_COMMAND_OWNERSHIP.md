@@ -3,7 +3,7 @@
 **Version**: 1.1
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
-**Last Updated**: 2025-01-03
+**Last Updated**: 2026-01-03
 **Canonical Reference**: [`DEPENDENCY_GRAPH.md`](DEPENDENCY_GRAPH.md), [`ARCHITECTURE_INDEX.md`](ARCHITECTURE_INDEX.md)
 **Governing ADR**: ADR-006 (CLI as Thin Client Without Runtime Embedding)
 

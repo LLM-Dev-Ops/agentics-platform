@@ -24,7 +24,7 @@ export interface SimulateParams {
  */
 export interface SimulationResult {
   id: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   result?: {
     message: {
       role: 'assistant';
@@ -51,7 +51,7 @@ export interface SimulationResult {
  */
 export interface SimulationStatus {
   id: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   progress?: number;
   createdAt: string;
   updatedAt: string;

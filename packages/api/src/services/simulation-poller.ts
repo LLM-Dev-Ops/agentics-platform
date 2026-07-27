@@ -1,14 +1,14 @@
 /**
- * ADR-011 Phase A — Research Core snapshot poller.
+ * ADR-011 Phase A — execution spine snapshot poller.
  *
- * Watches Research Core's `GET /simulations/:id` at 1 Hz, diffs
- * successive snapshots via the deterministic
+ * Watches agentics-results-index `GET /api/v1/runs/:id` at 1 Hz (ADR-013),
+ * diffs successive snapshots via the deterministic
  * `deriveEventsFromSnapshots` helper in @agentics/contracts, and
  * appends the derived events to `simulation_events`. Stops when the
  * upstream reports a terminal status.
  *
- * Phase B (future): retire this service in favor of Research Core
- * emitting events natively. The SSE transport contract is unchanged.
+ * Phase B (future): retire this service in favor of the spine emitting
+ * events natively. The SSE transport contract is unchanged.
  */
 
 import type { Pool } from 'pg';
@@ -19,6 +19,7 @@ import {
   type UpstreamSnapshot,
 } from '@agentics/contracts';
 import { SimulationEventsStore } from './simulation-events-store.js';
+import { fromResultsIndexRun } from './simulation/orchestration-adapter.js';
 import config from '../config.js';
 
 interface PollerLogger {
@@ -36,13 +37,13 @@ interface ActivePoll {
 
 export interface SimulationPollerOptions {
   intervalMs?: number;
-  researchCoreUrl?: string;
+  resultsIndexUrl?: string;
 }
 
 export class SimulationPoller {
   private readonly store: SimulationEventsStore;
   private readonly intervalMs: number;
-  private readonly researchCoreUrl: string;
+  private readonly resultsIndexUrl: string;
   private readonly log: PollerLogger;
   private readonly active = new Map<string, ActivePoll>();
 
@@ -53,7 +54,7 @@ export class SimulationPoller {
   ) {
     this.store = new SimulationEventsStore(pool);
     this.intervalMs = opts.intervalMs ?? 1000;
-    this.researchCoreUrl = opts.researchCoreUrl ?? config.layer3Endpoints.research;
+    this.resultsIndexUrl = opts.resultsIndexUrl ?? config.layer3Endpoints.resultsIndex;
     this.log = log;
   }
 
@@ -131,12 +132,17 @@ export class SimulationPoller {
   ): Promise<UpstreamSnapshot | null> {
     try {
       const res = await fetch(
-        `${this.researchCoreUrl}/simulations/${encodeURIComponent(simulationId)}`,
+        `${this.resultsIndexUrl}/api/v1/runs/${encodeURIComponent(simulationId)}`,
         { headers: { Accept: 'application/json', ...headers } }
       );
       if (!res.ok) return null;
       const body = (await res.json()) as unknown;
-      const parsed = UpstreamSnapshotSchema.safeParse(body);
+      const envelope = fromResultsIndexRun(body);
+      const parsed = UpstreamSnapshotSchema.safeParse({
+        simulation_id: envelope.simulation_id ?? simulationId,
+        status: envelope.status,
+        progress: envelope.progress,
+      });
       if (!parsed.success) {
         this.log.warn(
           { simulationId, issues: parsed.error.issues },

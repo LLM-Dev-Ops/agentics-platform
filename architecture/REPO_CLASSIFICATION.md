@@ -1,9 +1,9 @@
 # Repository Classification
 
-**Version**: 1.2
+**Version**: 1.3
 **Status**: Canonical
 **Classification**: Architecture Enforcement Artifact
-**Last Updated**: 2025-01-04
+**Last Updated**: 2026-07-27
 **Canonical Reference**: [`DEPENDENCY_GRAPH.md`](DEPENDENCY_GRAPH.md)
 
 ---
@@ -23,6 +23,7 @@ All repositories listed here have been explicitly defined in prior architectural
 | **Platform** | Core product surface (API Gateway, CLIs) |
 | **External** | Layer 5 external consumers (SDK, UI) designed for third-party distribution |
 | **Core** | Layer 3 consolidation cores owning business logic domains |
+| **Execution Spine** | Layer 3.5 services that sequence and record simulation execution between Layer 4 and the Layer 3 cores they dispatch to |
 | **Engine** | Layer 1 foundational engines and subsystems |
 | **Infrastructure** | Deployment, provisioning, and operational configuration |
 | **Service** | Internal microservices consumed by Layer 3 cores |
@@ -39,7 +40,7 @@ All repositories listed here have been explicitly defined in prior architectural
 
 | Repository | Class | Layer | Allowed Dependencies | Forbidden Dependencies |
 |------------|-------|-------|---------------------|------------------------|
-| `agentics-platform` | Platform | 4 | Layer 3 cores (HTTP), `@agentics/shared` | Layer 2 direct, Layer 1 direct, simulation, infra |
+| `agentics-platform` | Platform | 4 | Layer 3 cores (HTTP), Execution Spine (HTTP), `@agentics/shared` | Layer 2 direct, Layer 1 direct, Layer 3 direct for simulation, simulation, infra |
 | `agentics-platform-cli` | Platform | 5 | Layer 4 API (HTTP only), `@agentics/shared` | Layer 3 runtime, Layer 2 runtime, simulation, infra, all non-@agentics/shared packages |
 | `agentics-cli` | Platform | 5 | Layer 4 API (HTTP), `@agentics/sdk`, `@agentics/shared` | Layer 3 runtime, Layer 2 runtime, simulation, infra |
 
@@ -95,6 +96,20 @@ All repositories listed here have been explicitly defined in prior architectural
 
 ---
 
+### Execution Spine Repositories (Layer 3.5)
+
+| Repository | Class | Layer | Allowed Dependencies | Forbidden Dependencies |
+|------------|-------|-------|---------------------|------------------------|
+| `agentics-orchestration-engine` | Execution Spine | 3.5 | Other Execution Spine repos (HTTP), Layer 3 cores (HTTP), Layer 1 engines (RuvVector), `agentics-contracts` | Layer 4, Layer 5, infra (mutation), simulation repositories (runtime) |
+| `agentics-execution-engine` | Execution Spine | 3.5 | Other Execution Spine repos (HTTP), Layer 3 cores (HTTP), `agentics-contracts` | Layer 4, Layer 5, infra (mutation), simulation repositories (runtime) |
+| `agentics-results-index` | Execution Spine | 3.5 | Other Execution Spine repos (HTTP), `agentics-contracts`, result storage | Layer 4, Layer 5, Layer 3 cores (direct), infra (mutation) |
+| `agentics-usage-ledger` | Execution Spine | 3.5 | `agentics-contracts`, usage storage | Layer 4, Layer 5, Layer 3 cores (direct), infra (mutation) |
+| `agentics-deployment-intent` | Execution Spine | 3.5 | Other Execution Spine repos (HTTP), `agentics-contracts`, `erp-surface` (contracts) | Layer 4, Layer 5, Layer 3 cores (direct), infra (mutation) |
+
+**Note**: Layer 3.5 sits below Layer 4 and above the Layer 3 cores it dispatches to. `agentics-platform` reaches these services over internal HTTP only; the downward-only rule (ADR-004) forbids any Layer 3.5 repository from depending on Layer 4. Simulation execution requested at `POST /v1/simulate` enters the fleet through `agentics-orchestration-engine`; reads resolve against `agentics-results-index` and cancellation against `agentics-simulation-runner` (ADR-013).
+
+---
+
 ### Integration Surface Repositories (Layer 4)
 
 | Repository | Class | Layer | Allowed Dependencies | Forbidden Dependencies |
@@ -143,6 +158,10 @@ All repositories listed here have been explicitly defined in prior architectural
 | Package | Class | Layer | Allowed Dependencies | Forbidden Dependencies |
 |---------|-------|-------|---------------------|------------------------|
 | `@agentics/shared` | Shared | N/A | None (type definitions only) | All runtime code |
+| `agentics-contracts` | Shared | N/A | None (schema and type definitions only) | All runtime code |
+| `agentics-enforcement` | Shared | N/A | Architecture documents (read-only), CI tooling | Platform runtime, cores, services, simulation execution |
+
+**Note**: `agentics-contracts` publishes the request, result-packet, and execution schemas the Execution Spine validates against. `agentics-enforcement` carries governance and CI enforcement tooling; per ADR-013 its `plans/adr/` directory is being reconciled into `architecture/adr/` in this repository.
 
 ---
 
@@ -153,14 +172,15 @@ All repositories listed here have been explicitly defined in prior architectural
 | Platform | 3 | `agentics-platform`, `agentics-platform-cli`, `agentics-cli` |
 | External | 2 | `@agentics/sdk`, `@agentics/ui` |
 | Core | 8 | `LLM-Intelligence-Core`, `LLM-Security-Core`, `LLM-Automation-Core`, `LLM-Governance-Core`, `LLM-Data-Core`, `LLM-Ecosystem-Core`, `LLM-Research-Core`, `LLM-Interface-Core` |
+| Execution Spine | 5 | `agentics-orchestration-engine`, `agentics-execution-engine`, `agentics-results-index`, `agentics-usage-ledger`, `agentics-deployment-intent` |
 | Engine | 1 | `RuvVector` |
 | Simulation | 5 | `agentics-simulation-planner`, `agentics-simulation-runner`, `agentics-deployment-exporters`, `agentics-diligence-artifacts`, `agentics-org-manifests` |
 | Infrastructure | 4 | `infra-kubernetes`, `infra-terraform`, `infra-monitoring`, `infra-secrets` |
 | Service | 4 | `services-queue`, `services-cache`, `services-metrics`, `services-auth` |
 | Integration | 4 | `integrations-github`, `integrations-slack`, `integrations-jira`, `integrations-datadog` |
 | Integration Surface | 1 | `erp-surface` |
-| Shared | 1 | `@agentics/shared` |
-| **Total** | **33** | |
+| Shared | 3 | `@agentics/shared`, `agentics-contracts`, `agentics-enforcement` |
+| **Total** | **40** | |
 
 ---
 
@@ -200,10 +220,11 @@ The Agentics platform is implemented as a monorepo with scoped npm packages. Thi
    - `@agentics/ui` (Web UI)
    - Partner APIs and third-party applications
 2. **Layer 4**: API Gateway, control plane (`agentics-platform`), simulation repositories (`agentics-simulation-*`, `agentics-org-manifests`, `agentics-diligence-*`, `agentics-deployment-exporters`), and integration surface repositories (`erp-surface`)
-3. **Layer 3**: Consolidation cores (`LLM-*-Core`) — note: `LLM-Research-Core` consumes simulation outputs but does not execute simulations
-4. **Layer 2**: Internal services (`services-*`)
-5. **Layer 1**: Foundational engines (`RuvVector`)
-6. **N/A**: Cross-cutting repositories that do not fit the layer model (infra, integrations, shared)
+3. **Layer 3.5**: Execution spine (`agentics-orchestration-engine`, `agentics-execution-engine`, `agentics-results-index`, `agentics-usage-ledger`, `agentics-deployment-intent`) — sequences and records simulation execution; sits below Layer 4 and above the Layer 3 cores it dispatches to (ADR-013)
+4. **Layer 3**: Consolidation cores (`LLM-*-Core`) — note: `LLM-Research-Core` consumes simulation outputs but does not execute simulations
+5. **Layer 2**: Internal services (`services-*`)
+6. **Layer 1**: Foundational engines (`RuvVector`)
+7. **N/A**: Cross-cutting repositories that do not fit the layer model (infra, integrations, shared)
 
 ---
 
