@@ -58,3 +58,7 @@ coordination/
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal
+
+# TypeScript incremental build cache (must never be committed —
+# a stale tsbuildinfo makes composite tsc skip .d.ts emit)
+*.tsbuildinfo
