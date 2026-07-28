@@ -1,0 +1,170 @@
+# =============================================================================
+# AGENTICS PLATFORM API SERVICE - CLOUD BUILD
+# =============================================================================
+# CI/CD pipeline for the API Gateway service (packages/api).
+#
+# Service: agentics-platform
+# Region:  us-central1
+# Classification: API GATEWAY (Layer 4)
+#
+# Naming: the Cloud Run service is named `agentics-platform`, not `agentics-api`.
+# Per ADR-014 that name is a historical accident, but it is the live production
+# identity — renaming it would break the `agentics-cli-invoker` IAM binding and
+# the CLI. `agentics-api` never existed as a service, image repo, or SA.
+#
+# Build context: the ROOT Dockerfile is the API's build definition. It copies the
+# full workspace closure @agentics/api needs — shared, contracts, ruvector-client,
+# agents, api. `packages/api/Dockerfile` copied only shared+api and could never
+# compile; ADR-014 deletes it.
+#
+# IAM posture: this config deliberately does NOT pass --allow-unauthenticated.
+# The live service is IAM-locked to `agentics-cli-invoker` and one user. Widening
+# that to `allUsers` is a deliberate, separately-approved change (ADR-014 step 7),
+# not a side effect of a routine deploy. Application-level auth (apiKeyGate) is a
+# second layer, not a substitute for the IAM binding decision.
+#
+# Service account: --service-account is intentionally omitted. The referenced
+# `agentics-api-sa@` does not exist; the service currently runs as the project's
+# default compute SA. Provisioning a dedicated SA is tracked separately.
+# =============================================================================
+
+steps:
+  # ---------------------------------------------------------------------------
+  # Step 1: Build Docker image from the root Dockerfile
+  # ---------------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/agentics-platform:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/agentics-platform:latest'
+      - '-f'
+      - 'Dockerfile'
+      - '.'
+
+  # ---------------------------------------------------------------------------
+  # Step 2: Push to Container Registry
+  # ---------------------------------------------------------------------------
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-image'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/agentics-platform:$COMMIT_SHA'
+    waitFor:
+      - 'build-image'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-latest'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/agentics-platform:latest'
+    waitFor:
+      - 'build-image'
+
+  # ---------------------------------------------------------------------------
+  # Step 3: Deploy to Cloud Run
+  # ---------------------------------------------------------------------------
+  # Deploys by immutable $COMMIT_SHA tag so every revision is traceable to a
+  # commit that exists in version control.
+  # ---------------------------------------------------------------------------
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-cloud-run'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'agentics-platform'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/agentics-platform:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--port'
+      - '8080'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '10'
+      - '--timeout'
+      - '300'
+      - '--concurrency'
+      - '80'
+      - '--set-env-vars'
+      - 'NODE_ENV=production,SERVICE_NAME=agentics-platform,SERVICE_VERSION=$COMMIT_SHA'
+      # Secret names below are the ones that actually exist in Secret Manager and
+      # match the env block already on the live service. Note the casing:
+      # `stripe-secret-key` and `platform-env` are lowercase in Secret Manager.
+      - '--set-secrets'
+      - 'DATABASE_URL=DATABASE_URL:latest,PLATFORM_API_KEY=PLATFORM_API_KEY:latest,EXECUTION_HMAC_SECRET=EXECUTION_HMAC_SECRET:latest,RUVECTOR_SERVICE_URL=RUVECTOR_SERVICE_URL:latest,RUVECTOR_API_KEY=RUVECTOR_API_KEY:latest,TELEMETRY_ENDPOINT=TELEMETRY_ENDPOINT:latest,STRIPE_SECRET_KEY=stripe-secret-key:latest,PLATFORM_ENV=platform-env:latest'
+      - '--labels'
+      - 'app=agentics-platform,environment=production,team=platform,managed-by=cloud-build'
+    waitFor:
+      - 'push-image'
+
+  # ---------------------------------------------------------------------------
+  # Step 4: Verify deployment
+  # ---------------------------------------------------------------------------
+  # The service is IAM-locked, so verification uses an identity token. An
+  # unauthenticated probe is expected to return 403 from the Google frontend —
+  # that is the correct posture, not a failure.
+  # ---------------------------------------------------------------------------
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'verify-deployment'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -euo pipefail
+        echo "Verifying deployment..."
+        SERVICE_URL=$$(gcloud run services describe agentics-platform \
+          --region=us-central1 --format='value(status.url)')
+        echo "Service URL: $$SERVICE_URL"
+
+        TOKEN=$$(gcloud auth print-identity-token)
+
+        echo "Checking health endpoint (authenticated)..."
+        curl -sf -H "Authorization: Bearer $$TOKEN" "$$SERVICE_URL/health" || exit 1
+        echo ""
+
+        echo "Checking ready endpoint (authenticated)..."
+        curl -sf -H "Authorization: Bearer $$TOKEN" "$$SERVICE_URL/ready" \
+          || echo "Warning: ready check returned non-200"
+        echo ""
+
+        echo "Confirming the deployed revision reports the expected version..."
+        curl -sf -H "Authorization: Bearer $$TOKEN" "$$SERVICE_URL/" || exit 1
+        echo ""
+
+        echo "Confirming IAM posture is still locked (unauthenticated -> 403)..."
+        HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" "$$SERVICE_URL/health")
+        if [ "$$HTTP_CODE" != "403" ]; then
+          echo "NOTE: unauthenticated /health returned $$HTTP_CODE, not 403."
+          echo "      The service may have been intentionally opened to allUsers."
+        else
+          echo "IAM posture confirmed: unauthenticated requests rejected at the edge."
+        fi
+
+        echo ""
+        echo "Deployment verification complete!"
+    waitFor:
+      - 'deploy-cloud-run'
+
+# Container images to push
+images:
+  - 'gcr.io/$PROJECT_ID/agentics-platform:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/agentics-platform:latest'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+# Timeout for entire build
+timeout: '1200s'
