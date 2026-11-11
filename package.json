@@ -11,8 +11,11 @@
     "start": "npm run start --workspace=@agentics/api",
     "build:all": "npm run build --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
-    "test": "vitest",
-    "lint": "eslint . --ext .ts,.tsx",
+    "test": "npm run test:vitest && npm run test:node",
+    "test:vitest": "vitest run --config vitest.config.mts --pool=forks --maxWorkers=1 --no-file-parallelism",
+    "test:node": "node --test ci/stack/*.test.mts packages/contracts/test/*.test.mjs",
+    "lint": "node scripts/lint-ratchet.mjs",
+    "lint:strict": "eslint . --ext .ts,.tsx,.mts --max-warnings=0",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "clean": "rm -rf node_modules packages/*/node_modules packages/*/dist"
   },
