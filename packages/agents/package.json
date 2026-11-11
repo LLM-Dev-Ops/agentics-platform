@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Agentics Dev Platform Agent Infrastructure - Executive Decisioning, Synthesis, and Platform Governance",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
   "bin": {
@@ -11,7 +11,7 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
