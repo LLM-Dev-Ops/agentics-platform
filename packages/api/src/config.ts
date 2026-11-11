@@ -31,6 +31,7 @@ export interface Config {
   port: number;
   host: string;
   nodeEnv: string;
+  corsAllowedOrigins: string[];
 
   // Layer 3 Core Endpoints
   layer3Endpoints: Layer3Endpoints;
@@ -67,11 +68,22 @@ export interface Config {
   };
 }
 
+const nodeEnv = process.env.NODE_ENV || 'development';
+const configuredCorsOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ?.split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 const config: Config = {
   // Server Configuration
   port: parseInt(process.env.PORT || '3000', 10),
   host: process.env.HOST || '0.0.0.0',
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
+  corsAllowedOrigins: configuredCorsOrigins ?? (
+    nodeEnv === 'development'
+      ? ['http://localhost:3000', 'http://127.0.0.1:3000']
+      : []
+  ),
 
   // Layer 3 Core Endpoints
   layer3Endpoints: {

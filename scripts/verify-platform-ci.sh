@@ -12,8 +12,8 @@ node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --modu
 # The production entry point must resolve the same package exports as tests.
 node --input-type=module -e 'await import("@agentics/agents"); await import("./packages/api/dist/server.js"); process.exit(0)'
 status=0
-npm run test --workspace=@agentics/api -- --run --pool=forks --poolOptions.forks.singleFork || status=1
-npm run test --workspace=@agentics/agents -- --run --pool=forks --poolOptions.forks.singleFork || status=1
+npm run test --workspace=@agentics/api -- --run --pool=forks --maxWorkers=1 --no-file-parallelism || status=1
+npm run test --workspace=@agentics/agents -- --run --pool=forks --maxWorkers=1 --no-file-parallelism || status=1
 node --test packages/contracts/test/*.test.mjs || status=1
 npm audit --audit-level=low || status=1
 exit "$status"

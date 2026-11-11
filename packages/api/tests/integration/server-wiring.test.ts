@@ -6,6 +6,7 @@ import config from "../../src/config.js";
 import { getRequiredScope } from "../../src/middleware/scope.js";
 
 const original = { ...config.layer3Endpoints };
+const originalCorsAllowedOrigins = [...config.corsAllowedOrigins];
 let api: FastifyInstance;
 let upstream: ReturnType<typeof createHttpServer>;
 let healthy = true;
@@ -28,6 +29,7 @@ beforeEach(async () => {
   >) {
     config.layer3Endpoints[key] = `http://127.0.0.1:${address.port}`;
   }
+  config.corsAllowedOrigins = ["http://localhost:3000"];
   api = await createServer({ logger: false });
   await api.ready();
 });
@@ -37,6 +39,7 @@ afterEach(async () => {
   upstream.closeAllConnections();
   await new Promise<void>((resolve) => upstream.close(() => resolve()));
   Object.assign(config.layer3Endpoints, original);
+  config.corsAllowedOrigins = [...originalCorsAllowedOrigins];
 });
 
 describe("production server composition", () => {
@@ -58,6 +61,23 @@ describe("production server composition", () => {
     });
     expect(response.statusCode).toBe(401);
     expect(calls).toBe(0);
+  });
+  it("allows credentialed CORS only for configured origins", async () => {
+    const allowed = await api.inject({
+      method: "GET",
+      url: "/health",
+      headers: { origin: "http://localhost:3000" },
+    });
+    expect(allowed.headers["access-control-allow-origin"]).toBe("http://localhost:3000");
+    expect(allowed.headers["access-control-allow-credentials"]).toBe("true");
+
+    const denied = await api.inject({
+      method: "GET",
+      url: "/health",
+      headers: { origin: "https://attacker.invalid" },
+    });
+    expect(denied.headers["access-control-allow-origin"]).toBeUndefined();
+    expect(denied.headers["access-control-allow-credentials"]).toBeUndefined();
   });
   it("checks all eleven real HTTP dependencies before becoming ready", async () => {
     const response = await api.inject({ method: "GET", url: "/ready" });
