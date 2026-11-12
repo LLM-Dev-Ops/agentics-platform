@@ -58,5 +58,8 @@ test("partial provider routes cannot overstate results-index capability", () => 
   const results = changed.contract_gaps.find((gap) => gap.capability === "results_index");
   if (!results) throw new Error("results-index fixture missing");
   results.status = "PROVIDER_CANDIDATE";
+  results.implemented_semantics = results.implemented_semantics?.filter(
+    (semantic) => semantic !== "summary_query",
+  );
   assert.throws(() => validateDataPlaneClosure(changed), /capability is incomplete/);
 });

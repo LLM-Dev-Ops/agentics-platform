@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "66508ee1c52c8b66b899b712739c0f3130718c1a",
+      "revision": "0b70c0572d2ce6e3998c7965874a37bc3e32ac42",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "a0f194e3670a72192a61096236f50dd953e8f119",
+      "contract_authority_revision": "3ad92f0dc074496d3e10d6d2d1748c574cec2039",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -73,17 +73,26 @@
       "provider_routes": [
         "POST /v1/data-plane/results",
         "GET /v1/data-plane/results",
+        "GET /v1/data-plane/results/summary",
+        "GET /v1/data-plane/results/scenarios/:scenario_id",
         "GET /v1/data-plane/results/:result_id"
       ],
-      "implemented_semantics": ["run_ingest", "exact_id_query", "ordered_cursor_replay", "idempotency", "tenant_ownership"],
-      "status": "BLOCKED_PROVIDER_CONTRACT"
+      "implemented_semantics": ["run_ingest", "exact_id_query", "ordered_cursor_replay", "scenario_query", "summary_query", "idempotency", "tenant_ownership"],
+      "status": "PROVIDER_CANDIDATE"
     },
     {
       "capability": "usage_ledger",
       "consumers": ["agentics-usage-ledger"],
       "required_semantics": ["append_only_entries", "serializable_balance", "reservations", "idempotency", "principal_to_tenant_binding"],
-      "provider_routes": [],
-      "status": "BLOCKED_PROVIDER_CONTRACT"
+      "provider_routes": [
+        "POST /v1/data-plane/usage/entries",
+        "GET /v1/data-plane/usage/balance",
+        "POST /v1/data-plane/usage/reservations",
+        "POST /v1/data-plane/usage/reservations/:reservation_id/consume",
+        "POST /v1/data-plane/usage/reservations/:reservation_id/cancel"
+      ],
+      "implemented_semantics": ["append_only_entries", "serializable_balance", "reservations", "idempotency", "principal_to_tenant_binding"],
+      "status": "PROVIDER_CANDIDATE"
     },
     {
       "capability": "platform_identity_and_entitlements",
