@@ -130,12 +130,10 @@ test("partial identity provider cannot overstate missing CLI transaction semanti
   );
   if (!identity) throw new Error("identity fixture missing");
   assert.equal(identity.authority_contracts?.length, 8);
-  assert.deepEqual(identity.implemented_semantics, [
-    "api_key_lookup",
-    "entitlement_query",
-    "tenant_ownership",
-  ]);
-  assert.equal(identity.status, "BLOCKED_PROVIDER_CONTRACT");
+  assert.equal(identity.status, "PROVIDER_CANDIDATE");
+  identity.implemented_semantics = identity.implemented_semantics?.filter(
+    (semantic) => semantic !== "cli_session_transaction",
+  );
   identity.status = "PROVIDER_CANDIDATE";
   assert.throws(
     () => validateDataPlaneClosure(changed),

@@ -45,7 +45,7 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "3612cc8238c5eef10224f2502f256c1ff0ad9d9e",
+      "revision": "02e091cd6f1e557e74a0e156bb502c0e0a46f866",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
       "contract_authority_revision": "5bcdc926a78cf9c78072f5fbef2280cb437927f7",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "3612cc8238c5eef10224f2502f256c1ff0ad9d9e",
+      "head_revision": "02e091cd6f1e557e74a0e156bb502c0e0a46f866",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43175674087,
+      "hosted_ci_run_id": 43182951122,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -187,14 +187,18 @@
       ],
       "provider_routes": [
         "/v1/data-plane/identity/api-keys/lookup",
-        "/v1/data-plane/identity/entitlements/lookup"
+        "/v1/data-plane/identity/entitlements/lookup",
+        "POST /v1/data-plane/identity/cli/sessions",
+        "GET /v1/data-plane/identity/cli/sessions/:device_code",
+        "POST /v1/data-plane/identity/cli/sessions/:session_code/authorize"
       ],
       "implemented_semantics": [
         "api_key_lookup",
+        "cli_session_transaction",
         "entitlement_query",
         "tenant_ownership"
       ],
-      "status": "BLOCKED_PROVIDER_CONTRACT"
+      "status": "PROVIDER_CANDIDATE"
     }
   ],
   "migration_ready": false
