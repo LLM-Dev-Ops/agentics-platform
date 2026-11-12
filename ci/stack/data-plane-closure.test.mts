@@ -36,3 +36,18 @@ test("every direct-persistence consumer has an explicit contract closure", () =>
   );
   assert.throws(() => validateDataPlaneClosure(changed), /no contract closure/);
 });
+
+test("a component-validated provider candidate cannot become migration proof", () => {
+  const changed = structuredClone(dataPlaneClosure);
+  changed.provider.application_tenant_binding = true;
+  changed.evidence_status = "MIGRATION_READY";
+  changed.migration_ready = true;
+  assert.throws(() => validateDataPlaneClosure(changed), /readiness|overstates/);
+});
+
+test("provider candidate evidence is pinned to exact cross-repository revisions", () => {
+  const changed = structuredClone(dataPlaneClosure);
+  if (!changed.provider.candidate) throw new Error("candidate fixture missing");
+  changed.provider.candidate.revision = "main";
+  assert.throws(() => validateDataPlaneClosure(changed), /candidate revision/);
+});

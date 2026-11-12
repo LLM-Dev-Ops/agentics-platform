@@ -19,7 +19,7 @@ type ContractGap = {
   consumers: string[];
   required_semantics: string[];
   provider_routes: string[];
-  status: "BLOCKED_PROVIDER_CONTRACT" | "READY";
+  status: "BLOCKED_PROVIDER_CONTRACT" | "PROVIDER_CANDIDATE" | "READY";
 };
 
 export interface DataPlaneClosure {
@@ -33,6 +33,15 @@ export interface DataPlaneClosure {
     revision: string;
     transport_identity: "CLOUD_RUN_IAM";
     application_tenant_binding: boolean;
+    candidate?: {
+      revision: string;
+      branch: string;
+      pull_request: string;
+      contract_authority_revision: string;
+      contract_pull_request: string;
+      application_tenant_binding: boolean;
+      status: "COMPONENT_VALIDATED";
+    };
   };
   contract_gaps: ContractGap[];
   migration_ready: boolean;
@@ -101,6 +110,24 @@ export function validateDataPlaneClosure(
     throw new Error("Provider revision is not the selected source pin");
   if (closure.provider.transport_identity !== "CLOUD_RUN_IAM")
     throw new Error("Provider transport identity must remain IAM-scoped");
+  const candidate = closure.provider.candidate;
+  if (candidate) {
+    for (const [name, revision] of [
+      ["provider", candidate.revision],
+      ["contract authority", candidate.contract_authority_revision],
+    ] as const) {
+      if (!/^[0-9a-f]{40}$/.test(revision))
+        throw new Error(`Invalid ${name} candidate revision`);
+    }
+    if (
+      candidate.branch !== "integration/tenant-bound-data-plane-2026-11-12" ||
+      candidate.pull_request !== "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5" ||
+      candidate.contract_pull_request !==
+        "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1" ||
+      !candidate.application_tenant_binding
+    )
+      throw new Error("Incomplete tenant-bound provider candidate evidence");
+  }
 
   const covered = new Set<string>();
   for (const gap of closure.contract_gaps) {
@@ -113,6 +140,11 @@ export function validateDataPlaneClosure(
     }
     if (gap.status === "READY" && gap.provider_routes.length === 0)
       throw new Error(`Ready capability has no provider routes: ${gap.capability}`);
+    if (
+      gap.status === "PROVIDER_CANDIDATE" &&
+      (!candidate || gap.provider_routes.length === 0)
+    )
+      throw new Error(`Provider candidate has no pinned implementation: ${gap.capability}`);
   }
   for (const component of consumers.keys())
     if (!covered.has(component))

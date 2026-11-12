@@ -43,15 +43,27 @@
     "component": "ruvector-service",
     "revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
     "transport_identity": "CLOUD_RUN_IAM",
-    "application_tenant_binding": false
+    "application_tenant_binding": false,
+    "candidate": {
+      "revision": "85db2c13e8e964cb580eb68ef9260e13cf7179b7",
+      "branch": "integration/tenant-bound-data-plane-2026-11-12",
+      "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
+      "contract_authority_revision": "171d22ec1ddc5766b9ef6b93b19630d2e1172dee",
+      "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
+      "application_tenant_binding": true,
+      "status": "COMPONENT_VALIDATED"
+    }
   },
   "contract_gaps": [
     {
       "capability": "simulation_event_stream",
       "consumers": ["agentics-platform"],
       "required_semantics": ["append_batch", "per_simulation_sequence", "cursor_replay", "durable_restart_retrieval", "tenant_ownership"],
-      "provider_routes": [],
-      "status": "BLOCKED_PROVIDER_CONTRACT"
+      "provider_routes": [
+        "POST /v1/data-plane/simulation-events",
+        "GET /v1/data-plane/simulations/:simulation_id/events"
+      ],
+      "status": "PROVIDER_CANDIDATE"
     },
     {
       "capability": "results_index",
