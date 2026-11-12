@@ -122,3 +122,17 @@ test("partial provider routes cannot overstate results-index capability", () => 
     /capability is incomplete/,
   );
 });
+
+test("identity authority contracts cannot be mislabeled provider implementation", () => {
+  const changed = structuredClone(dataPlaneClosure);
+  const identity = changed.contract_gaps.find(
+    (gap) => gap.capability === "platform_identity_and_entitlements",
+  );
+  if (!identity) throw new Error("identity fixture missing");
+  assert.equal(identity.authority_contracts?.length, 8);
+  identity.authority_contracts = [];
+  assert.throws(
+    () => validateDataPlaneClosure(changed),
+    /no authority contract/,
+  );
+});

@@ -18,6 +18,7 @@ type ContractGap = {
   capability: string;
   consumers: string[];
   required_semantics: string[];
+  authority_contracts?: string[];
   implemented_semantics?: string[];
   provider_routes: string[];
   status: "BLOCKED_PROVIDER_CONTRACT" | "PROVIDER_CANDIDATE" | "READY";
@@ -230,6 +231,12 @@ export function validateDataPlaneClosure(closure: DataPlaneClosure): void {
     if (gap.required_semantics.length === 0)
       throw new Error(`Missing required semantics: ${gap.capability}`);
     const implemented = new Set(gap.implemented_semantics ?? []);
+    const authorityContracts = new Set(gap.authority_contracts ?? []);
+    if (authorityContracts.size !== (gap.authority_contracts?.length ?? 0))
+      throw new Error(`Duplicate authority contract: ${gap.capability}`);
+    for (const contract of authorityContracts)
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(contract))
+        throw new Error(`Invalid authority contract: ${gap.capability}`);
     for (const semantic of implemented)
       if (!gap.required_semantics.includes(semantic))
         throw new Error(
@@ -243,6 +250,14 @@ export function validateDataPlaneClosure(closure: DataPlaneClosure): void {
     if (gap.status === "READY" && gap.provider_routes.length === 0)
       throw new Error(
         `Ready capability has no provider routes: ${gap.capability}`,
+      );
+    if (
+      gap.status === "BLOCKED_PROVIDER_CONTRACT" &&
+      gap.provider_routes.length === 0 &&
+      authorityContracts.size === 0
+    )
+      throw new Error(
+        `Blocked capability has no authority contract: ${gap.capability}`,
       );
     if (gap.provider_routes.length > 0 && implemented.size === 0)
       throw new Error(
