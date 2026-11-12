@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "b03c18fa5bef232ec1933936d52ccea99dc107a1",
+      "revision": "3612cc8238c5eef10224f2502f256c1ff0ad9d9e",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "3ad92f0dc074496d3e10d6d2d1748c574cec2039",
+      "contract_authority_revision": "5bcdc926a78cf9c78072f5fbef2280cb437927f7",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -58,7 +58,7 @@
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "head_revision": "5bcdc926a78cf9c78072f5fbef2280cb437927f7",
-      "semantic_revision": "3ad92f0dc074496d3e10d6d2d1748c574cec2039",
+      "semantic_revision": "5bcdc926a78cf9c78072f5fbef2280cb437927f7",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
       "hosted_ci_run_id": 43172856281,
       "hosted_ci_conclusion": "success",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "b03c18fa5bef232ec1933936d52ccea99dc107a1",
+      "head_revision": "3612cc8238c5eef10224f2502f256c1ff0ad9d9e",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43160351460,
+      "hosted_ci_run_id": 43175674087,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -185,7 +185,15 @@
         "identity-cli-session-authorized",
         "identity-cli-session-poll"
       ],
-      "provider_routes": [],
+      "provider_routes": [
+        "/v1/data-plane/identity/api-keys/lookup",
+        "/v1/data-plane/identity/entitlements/lookup"
+      ],
+      "implemented_semantics": [
+        "api_key_lookup",
+        "entitlement_query",
+        "tenant_ownership"
+      ],
       "status": "BLOCKED_PROVIDER_CONTRACT"
     }
   ],

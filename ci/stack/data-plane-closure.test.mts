@@ -123,16 +123,22 @@ test("partial provider routes cannot overstate results-index capability", () => 
   );
 });
 
-test("identity authority contracts cannot be mislabeled provider implementation", () => {
+test("partial identity provider cannot overstate missing CLI transaction semantics", () => {
   const changed = structuredClone(dataPlaneClosure);
   const identity = changed.contract_gaps.find(
     (gap) => gap.capability === "platform_identity_and_entitlements",
   );
   if (!identity) throw new Error("identity fixture missing");
   assert.equal(identity.authority_contracts?.length, 8);
-  identity.authority_contracts = [];
+  assert.deepEqual(identity.implemented_semantics, [
+    "api_key_lookup",
+    "entitlement_query",
+    "tenant_ownership",
+  ]);
+  assert.equal(identity.status, "BLOCKED_PROVIDER_CONTRACT");
+  identity.status = "PROVIDER_CANDIDATE";
   assert.throws(
     () => validateDataPlaneClosure(changed),
-    /no authority contract/,
+    /capability is incomplete/,
   );
 });
