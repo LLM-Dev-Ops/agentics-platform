@@ -2,6 +2,8 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 node --test ci/stack/*.test.mts
+node ci/stack/direct-persistence.mts
+node ci/stack/source-revisions.mts
 bash ci/check-architecture.sh
 npm ci --ignore-scripts --no-audit --no-fund
 npm rebuild bcrypt
