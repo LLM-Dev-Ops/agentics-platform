@@ -55,12 +55,10 @@ PY
 
 # Updating existing bindings must not erase the thirteen downstream URLs.
 gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --format=json > "$STATE/before.json"
-python3 - "$STATE/before.json" config/stack/topology.json > "$STATE/traffic" <<'PY'
+node ci/stack/cloud-run-env.mts "$STATE/before.json" > "$STATE/bindings-before.json"
+python3 - "$STATE/before.json" > "$STATE/traffic" <<'PY'
 import json,sys
-service=json.load(open(sys.argv[1])); topology=json.load(open(sys.argv[2]))
-bindings={e['name']:e for e in service['spec']['template']['spec']['containers'][0].get('env',[])}
-for name in topology['platform_runtime_dependencies']:
-    assert name in bindings and (bindings[name].get('value') or bindings[name].get('valueFrom')), f'Missing binding: {name}'
+service=json.load(open(sys.argv[1]))
 traffic={}
 for item in service['status'].get('traffic',[]):
     if item.get('percent',0):
@@ -80,6 +78,7 @@ gcloud run deploy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --platfo
   --update-env-vars "NODE_ENV=production,SERVICE_NAME=$SERVICE,SERVICE_VERSION=$SOURCE_COMMIT" \
   --quiet
 gcloud run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --format=json > "$STATE/candidate.json"
+node ci/stack/cloud-run-env.mts "$STATE/candidate.json" > "$STATE/bindings-candidate.json"
 python3 - "$STATE/candidate.json" "$TAG" > "$STATE/candidate" <<'PY'
 import json,sys
 from urllib.parse import urlsplit

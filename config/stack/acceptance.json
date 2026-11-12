@@ -8,6 +8,7 @@
     "Production gateway simulation-route registration and scope regression tests",
     "Readiness requires all eight cores and three execution-spine endpoints",
     "Native package-export resolution after deterministic workspace builds",
+    "Platform release candidates reject missing or unsafe shared-service URLs and direct database bindings",
     "Live staging simulation creation, completed-result readback and cross-tenant rejection"
   ],
   "required_before_stack_operational": [

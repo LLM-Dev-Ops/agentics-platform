@@ -69,6 +69,15 @@ function runRelease(mode: string) {
       services: dependencies.map((service) => ({ service, status: "healthy" })),
     },
   };
+  if (mode === "unsafe-binding")
+    fixture.before.spec.template.spec.containers[0].env.find(
+      (entry) => entry.name === "RUVECTOR_SERVICE_URL",
+    )!.value = "http://localhost:8080";
+  if (mode === "direct-sql")
+    fixture.before.spec.template.spec.containers[0].env.push({
+      name: "DATABASE_URL",
+      value: "postgres://fixture.invalid/db",
+    });
   writeFileSync(join(dir, "fixture.json"), JSON.stringify(fixture));
   writeFileSync(
     join(dir, "gcloud"),
@@ -85,7 +94,9 @@ if a[:3]==['run','services','describe']:
 elif a[:3]==['container','images','describe']: print('sha256:'+('c'*64))
 elif a[:2]==['auth','print-identity-token']: print('fixture-id-token')
 elif a[:2]==['run','deploy']:
-    state=f['before']; state['status']['traffic'].append({'revisionName':'candidate-revision','tag':'candidate-${sha.slice(0, 12)}','url':'https://candidate.run.app','percent':0}); (p/'state').write_text(json.dumps(state))
+    state=f['before']; state['status']['traffic'].append({'revisionName':'candidate-revision','tag':'candidate-${sha.slice(0, 12)}','url':'https://candidate.run.app','percent':0})
+    if os.environ['FIXTURE_MODE']=='candidate-drops-binding': state['spec']['template']['spec']['containers'][0]['env']=[e for e in state['spec']['template']['spec']['containers'][0]['env'] if e['name']!='RUVECTOR_SERVICE_URL']
+    (p/'state').write_text(json.dumps(state))
 elif a[:3]==['run','services','update-traffic']:
     value=a[a.index('--to-revisions')+1]; state=f['before']; state['status']['traffic']=[{'revisionName':x.split('=')[0],'percent':int(x.split('=')[1])} for x in value.split(',')]; (p/'state').write_text(json.dumps(state))
 else: sys.exit(90)
@@ -136,6 +147,19 @@ test("missing/wrong staging evidence never reaches a cloud deployment", () => {
     assert.notEqual(result.status, 0);
     assert.ok(!result.commands.includes("gcloud run deploy"));
   }
+});
+test("unsafe and direct-database bindings never reach a cloud deployment", () => {
+  for (const mode of ["unsafe-binding", "direct-sql"]) {
+    const result = runRelease(mode);
+    assert.notEqual(result.status, 0);
+    assert.ok(!result.commands.includes("gcloud run deploy"));
+  }
+});
+test("a candidate that loses a required binding never receives traffic", () => {
+  const result = runRelease("candidate-drops-binding");
+  assert.notEqual(result.status, 0);
+  assert.ok(result.commands.includes("gcloud run deploy"));
+  assert.ok(!result.commands.includes("update-traffic"));
 });
 test("a failed candidate readiness check never receives production traffic", () => {
   const result = runRelease("candidate-fail");
