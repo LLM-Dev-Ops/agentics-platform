@@ -23,6 +23,7 @@ test("routes alone cannot replace application tenant binding", () => {
   for (const gap of changed.contract_gaps) {
     gap.status = "READY";
     gap.provider_routes = [`/v1/${gap.capability}`];
+    gap.implemented_semantics = [...gap.required_semantics];
   }
   changed.evidence_status = "MIGRATION_READY";
   changed.migration_ready = true;
@@ -50,4 +51,12 @@ test("provider candidate evidence is pinned to exact cross-repository revisions"
   if (!changed.provider.candidate) throw new Error("candidate fixture missing");
   changed.provider.candidate.revision = "main";
   assert.throws(() => validateDataPlaneClosure(changed), /candidate revision/);
+});
+
+test("partial provider routes cannot overstate results-index capability", () => {
+  const changed = structuredClone(dataPlaneClosure);
+  const results = changed.contract_gaps.find((gap) => gap.capability === "results_index");
+  if (!results) throw new Error("results-index fixture missing");
+  results.status = "PROVIDER_CANDIDATE";
+  assert.throws(() => validateDataPlaneClosure(changed), /capability is incomplete/);
 });

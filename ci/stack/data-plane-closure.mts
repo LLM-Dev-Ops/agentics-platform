@@ -18,6 +18,7 @@ type ContractGap = {
   capability: string;
   consumers: string[];
   required_semantics: string[];
+  implemented_semantics?: string[];
   provider_routes: string[];
   status: "BLOCKED_PROVIDER_CONTRACT" | "PROVIDER_CANDIDATE" | "READY";
 };
@@ -133,6 +134,10 @@ export function validateDataPlaneClosure(
   for (const gap of closure.contract_gaps) {
     if (gap.required_semantics.length === 0)
       throw new Error(`Missing required semantics: ${gap.capability}`);
+    const implemented = new Set(gap.implemented_semantics ?? []);
+    for (const semantic of implemented)
+      if (!gap.required_semantics.includes(semantic))
+        throw new Error(`Unknown implemented semantic: ${gap.capability}:${semantic}`);
     for (const consumer of gap.consumers) {
       if (!consumers.has(consumer))
         throw new Error(`Unknown contract-gap consumer: ${consumer}`);
@@ -140,6 +145,13 @@ export function validateDataPlaneClosure(
     }
     if (gap.status === "READY" && gap.provider_routes.length === 0)
       throw new Error(`Ready capability has no provider routes: ${gap.capability}`);
+    if (gap.provider_routes.length > 0 && implemented.size === 0)
+      throw new Error(`Provider routes have no semantic evidence: ${gap.capability}`);
+    if (
+      (gap.status === "READY" || gap.status === "PROVIDER_CANDIDATE") &&
+      gap.required_semantics.some((semantic) => !implemented.has(semantic))
+    )
+      throw new Error(`Provider capability is incomplete: ${gap.capability}`);
     if (
       gap.status === "PROVIDER_CANDIDATE" &&
       (!candidate || gap.provider_routes.length === 0)

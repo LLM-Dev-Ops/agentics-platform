@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "85db2c13e8e964cb580eb68ef9260e13cf7179b7",
+      "revision": "698ffda504f99f00c5e76cc18ec648e76c0ace07",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "171d22ec1ddc5766b9ef6b93b19630d2e1172dee",
+      "contract_authority_revision": "a0f194e3670a72192a61096236f50dd953e8f119",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -63,13 +63,19 @@
         "POST /v1/data-plane/simulation-events",
         "GET /v1/data-plane/simulations/:simulation_id/events"
       ],
+      "implemented_semantics": ["append_batch", "per_simulation_sequence", "cursor_replay", "durable_restart_retrieval", "tenant_ownership"],
       "status": "PROVIDER_CANDIDATE"
     },
     {
       "capability": "results_index",
       "consumers": ["agentics-results-index"],
-      "required_semantics": ["run_ingest", "scenario_query", "summary_query", "idempotency", "tenant_ownership"],
-      "provider_routes": [],
+      "required_semantics": ["run_ingest", "exact_id_query", "ordered_cursor_replay", "scenario_query", "summary_query", "idempotency", "tenant_ownership"],
+      "provider_routes": [
+        "POST /v1/data-plane/results",
+        "GET /v1/data-plane/results",
+        "GET /v1/data-plane/results/:result_id"
+      ],
+      "implemented_semantics": ["run_ingest", "exact_id_query", "ordered_cursor_replay", "idempotency", "tenant_ownership"],
       "status": "BLOCKED_PROVIDER_CONTRACT"
     },
     {
