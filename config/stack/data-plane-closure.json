@@ -54,22 +54,74 @@
       "status": "COMPONENT_VALIDATED"
     }
   },
+  "promotion_evidence": {
+    "contract_authority": {
+      "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
+      "head_revision": "124950aeaecd2093bbac1d8ee8a293852e7725de",
+      "semantic_revision": "3ad92f0dc074496d3e10d6d2d1748c574cec2039",
+      "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
+      "hosted_ci_run_id": 43161491549,
+      "hosted_ci_conclusion": "success",
+      "review_decision": "NONE",
+      "merge_status": "UNMERGED",
+      "merged_commit": null
+    },
+    "provider": {
+      "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
+      "head_revision": "b03c18fa5bef232ec1933936d52ccea99dc107a1",
+      "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
+      "hosted_ci_run_id": 43160351460,
+      "hosted_ci_conclusion": "success",
+      "review_decision": "NONE",
+      "merge_status": "DRAFT_UNMERGED",
+      "merged_commit": null
+    },
+    "live_iam": {
+      "environment": "staging",
+      "workflow_path": ".github/workflows/stack-staging.yml",
+      "workflow_on_main": false,
+      "trusted_main_run_id": null,
+      "transport_identity_verified": false,
+      "principal_tenant_binding_verified": false,
+      "status": "UNVERIFIED"
+    }
+  },
   "contract_gaps": [
     {
       "capability": "simulation_event_stream",
       "consumers": ["agentics-platform"],
-      "required_semantics": ["append_batch", "per_simulation_sequence", "cursor_replay", "durable_restart_retrieval", "tenant_ownership"],
+      "required_semantics": [
+        "append_batch",
+        "per_simulation_sequence",
+        "cursor_replay",
+        "durable_restart_retrieval",
+        "tenant_ownership"
+      ],
       "provider_routes": [
         "POST /v1/data-plane/simulation-events",
         "GET /v1/data-plane/simulations/:simulation_id/events"
       ],
-      "implemented_semantics": ["append_batch", "per_simulation_sequence", "cursor_replay", "durable_restart_retrieval", "tenant_ownership"],
+      "implemented_semantics": [
+        "append_batch",
+        "per_simulation_sequence",
+        "cursor_replay",
+        "durable_restart_retrieval",
+        "tenant_ownership"
+      ],
       "status": "PROVIDER_CANDIDATE"
     },
     {
       "capability": "results_index",
       "consumers": ["agentics-results-index"],
-      "required_semantics": ["run_ingest", "exact_id_query", "ordered_cursor_replay", "scenario_query", "summary_query", "idempotency", "tenant_ownership"],
+      "required_semantics": [
+        "run_ingest",
+        "exact_id_query",
+        "ordered_cursor_replay",
+        "scenario_query",
+        "summary_query",
+        "idempotency",
+        "tenant_ownership"
+      ],
       "provider_routes": [
         "POST /v1/data-plane/results",
         "GET /v1/data-plane/results",
@@ -77,13 +129,27 @@
         "GET /v1/data-plane/results/scenarios/:scenario_id",
         "GET /v1/data-plane/results/:result_id"
       ],
-      "implemented_semantics": ["run_ingest", "exact_id_query", "ordered_cursor_replay", "scenario_query", "summary_query", "idempotency", "tenant_ownership"],
+      "implemented_semantics": [
+        "run_ingest",
+        "exact_id_query",
+        "ordered_cursor_replay",
+        "scenario_query",
+        "summary_query",
+        "idempotency",
+        "tenant_ownership"
+      ],
       "status": "PROVIDER_CANDIDATE"
     },
     {
       "capability": "usage_ledger",
       "consumers": ["agentics-usage-ledger"],
-      "required_semantics": ["append_only_entries", "serializable_balance", "reservations", "idempotency", "principal_to_tenant_binding"],
+      "required_semantics": [
+        "append_only_entries",
+        "serializable_balance",
+        "reservations",
+        "idempotency",
+        "principal_to_tenant_binding"
+      ],
       "provider_routes": [
         "POST /v1/data-plane/usage/entries",
         "GET /v1/data-plane/usage/balance",
@@ -91,13 +157,24 @@
         "POST /v1/data-plane/usage/reservations/:reservation_id/consume",
         "POST /v1/data-plane/usage/reservations/:reservation_id/cancel"
       ],
-      "implemented_semantics": ["append_only_entries", "serializable_balance", "reservations", "idempotency", "principal_to_tenant_binding"],
+      "implemented_semantics": [
+        "append_only_entries",
+        "serializable_balance",
+        "reservations",
+        "idempotency",
+        "principal_to_tenant_binding"
+      ],
       "status": "PROVIDER_CANDIDATE"
     },
     {
       "capability": "platform_identity_and_entitlements",
       "consumers": ["agentics-platform"],
-      "required_semantics": ["api_key_lookup", "cli_session_transaction", "entitlement_query", "tenant_ownership"],
+      "required_semantics": [
+        "api_key_lookup",
+        "cli_session_transaction",
+        "entitlement_query",
+        "tenant_ownership"
+      ],
       "provider_routes": [],
       "status": "BLOCKED_PROVIDER_CONTRACT"
     }
