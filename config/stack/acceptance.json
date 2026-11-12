@@ -11,6 +11,7 @@
     "Platform release candidates reject missing or unsafe shared-service URLs and direct database bindings",
     "Immutable inventory pins cover all runtime providers plus contract and schema authorities without claiming compatibility or deployment",
     "Direct platform persistence debt is frozen at 48 findings and may only decrease pending RuVector service migration",
+    "Exact pinned closure inspection records 101 direct-persistence findings across platform, results index and usage ledger and refuses migration readiness without tenant-bound provider contracts",
     "Live staging simulation creation, completed-result readback and cross-tenant rejection"
   ],
   "required_before_stack_operational": [

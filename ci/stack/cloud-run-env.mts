@@ -34,6 +34,15 @@ const directPersistenceNames = new Set([
   "INSTANCE_CONNECTION_NAME",
 ]);
 
+function isDirectPersistenceBinding(name: string): boolean {
+  if (directPersistenceNames.has(name)) return true;
+  return (
+    /^(?:RESULTS|USAGE|IDENTITY|PLATFORM|AGENTICS|RUVECTOR)_DB(?:_|$)/.test(name) ||
+    /^(?:RESULTS|USAGE|IDENTITY|PLATFORM|AGENTICS|RUVECTOR)_DATABASE(?:_|$)/.test(name) ||
+    /^(?:DB|DATABASE)_(?:HOST|PORT|NAME|USER|PASSWORD|URL)$/.test(name)
+  );
+}
+
 export function validateCloudRunEnvironment(
   service: CloudRunService,
 ): { required_bindings: number; direct_persistence_bindings: 0 } {
@@ -47,7 +56,7 @@ export function validateCloudRunEnvironment(
     if (byName.has(entry.name))
       throw new Error(`Duplicate service binding: ${entry.name}`);
     byName.set(entry.name, entry);
-    if (directPersistenceNames.has(entry.name))
+    if (isDirectPersistenceBinding(entry.name))
       throw new Error(`Direct persistence binding is forbidden: ${entry.name}`);
   }
 

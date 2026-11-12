@@ -75,6 +75,10 @@ test("the platform release candidate cannot own a direct database binding", () =
     "DATABASE_URL",
     "PGHOST",
     "CLOUD_SQL_CONNECTION_NAME",
+    "RESULTS_DB_HOST",
+    "USAGE_DB_PASSWORD",
+    "IDENTITY_DB_URL",
+    "RUVECTOR_DATABASE_NAME",
   ])
     assert.throws(
       () =>

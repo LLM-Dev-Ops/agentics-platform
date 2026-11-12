@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-11-12",
+  "evidence_status": "BLOCKED_PROVIDER_CONTRACT",
+  "policy": "Direct consumer persistence may move only to an authenticated, tenant-bound ruvector-service contract with equivalent durability, ordering, idempotency and transactional semantics.",
+  "consumers": [
+    {
+      "component": "agentics-platform",
+      "revision_source": "CURRENT_TREE",
+      "pg_imports": 4,
+      "database_url_reads": 2,
+      "query_calls": 40,
+      "runtime_pg_dependencies": 2,
+      "findings": 48
+    },
+    {
+      "component": "agentics-results-index",
+      "revision": "876cd8cf38eb9e5687c92b73e8d3b8ac7e34e57c",
+      "pg_imports": 2,
+      "database_url_reads": 0,
+      "query_calls": 5,
+      "runtime_pg_dependencies": 1,
+      "findings": 8
+    },
+    {
+      "component": "agentics-usage-ledger",
+      "revision": "dbd63a6ae35a45f889170fc2ca3e611907506c45",
+      "pg_imports": 6,
+      "database_url_reads": 0,
+      "query_calls": 38,
+      "runtime_pg_dependencies": 1,
+      "findings": 45
+    }
+  ],
+  "totals": {
+    "pg_imports": 12,
+    "database_url_reads": 2,
+    "query_calls": 83,
+    "runtime_pg_dependencies": 4,
+    "findings": 101
+  },
+  "provider": {
+    "component": "ruvector-service",
+    "revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
+    "transport_identity": "CLOUD_RUN_IAM",
+    "application_tenant_binding": false
+  },
+  "contract_gaps": [
+    {
+      "capability": "simulation_event_stream",
+      "consumers": ["agentics-platform"],
+      "required_semantics": ["append_batch", "per_simulation_sequence", "cursor_replay", "durable_restart_retrieval", "tenant_ownership"],
+      "provider_routes": [],
+      "status": "BLOCKED_PROVIDER_CONTRACT"
+    },
+    {
+      "capability": "results_index",
+      "consumers": ["agentics-results-index"],
+      "required_semantics": ["run_ingest", "scenario_query", "summary_query", "idempotency", "tenant_ownership"],
+      "provider_routes": [],
+      "status": "BLOCKED_PROVIDER_CONTRACT"
+    },
+    {
+      "capability": "usage_ledger",
+      "consumers": ["agentics-usage-ledger"],
+      "required_semantics": ["append_only_entries", "serializable_balance", "reservations", "idempotency", "principal_to_tenant_binding"],
+      "provider_routes": [],
+      "status": "BLOCKED_PROVIDER_CONTRACT"
+    },
+    {
+      "capability": "platform_identity_and_entitlements",
+      "consumers": ["agentics-platform"],
+      "required_semantics": ["api_key_lookup", "cli_session_transaction", "entitlement_query", "tenant_ownership"],
+      "provider_routes": [],
+      "status": "BLOCKED_PROVIDER_CONTRACT"
+    }
+  ],
+  "migration_ready": false
+}
