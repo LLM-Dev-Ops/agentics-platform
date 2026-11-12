@@ -45,7 +45,7 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "698ffda504f99f00c5e76cc18ec648e76c0ace07",
+      "revision": "66508ee1c52c8b66b899b712739c0f3130718c1a",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
       "contract_authority_revision": "a0f194e3670a72192a61096236f50dd953e8f119",
