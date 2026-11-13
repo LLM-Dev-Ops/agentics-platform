@@ -159,8 +159,9 @@ test("partial identity provider cannot overstate missing CLI transaction semanti
   );
 });
 
-test("identity provider cannot omit delivery-time binding or its transaction lock", () => {
+test("identity provider cannot omit entitlement or delivery-time safety semantics", () => {
   for (const missing of [
+    "lossless_entitlement_limits",
     "delivery_time_membership_binding",
     "delivery_time_key_activity",
     "delivery_time_binding_lock",
