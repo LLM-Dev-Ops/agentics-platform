@@ -60,8 +60,8 @@
       "head_revision": "f3e7d622e876aef4c7e1b06c958d085c80ce53fe",
       "semantic_revision": "f3e7d622e876aef4c7e1b06c958d085c80ce53fe",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": null,
-      "hosted_ci_conclusion": "pending",
+      "hosted_ci_run_id": 43390725577,
+      "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
       "merged_commit": null
@@ -70,8 +70,8 @@
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
       "head_revision": "b10a33115b0b791c1f0a701f327a0ed74ed7f91c",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": null,
-      "hosted_ci_conclusion": "pending",
+      "hosted_ci_run_id": 43391114480,
+      "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
       "merged_commit": null
