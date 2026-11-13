@@ -164,6 +164,7 @@ test("identity provider cannot omit delivery-time binding or its transaction loc
     "delivery_time_membership_binding",
     "delivery_time_key_activity",
     "delivery_time_binding_lock",
+    "delivery_copy_key_binding",
   ]) {
     const changed = structuredClone(dataPlaneClosure);
     const identity = changed.contract_gaps.find(
