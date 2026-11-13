@@ -159,10 +159,11 @@ test("partial identity provider cannot overstate missing CLI transaction semanti
   );
 });
 
-test("identity provider cannot omit delivery-time membership or key binding", () => {
+test("identity provider cannot omit delivery-time binding or its transaction lock", () => {
   for (const missing of [
     "delivery_time_membership_binding",
     "delivery_time_key_activity",
+    "delivery_time_binding_lock",
   ]) {
     const changed = structuredClone(dataPlaneClosure);
     const identity = changed.contract_gaps.find(
