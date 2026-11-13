@@ -11,6 +11,24 @@ test("the measured direct-persistence closure remains explicitly blocked", () =>
   assert.equal(dataPlaneClosure.migration_ready, false);
 });
 
+test("an exact unmerged dependency head may record hosted CI as pending", () => {
+  const changed = structuredClone(dataPlaneClosure);
+  changed.promotion_evidence.contract_authority.hosted_ci_run_id = null;
+  changed.promotion_evidence.contract_authority.hosted_ci_conclusion = "pending";
+  validateDataPlaneClosure(changed);
+  assert.equal(changed.migration_ready, false);
+});
+
+test("pending hosted CI must not cite a stale run", () => {
+  const changed = structuredClone(dataPlaneClosure);
+  changed.promotion_evidence.provider.hosted_ci_run_id = 43182951122;
+  changed.promotion_evidence.provider.hosted_ci_conclusion = "pending";
+  assert.throws(
+    () => validateDataPlaneClosure(changed),
+    /promotion evidence/,
+  );
+});
+
 test("inventory evidence cannot be relabeled migration-ready", () => {
   const changed = structuredClone(dataPlaneClosure);
   changed.evidence_status = "MIGRATION_READY";

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-11-12",
+  "captured_at": "2026-11-13",
   "evidence_status": "BLOCKED_PROVIDER_CONTRACT",
   "policy": "Direct consumer persistence may move only to an authenticated, tenant-bound ruvector-service contract with equivalent durability, ordering, idempotency and transactional semantics.",
   "consumers": [
@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "02e091cd6f1e557e74a0e156bb502c0e0a46f866",
+      "revision": "a2471565448737b06ce5990bbcb56e19e5c06b68",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "5bcdc926a78cf9c78072f5fbef2280cb437927f7",
+      "contract_authority_revision": "11464293ef5d7f6d57ddaa6c5e1e5de26e3412f9",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,21 +57,21 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "5bcdc926a78cf9c78072f5fbef2280cb437927f7",
-      "semantic_revision": "5bcdc926a78cf9c78072f5fbef2280cb437927f7",
+      "head_revision": "11464293ef5d7f6d57ddaa6c5e1e5de26e3412f9",
+      "semantic_revision": "11464293ef5d7f6d57ddaa6c5e1e5de26e3412f9",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43172856281,
-      "hosted_ci_conclusion": "success",
+      "hosted_ci_run_id": null,
+      "hosted_ci_conclusion": "pending",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
       "merged_commit": null
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "02e091cd6f1e557e74a0e156bb502c0e0a46f866",
+      "head_revision": "a2471565448737b06ce5990bbcb56e19e5c06b68",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43182951122,
-      "hosted_ci_conclusion": "success",
+      "hosted_ci_run_id": null,
+      "hosted_ci_conclusion": "pending",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
       "merged_commit": null

@@ -29,8 +29,8 @@ type MergeEvidence = {
   head_revision: string;
   semantic_revision?: string;
   base_main_revision: string;
-  hosted_ci_run_id: number;
-  hosted_ci_conclusion: "success";
+  hosted_ci_run_id: number | null;
+  hosted_ci_conclusion: "pending" | "success" | "failure";
   review_decision: "NONE" | "APPROVED";
   merge_status: "UNMERGED" | "DRAFT_UNMERGED" | "MERGED";
   merged_commit: string | null;
@@ -180,9 +180,13 @@ export function validateDataPlaneClosure(closure: DataPlaneClosure): void {
       evidence.pull_request !== expectedPullRequest ||
       !/^[0-9a-f]{40}$/.test(evidence.head_revision) ||
       !/^[0-9a-f]{40}$/.test(evidence.base_main_revision) ||
-      !Number.isSafeInteger(evidence.hosted_ci_run_id) ||
-      evidence.hosted_ci_run_id <= 0 ||
-      evidence.hosted_ci_conclusion !== "success"
+      (evidence.hosted_ci_run_id !== null &&
+        (!Number.isSafeInteger(evidence.hosted_ci_run_id) ||
+          evidence.hosted_ci_run_id <= 0)) ||
+      (evidence.hosted_ci_run_id === null &&
+        evidence.hosted_ci_conclusion !== "pending") ||
+      (evidence.hosted_ci_run_id !== null &&
+        evidence.hosted_ci_conclusion === "pending")
     )
       throw new Error(`Invalid ${name} promotion evidence`);
     if (
@@ -194,6 +198,7 @@ export function validateDataPlaneClosure(closure: DataPlaneClosure): void {
     if (
       evidence.merge_status === "MERGED" &&
       (evidence.review_decision !== "APPROVED" ||
+        evidence.hosted_ci_conclusion !== "success" ||
         !evidence.merged_commit ||
         !/^[0-9a-f]{40}$/.test(evidence.merged_commit))
     )
@@ -286,8 +291,10 @@ export function validateDataPlaneClosure(closure: DataPlaneClosure): void {
   const dependencyPromotionReady =
     promotion.contract_authority.merge_status === "MERGED" &&
     promotion.contract_authority.review_decision === "APPROVED" &&
+    promotion.contract_authority.hosted_ci_conclusion === "success" &&
     promotion.provider.merge_status === "MERGED" &&
-    promotion.provider.review_decision === "APPROVED";
+    promotion.provider.review_decision === "APPROVED" &&
+    promotion.provider.hosted_ci_conclusion === "success";
   const liveIamReady =
     liveIam.status === "VERIFIED" &&
     liveIam.workflow_on_main &&
