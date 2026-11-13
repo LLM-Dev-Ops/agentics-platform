@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "a91f362ee75f4bca9cdc6d74672a8a88f06071d5",
+      "revision": "e360faa49084c173bdb4cb6f7626d713211671fc",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "96853735ccf4d3261ce49656675432b8fd7cb196",
+      "contract_authority_revision": "f3e7d622e876aef4c7e1b06c958d085c80ce53fe",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,21 +57,21 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "96853735ccf4d3261ce49656675432b8fd7cb196",
-      "semantic_revision": "96853735ccf4d3261ce49656675432b8fd7cb196",
+      "head_revision": "f3e7d622e876aef4c7e1b06c958d085c80ce53fe",
+      "semantic_revision": "f3e7d622e876aef4c7e1b06c958d085c80ce53fe",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43382987571,
-      "hosted_ci_conclusion": "success",
+      "hosted_ci_run_id": null,
+      "hosted_ci_conclusion": "pending",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
       "merged_commit": null
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "a91f362ee75f4bca9cdc6d74672a8a88f06071d5",
+      "head_revision": "e360faa49084c173bdb4cb6f7626d713211671fc",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43383096406,
-      "hosted_ci_conclusion": "success",
+      "hosted_ci_run_id": null,
+      "hosted_ci_conclusion": "pending",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
       "merged_commit": null
@@ -173,6 +173,7 @@
         "api_key_lookup",
         "cli_session_transaction",
         "entitlement_query",
+        "lossless_entitlement_limits",
         "active_api_key_limit",
         "delivery_time_membership_binding",
         "delivery_time_key_activity",
@@ -202,6 +203,7 @@
         "api_key_lookup",
         "cli_session_transaction",
         "entitlement_query",
+        "lossless_entitlement_limits",
         "active_api_key_limit",
         "delivery_time_membership_binding",
         "delivery_time_key_activity",
