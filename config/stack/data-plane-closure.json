@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "b10a33115b0b791c1f0a701f327a0ed74ed7f91c",
+      "revision": "d9036484cc38fb02f454487f535105b11a90ae08",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "f3e7d622e876aef4c7e1b06c958d085c80ce53fe",
+      "contract_authority_revision": "9ffdc644c2d17cef5ba621e1eb95bf1f89a96cc4",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "f3e7d622e876aef4c7e1b06c958d085c80ce53fe",
-      "semantic_revision": "f3e7d622e876aef4c7e1b06c958d085c80ce53fe",
+      "head_revision": "9ffdc644c2d17cef5ba621e1eb95bf1f89a96cc4",
+      "semantic_revision": "9ffdc644c2d17cef5ba621e1eb95bf1f89a96cc4",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43390725577,
+      "hosted_ci_run_id": 43398146459,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "b10a33115b0b791c1f0a701f327a0ed74ed7f91c",
+      "head_revision": "d9036484cc38fb02f454487f535105b11a90ae08",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43391114480,
+      "hosted_ci_run_id": 43398335568,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -171,6 +171,7 @@
       "consumers": ["agentics-platform"],
       "required_semantics": [
         "api_key_lookup",
+        "active_key_scope_allowlist",
         "cli_session_transaction",
         "entitlement_query",
         "lossless_entitlement_limits",
@@ -201,6 +202,7 @@
       ],
       "implemented_semantics": [
         "api_key_lookup",
+        "active_key_scope_allowlist",
         "cli_session_transaction",
         "entitlement_query",
         "lossless_entitlement_limits",
