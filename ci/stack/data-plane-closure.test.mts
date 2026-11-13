@@ -163,6 +163,7 @@ test("identity provider cannot omit entitlement or delivery-time safety semantic
   for (const missing of [
     "active_key_scope_allowlist",
     "nonempty_identity_scopes",
+    "persisted_session_scope_revalidation",
     "lossless_entitlement_limits",
     "lossless_api_key_limit",
     "lossless_api_key_limit_enforcement",
