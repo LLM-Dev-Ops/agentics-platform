@@ -45,7 +45,7 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "f03a96d8584f2dd3a35d8ac1b5f7f3876bf516d0",
+      "revision": "ecb719385374b4a1446a3f88086a7e3089bf3f57",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
       "contract_authority_revision": "b25c98d187b4b3a3c04283df1c1c978729c44e69",
@@ -68,7 +68,7 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "f03a96d8584f2dd3a35d8ac1b5f7f3876bf516d0",
+      "head_revision": "ecb719385374b4a1446a3f88086a7e3089bf3f57",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
       "hosted_ci_run_id": null,
       "hosted_ci_conclusion": "pending",
