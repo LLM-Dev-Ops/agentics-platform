@@ -162,6 +162,7 @@ test("partial identity provider cannot overstate missing CLI transaction semanti
 test("identity provider cannot omit entitlement or delivery-time safety semantics", () => {
   for (const missing of [
     "active_key_scope_allowlist",
+    "nonempty_identity_scopes",
     "lossless_entitlement_limits",
     "lossless_api_key_limit",
     "delivery_time_membership_binding",
