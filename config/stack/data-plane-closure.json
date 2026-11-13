@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "bd7cf6bc8f01e0d648c4b21343b61fce608e6579",
+      "revision": "f03a96d8584f2dd3a35d8ac1b5f7f3876bf516d0",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "11464293ef5d7f6d57ddaa6c5e1e5de26e3412f9",
+      "contract_authority_revision": "b25c98d187b4b3a3c04283df1c1c978729c44e69",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,8 +57,8 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "11464293ef5d7f6d57ddaa6c5e1e5de26e3412f9",
-      "semantic_revision": "11464293ef5d7f6d57ddaa6c5e1e5de26e3412f9",
+      "head_revision": "b25c98d187b4b3a3c04283df1c1c978729c44e69",
+      "semantic_revision": "b25c98d187b4b3a3c04283df1c1c978729c44e69",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
       "hosted_ci_run_id": null,
       "hosted_ci_conclusion": "pending",
@@ -68,7 +68,7 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "bd7cf6bc8f01e0d648c4b21343b61fce608e6579",
+      "head_revision": "f03a96d8584f2dd3a35d8ac1b5f7f3876bf516d0",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
       "hosted_ci_run_id": null,
       "hosted_ci_conclusion": "pending",
@@ -173,6 +173,7 @@
         "api_key_lookup",
         "cli_session_transaction",
         "entitlement_query",
+        "active_api_key_limit",
         "tenant_ownership"
       ],
       "authority_contracts": [
@@ -196,6 +197,7 @@
         "api_key_lookup",
         "cli_session_transaction",
         "entitlement_query",
+        "active_api_key_limit",
         "tenant_ownership"
       ],
       "status": "PROVIDER_CANDIDATE"
