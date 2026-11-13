@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "ecb719385374b4a1446a3f88086a7e3089bf3f57",
+      "revision": "9e26061a5444eb96575dad1ce1ae3ec03b048adf",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "b25c98d187b4b3a3c04283df1c1c978729c44e69",
+      "contract_authority_revision": "3aeb6d4fcb430bc653e325ba4a2def169775eb15",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,21 +57,21 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "b25c98d187b4b3a3c04283df1c1c978729c44e69",
-      "semantic_revision": "b25c98d187b4b3a3c04283df1c1c978729c44e69",
+      "head_revision": "3aeb6d4fcb430bc653e325ba4a2def169775eb15",
+      "semantic_revision": "3aeb6d4fcb430bc653e325ba4a2def169775eb15",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43356229770,
-      "hosted_ci_conclusion": "success",
+      "hosted_ci_run_id": null,
+      "hosted_ci_conclusion": "pending",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
       "merged_commit": null
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "ecb719385374b4a1446a3f88086a7e3089bf3f57",
+      "head_revision": "9e26061a5444eb96575dad1ce1ae3ec03b048adf",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43356899718,
-      "hosted_ci_conclusion": "success",
+      "hosted_ci_run_id": null,
+      "hosted_ci_conclusion": "pending",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
       "merged_commit": null
@@ -174,6 +174,8 @@
         "cli_session_transaction",
         "entitlement_query",
         "active_api_key_limit",
+        "delivery_time_membership_binding",
+        "delivery_time_key_activity",
         "tenant_ownership"
       ],
       "authority_contracts": [
@@ -198,6 +200,8 @@
         "cli_session_transaction",
         "entitlement_query",
         "active_api_key_limit",
+        "delivery_time_membership_binding",
+        "delivery_time_key_activity",
         "tenant_ownership"
       ],
       "status": "PROVIDER_CANDIDATE"

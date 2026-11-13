@@ -158,3 +158,23 @@ test("partial identity provider cannot overstate missing CLI transaction semanti
     /capability is incomplete/,
   );
 });
+
+test("identity provider cannot omit delivery-time membership or key binding", () => {
+  for (const missing of [
+    "delivery_time_membership_binding",
+    "delivery_time_key_activity",
+  ]) {
+    const changed = structuredClone(dataPlaneClosure);
+    const identity = changed.contract_gaps.find(
+      (gap) => gap.capability === "platform_identity_and_entitlements",
+    );
+    if (!identity) throw new Error("identity fixture missing");
+    identity.implemented_semantics = identity.implemented_semantics?.filter(
+      (semantic) => semantic !== missing,
+    );
+    assert.throws(
+      () => validateDataPlaneClosure(changed),
+      /capability is incomplete/,
+    );
+  }
+});
