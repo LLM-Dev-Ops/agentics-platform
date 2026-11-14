@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "774bac2f6b341fced1953dea773e4f07403f6291",
+      "revision": "ae47020952f8a6c6842fc6dfd450ba559670bcc8",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "b777fe8057c83c004797749ffa5ea5496eae174c",
+      "contract_authority_revision": "4221a94b71fdeffbbdd1fc2d1f54d0cc295126fe",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "b777fe8057c83c004797749ffa5ea5496eae174c",
-      "semantic_revision": "b777fe8057c83c004797749ffa5ea5496eae174c",
+      "head_revision": "4221a94b71fdeffbbdd1fc2d1f54d0cc295126fe",
+      "semantic_revision": "4221a94b71fdeffbbdd1fc2d1f54d0cc295126fe",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43549842023,
+      "hosted_ci_run_id": 43555167673,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "774bac2f6b341fced1953dea773e4f07403f6291",
+      "head_revision": "ae47020952f8a6c6842fc6dfd450ba559670bcc8",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43550036639,
+      "hosted_ci_run_id": 43555325774,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -196,6 +196,7 @@
         "delivery_time_membership_binding",
         "delivery_time_key_activity",
         "delivery_time_binding_lock",
+        "delivery_envelope_session_binding",
         "delivery_copy_key_binding",
         "owner_role_authorization",
         "tenant_ownership"
@@ -244,6 +245,7 @@
         "delivery_time_membership_binding",
         "delivery_time_key_activity",
         "delivery_time_binding_lock",
+        "delivery_envelope_session_binding",
         "delivery_copy_key_binding",
         "owner_role_authorization",
         "tenant_ownership"
