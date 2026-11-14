@@ -49,7 +49,7 @@ export const telemetryEventSchema = z.object({
 
   // Event data
   message: z.string(),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
 
   // Error details (if applicable)
   error: z.object({
@@ -62,7 +62,7 @@ export const telemetryEventSchema = z.object({
   duration_ms: z.number().nonnegative().optional(),
 
   // Tags for filtering
-  tags: z.record(z.string()).optional(),
+  tags: z.record(z.string(), z.string()).optional(),
 });
 export type TelemetryEvent = z.infer<typeof telemetryEventSchema>;
 

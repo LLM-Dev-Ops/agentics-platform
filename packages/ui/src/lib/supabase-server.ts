@@ -10,13 +10,13 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export function getServerSupabase(): SupabaseClient {
+export async function getServerSupabase(): Promise<SupabaseClient> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   if (!url || !anon) {
     throw new Error('Supabase is not configured on the server.');
   }
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   return createServerClient(url, anon, {
     cookies: {
       get(name: string) {
@@ -32,7 +32,7 @@ export function getServerSupabase(): SupabaseClient {
 
 export async function getServerAccessToken(): Promise<string | null> {
   try {
-    const supabase = getServerSupabase();
+    const supabase = await getServerSupabase();
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token ?? null;
   } catch {

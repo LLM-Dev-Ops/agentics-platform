@@ -52,7 +52,7 @@ export interface ValidationError {
  * Extract validation errors from Zod error
  */
 export function extractValidationErrors(error: z.ZodError): ValidationError[] {
-  return error.errors.map(e => ({
+  return error.issues.map(e => ({
     field: e.path.join('.'),
     message: e.message,
     code: e.code,

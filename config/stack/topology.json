@@ -1,0 +1,399 @@
+{
+  "schema_version": 1,
+  "source": {
+    "description": "User-supplied architecture, November 11 2026; composition requirements, not deployment evidence",
+    "sha256": "5dea313ea9846dc77db8e07f43be1df521dc83f19773eb0a2849eeabf0ec844f"
+  },
+  "data_plane": {
+    "service": "ruvector-service",
+    "backend": "Google Cloud SQL PostgreSQL",
+    "consumer_env": "RUVECTOR_SERVICE_URL",
+    "service_owned_databases": false
+  },
+  "components": [
+    {
+      "id": "test-bench",
+      "repository": "LLM-Dev-Ops/test-bench",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "observatory",
+      "repository": "LLM-Dev-Ops/observatory",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "shield",
+      "repository": "LLM-Dev-Ops/shield",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "sentinel",
+      "repository": "LLM-Dev-Ops/sentinel",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "memory-graph",
+      "repository": "LLM-Dev-Ops/memory-graph",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "latency-lens",
+      "repository": "LLM-Dev-Ops/latency-lens",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "forge",
+      "repository": "LLM-Dev-Ops/forge",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "edge-agent",
+      "repository": "LLM-Dev-Ops/edge-agent",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "auto-optimizer",
+      "repository": "LLM-Dev-Ops/auto-optimizer",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "incident-manager",
+      "repository": "LLM-Dev-Ops/incident-manager",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "orchestrator",
+      "repository": "LLM-Dev-Ops/orchestrator",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "cost-ops",
+      "repository": "LLM-Dev-Ops/cost-ops",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "governance-dashboard",
+      "repository": "LLM-Dev-Ops/governance-dashboard",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "policy-engine",
+      "repository": "LLM-Dev-Ops/policy-engine",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "registry",
+      "repository": "LLM-Dev-Ops/registry",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "marketplace",
+      "repository": "LLM-Dev-Ops/marketplace",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "analytics-hub",
+      "repository": "LLM-Dev-Ops/analytics-hub",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "config-manager",
+      "repository": "LLM-Dev-Ops/config-manager",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "schema-registry",
+      "repository": "LLM-Dev-Ops/schema-registry",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "connector-hub",
+      "repository": "LLM-Dev-Ops/connector-hub",
+      "product_group": "foundation",
+      "required_members": []
+    },
+    {
+      "id": "copilot-agent",
+      "repository": "LLM-Dev-Ops/copilot-agent",
+      "product_group": "intelligence-service",
+      "required_members": []
+    },
+    {
+      "id": "simulator",
+      "repository": "LLM-Dev-Ops/simulator",
+      "product_group": "intelligence-service",
+      "required_members": []
+    },
+    {
+      "id": "benchmark-exchange",
+      "repository": "LLM-Dev-Ops/benchmark-exchange",
+      "product_group": "intelligence-service",
+      "required_members": []
+    },
+    {
+      "id": "inference-gateway",
+      "repository": "LLM-Dev-Ops/inference-gateway",
+      "product_group": "intelligence-service",
+      "required_members": []
+    },
+    {
+      "id": "data-vault",
+      "repository": "LLM-Dev-Ops/data-vault",
+      "product_group": "intelligence-service",
+      "required_members": []
+    },
+    {
+      "id": "research-lab",
+      "repository": "LLM-Dev-Ops/research-lab",
+      "product_group": "intelligence-service",
+      "required_members": []
+    },
+    {
+      "id": "intelligence-core",
+      "repository": "LLM-Dev-Ops/intelligence-core",
+      "product_group": "core-bundle",
+      "required_members": [
+        "test-bench",
+        "observatory",
+        "sentinel",
+        "latency-lens",
+        "analytics-hub",
+        "schema-registry"
+      ]
+    },
+    {
+      "id": "security-core",
+      "repository": "LLM-Dev-Ops/security-core",
+      "product_group": "core-bundle",
+      "required_members": [
+        "shield",
+        "edge-agent",
+        "incident-manager",
+        "policy-engine",
+        "config-manager"
+      ]
+    },
+    {
+      "id": "automation-core",
+      "repository": "LLM-Dev-Ops/automation-core",
+      "product_group": "core-bundle",
+      "required_members": [
+        "forge",
+        "auto-optimizer",
+        "orchestrator",
+        "connector-hub"
+      ]
+    },
+    {
+      "id": "governance-core",
+      "repository": "LLM-Dev-Ops/governance-core",
+      "product_group": "core-bundle",
+      "required_members": [
+        "cost-ops",
+        "governance-dashboard",
+        "policy-engine",
+        "analytics-hub",
+        "config-manager",
+        "schema-registry"
+      ]
+    },
+    {
+      "id": "data-core",
+      "repository": "LLM-Dev-Ops/data-core",
+      "product_group": "core-bundle",
+      "required_members": [
+        "memory-graph",
+        "registry",
+        "data-vault",
+        "config-manager",
+        "schema-registry"
+      ]
+    },
+    {
+      "id": "ecosystem-core",
+      "repository": "LLM-Dev-Ops/ecosystem-core",
+      "product_group": "core-bundle",
+      "required_members": ["marketplace", "analytics-hub", "benchmark-exchange"]
+    },
+    {
+      "id": "research-core",
+      "repository": "LLM-Dev-Ops/research-core",
+      "product_group": "core-bundle",
+      "required_members": ["schema-registry", "simulator", "research-lab"]
+    },
+    {
+      "id": "interface-core",
+      "repository": "LLM-Dev-Ops/interface-core",
+      "product_group": "core-bundle",
+      "required_members": [
+        "forge",
+        "config-manager",
+        "connector-hub",
+        "copilot-agent",
+        "inference-gateway"
+      ]
+    },
+    {
+      "id": "agentics-platform",
+      "repository": "LLM-Dev-Ops/agentics-platform",
+      "product_group": "platform",
+      "required_members": []
+    },
+    {
+      "id": "agentics-diligence-artifacts",
+      "repository": "LLM-Dev-Ops/agentics-diligence-artifacts",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-deployment-intent",
+      "repository": "LLM-Dev-Ops/agentics-deployment-intent",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-simulation-planner",
+      "repository": "LLM-Dev-Ops/agentics-simulation-planner",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-simulation-runner",
+      "repository": "LLM-Dev-Ops/agentics-simulation-runner",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-deployment-exporters",
+      "repository": "LLM-Dev-Ops/agentics-deployment-exporters",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-org-manifests",
+      "repository": "LLM-Dev-Ops/agentics-org-manifests",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-cli",
+      "repository": "LLM-Dev-Ops/agentics-cli",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-orchestration-engine",
+      "repository": "LLM-Dev-Ops/agentics-orchestration-engine",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "infra",
+      "repository": "LLM-Dev-Ops/infra",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "integrations",
+      "repository": "LLM-Dev-Ops/integrations",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "ruvector-service",
+      "repository": "LLM-Dev-Ops/ruvector-service",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "enterprise-roi-engine",
+      "repository": "LLM-Dev-Ops/enterprise-roi-engine",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "erp-surface",
+      "repository": "LLM-Dev-Ops/erp-surface",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-contracts",
+      "repository": "LLM-Dev-Ops/agentics-contracts",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-results-index",
+      "repository": "LLM-Dev-Ops/agentics-results-index",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-usage-ledger",
+      "repository": "LLM-Dev-Ops/agentics-usage-ledger",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-execution-engine",
+      "repository": "LLM-Dev-Ops/agentics-execution-engine",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "agentics-enforcement",
+      "repository": "LLM-Dev-Ops/agentics-enforcement",
+      "product_group": "support",
+      "required_members": []
+    },
+    {
+      "id": "platform-agents",
+      "repository": "LLM-Dev-Ops/platform-agents",
+      "product_group": "support",
+      "required_members": []
+    }
+  ],
+  "platform_runtime_dependencies": {
+    "INTELLIGENCE_CORE_URL": "intelligence-core",
+    "SECURITY_CORE_URL": "security-core",
+    "AUTOMATION_CORE_URL": "automation-core",
+    "GOVERNANCE_CORE_URL": "governance-core",
+    "DATA_CORE_URL": "data-core",
+    "ECOSYSTEM_CORE_URL": "ecosystem-core",
+    "RESEARCH_CORE_URL": "research-core",
+    "INTERFACE_CORE_URL": "interface-core",
+    "ORCHESTRATION_ENGINE_URL": "agentics-orchestration-engine",
+    "RESULTS_INDEX_URL": "agentics-results-index",
+    "SIMULATION_RUNNER_URL": "agentics-simulation-runner",
+    "USAGE_LEDGER_URL": "agentics-usage-ledger",
+    "RUVECTOR_SERVICE_URL": "ruvector-service"
+  },
+  "gateway_routes": [
+    "POST /v1/simulate",
+    "GET /v1/simulate",
+    "GET /v1/simulate/:id",
+    "DELETE /v1/simulate/:id",
+    "GET /v1/simulations/:id/events",
+    "GET /v1/api/usage/summary"
+  ]
+}

@@ -1,0 +1,281 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-11-14",
+  "evidence_status": "BLOCKED_PROVIDER_CONTRACT",
+  "policy": "Direct consumer persistence may move only to an authenticated, tenant-bound ruvector-service contract with equivalent durability, ordering, idempotency and transactional semantics.",
+  "consumers": [
+    {
+      "component": "agentics-platform",
+      "revision_source": "CURRENT_TREE",
+      "pg_imports": 4,
+      "database_url_reads": 2,
+      "query_calls": 40,
+      "runtime_pg_dependencies": 2,
+      "findings": 48
+    },
+    {
+      "component": "agentics-results-index",
+      "revision": "876cd8cf38eb9e5687c92b73e8d3b8ac7e34e57c",
+      "pg_imports": 2,
+      "database_url_reads": 0,
+      "query_calls": 5,
+      "runtime_pg_dependencies": 1,
+      "findings": 8
+    },
+    {
+      "component": "agentics-usage-ledger",
+      "revision": "dbd63a6ae35a45f889170fc2ca3e611907506c45",
+      "pg_imports": 6,
+      "database_url_reads": 0,
+      "query_calls": 38,
+      "runtime_pg_dependencies": 1,
+      "findings": 45
+    }
+  ],
+  "totals": {
+    "pg_imports": 12,
+    "database_url_reads": 2,
+    "query_calls": 83,
+    "runtime_pg_dependencies": 4,
+    "findings": 101
+  },
+  "provider": {
+    "component": "ruvector-service",
+    "revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
+    "transport_identity": "CLOUD_RUN_IAM",
+    "application_tenant_binding": false,
+    "candidate": {
+      "revision": "03821af910787f75b4b416b60e94365d627db08b",
+      "branch": "integration/tenant-bound-data-plane-2026-11-12",
+      "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
+      "contract_authority_revision": "621421cba274aaaa0bec2f74e15a80b48857d28b",
+      "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
+      "application_tenant_binding": true,
+      "status": "COMPONENT_VALIDATED"
+    }
+  },
+  "promotion_evidence": {
+    "contract_authority": {
+      "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
+      "head_revision": "621421cba274aaaa0bec2f74e15a80b48857d28b",
+      "semantic_revision": "621421cba274aaaa0bec2f74e15a80b48857d28b",
+      "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
+      "hosted_ci_run_id": 43613355030,
+      "hosted_ci_conclusion": "success",
+      "review_decision": "NONE",
+      "merge_status": "UNMERGED",
+      "merged_commit": null
+    },
+    "provider": {
+      "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
+      "head_revision": "03821af910787f75b4b416b60e94365d627db08b",
+      "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
+      "hosted_ci_run_id": 43613350344,
+      "hosted_ci_conclusion": "success",
+      "review_decision": "NONE",
+      "merge_status": "DRAFT_UNMERGED",
+      "merged_commit": null
+    },
+    "live_iam": {
+      "environment": "staging",
+      "workflow_path": ".github/workflows/stack-staging.yml",
+      "workflow_on_main": false,
+      "trusted_main_run_id": null,
+      "transport_identity_verified": false,
+      "principal_tenant_binding_verified": false,
+      "status": "UNVERIFIED"
+    }
+  },
+  "contract_gaps": [
+    {
+      "capability": "simulation_event_stream",
+      "consumers": ["agentics-platform"],
+      "required_semantics": [
+        "append_batch",
+        "per_simulation_sequence",
+        "cursor_replay",
+        "durable_restart_retrieval",
+        "tenant_ownership"
+      ],
+      "provider_routes": [
+        "POST /v1/data-plane/simulation-events",
+        "GET /v1/data-plane/simulations/:simulation_id/events"
+      ],
+      "implemented_semantics": [
+        "append_batch",
+        "per_simulation_sequence",
+        "cursor_replay",
+        "durable_restart_retrieval",
+        "tenant_ownership"
+      ],
+      "status": "PROVIDER_CANDIDATE"
+    },
+    {
+      "capability": "results_index",
+      "consumers": ["agentics-results-index"],
+      "required_semantics": [
+        "run_ingest",
+        "exact_id_query",
+        "ordered_cursor_replay",
+        "scenario_query",
+        "summary_query",
+        "idempotency",
+        "tenant_ownership"
+      ],
+      "provider_routes": [
+        "POST /v1/data-plane/results",
+        "GET /v1/data-plane/results",
+        "GET /v1/data-plane/results/summary",
+        "GET /v1/data-plane/results/scenarios/:scenario_id",
+        "GET /v1/data-plane/results/:result_id"
+      ],
+      "implemented_semantics": [
+        "run_ingest",
+        "exact_id_query",
+        "ordered_cursor_replay",
+        "scenario_query",
+        "summary_query",
+        "idempotency",
+        "tenant_ownership"
+      ],
+      "status": "PROVIDER_CANDIDATE"
+    },
+    {
+      "capability": "usage_ledger",
+      "consumers": ["agentics-usage-ledger"],
+      "required_semantics": [
+        "append_only_entries",
+        "serializable_balance",
+        "reservations",
+        "idempotency",
+        "principal_to_tenant_binding"
+      ],
+      "provider_routes": [
+        "POST /v1/data-plane/usage/entries",
+        "GET /v1/data-plane/usage/balance",
+        "POST /v1/data-plane/usage/reservations",
+        "POST /v1/data-plane/usage/reservations/:reservation_id/consume",
+        "POST /v1/data-plane/usage/reservations/:reservation_id/cancel"
+      ],
+      "implemented_semantics": [
+        "append_only_entries",
+        "serializable_balance",
+        "reservations",
+        "idempotency",
+        "principal_to_tenant_binding"
+      ],
+      "status": "PROVIDER_CANDIDATE"
+    },
+    {
+      "capability": "platform_identity_and_entitlements",
+      "consumers": ["agentics-platform"],
+      "required_semantics": [
+        "api_key_lookup",
+        "active_key_scope_allowlist",
+        "nonempty_identity_scopes",
+        "persisted_session_scope_revalidation",
+        "idempotent_authorization_key_binding",
+        "idempotent_authorization_identity_binding",
+        "completed_authorization_replay_parameter_binding",
+        "completed_session_scope_activity",
+        "completed_poll_key_activity_binding",
+        "post_response_precommit_api_key_activity",
+        "entitlement_active_key_scope_binding",
+        "serialized_active_lookup_revocation_expiry",
+        "cli_session_creation_atomicity",
+        "post_insert_database_wall_clock_session_expiry",
+        "completed_replay_identity_precedence",
+        "database_clock_session_expiry",
+        "post_lock_database_wall_clock_session_expiry",
+        "post_lock_database_wall_clock_api_key_expiry",
+        "post_lock_database_wall_clock_api_key_quota",
+        "lossless_api_key_limit_storage",
+        "unambiguous_principal_tenant_binding",
+        "unambiguous_identity_caller_allowlist",
+        "strict_identity_scope_configuration",
+        "unique_active_membership_binding",
+        "cli_session_transaction",
+        "entitlement_query",
+        "lossless_entitlement_limits",
+        "lossless_api_key_limit",
+        "lossless_api_key_limit_enforcement",
+        "active_api_key_limit",
+        "delivery_time_membership_binding",
+        "delivery_time_key_activity",
+        "delivery_time_binding_lock",
+        "unambiguous_delivery_state",
+        "delivery_envelope_session_binding",
+        "validated_delivery_before_erasure",
+        "authorization_delivery_precommit_validation",
+        "final_precommit_database_wall_clock_session_expiry",
+        "post_write_precommit_database_wall_clock_session_expiry",
+        "delivery_copy_key_binding",
+        "owner_role_authorization",
+        "tenant_ownership"
+      ],
+      "authority_contracts": [
+        "identity-api-key-lookup",
+        "identity-api-key-response",
+        "identity-entitlement-response",
+        "identity-cli-session-create",
+        "identity-cli-session-created",
+        "identity-cli-session-authorize",
+        "identity-cli-session-authorized",
+        "identity-cli-session-poll"
+      ],
+      "provider_routes": [
+        "/v1/data-plane/identity/api-keys/lookup",
+        "/v1/data-plane/identity/entitlements/lookup",
+        "POST /v1/data-plane/identity/cli/sessions",
+        "GET /v1/data-plane/identity/cli/sessions/:device_code",
+        "POST /v1/data-plane/identity/cli/sessions/:session_code/authorize"
+      ],
+      "implemented_semantics": [
+        "api_key_lookup",
+        "active_key_scope_allowlist",
+        "nonempty_identity_scopes",
+        "persisted_session_scope_revalidation",
+        "idempotent_authorization_key_binding",
+        "idempotent_authorization_identity_binding",
+        "completed_authorization_replay_parameter_binding",
+        "completed_session_scope_activity",
+        "completed_poll_key_activity_binding",
+        "post_response_precommit_api_key_activity",
+        "entitlement_active_key_scope_binding",
+        "serialized_active_lookup_revocation_expiry",
+        "cli_session_creation_atomicity",
+        "post_insert_database_wall_clock_session_expiry",
+        "completed_replay_identity_precedence",
+        "database_clock_session_expiry",
+        "post_lock_database_wall_clock_session_expiry",
+        "post_lock_database_wall_clock_api_key_expiry",
+        "post_lock_database_wall_clock_api_key_quota",
+        "lossless_api_key_limit_storage",
+        "unambiguous_principal_tenant_binding",
+        "unambiguous_identity_caller_allowlist",
+        "strict_identity_scope_configuration",
+        "unique_active_membership_binding",
+        "cli_session_transaction",
+        "entitlement_query",
+        "lossless_entitlement_limits",
+        "lossless_api_key_limit",
+        "lossless_api_key_limit_enforcement",
+        "active_api_key_limit",
+        "delivery_time_membership_binding",
+        "delivery_time_key_activity",
+        "delivery_time_binding_lock",
+        "unambiguous_delivery_state",
+        "delivery_envelope_session_binding",
+        "validated_delivery_before_erasure",
+        "authorization_delivery_precommit_validation",
+        "final_precommit_database_wall_clock_session_expiry",
+        "post_write_precommit_database_wall_clock_session_expiry",
+        "delivery_copy_key_binding",
+        "owner_role_authorization",
+        "tenant_ownership"
+      ],
+      "status": "PROVIDER_CANDIDATE"
+    }
+  ],
+  "migration_ready": false
+}

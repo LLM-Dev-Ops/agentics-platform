@@ -37,7 +37,7 @@ export type RegisteredAgent = z.infer<typeof registeredAgentSchema>;
 export const agentRegistrySchema = z.object({
   version: z.string(),
   updated_at: z.string().datetime(),
-  agents: z.record(registeredAgentSchema),
+  agents: z.record(z.string(), registeredAgentSchema),
 });
 export type AgentRegistry = z.infer<typeof agentRegistrySchema>;
 

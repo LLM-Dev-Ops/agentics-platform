@@ -3,7 +3,7 @@
  * Fastify server initialization with CORS, Helmet, logging, and error handling
  */
 
-import Fastify, { FastifyInstance, FastifyServerOptions } from 'fastify';
+import Fastify, { FastifyError, FastifyInstance, FastifyServerOptions } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rawBody from 'fastify-raw-body';
@@ -24,6 +24,8 @@ import { registerAuthSessionRoutes } from './routes/auth-session.js';
 import { registerCliCommandRoutes } from './routes/cli-commands.js';
 import { registerCoherenceRoutes } from './routes/coherence.js';
 import { registerSimulationEventsRoutes } from './routes/simulation-events.js';
+import { registerSimulateRoutes } from './routes/simulate.js';
+import { checkAllLayer3Services } from './services/health/layer3.js';
 import { apiKeyGate } from './middleware/api-key-gate.js';
 
 export interface ErrorResponse {
@@ -64,7 +66,11 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
 
   // Register CORS plugin
   await server.register(cors, {
-    origin: true, // Allow all origins in development (should be restricted in production)
+    origin(origin, callback) {
+      // Requests without Origin are service-to-service or same-origin. Browser
+      // credential sharing is limited to the explicit environment allowlist.
+      callback(null, !origin || config.corsAllowedOrigins.includes(origin));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id', 'X-API-Key', 'X-Correlation-ID'],
@@ -155,6 +161,7 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
   // ADR-011 — Real-time simulation telemetry SSE.
   // GET /v1/simulations/:id/events. Auth enforced by authMiddleware.
   await registerSimulationEventsRoutes(server);
+  await registerSimulateRoutes(server);
 
   // Request logging
   server.addHook('onRequest', async (request, reply) => {
@@ -171,13 +178,13 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
       method: request.method,
       url: request.url,
       statusCode: reply.statusCode,
-      responseTime: reply.getResponseTime(),
+      responseTime: reply.elapsedTime,
       correlationId: request.id,
     }, 'Request completed');
   });
 
   // Global error handler
-  server.setErrorHandler((error, request, reply) => {
+  server.setErrorHandler((error: FastifyError, request, reply) => {
     const correlationId = request.id;
 
     request.log.error({
@@ -213,16 +220,19 @@ export async function createServer(opts: ServerOptions = {}): Promise<FastifyIns
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '0.1.0',
+      version: process.env.SERVICE_VERSION || process.env.npm_package_version || '0.1.0',
     };
   });
 
   // Ready check endpoint
   server.get('/ready', async (request, reply) => {
-    // In production, this would check Layer 3 core connectivity
+    const dependencies = await checkAllLayer3Services();
+    const ready = dependencies.status === 'healthy';
+    reply.code(ready ? 200 : 503);
     return {
-      status: 'ready',
+      status: ready ? 'ready' : 'not_ready',
       timestamp: new Date().toISOString(),
+      services: dependencies.services,
     };
   });
 
