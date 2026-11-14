@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-11-13",
+  "captured_at": "2026-11-14",
   "evidence_status": "BLOCKED_PROVIDER_CONTRACT",
   "policy": "Direct consumer persistence may move only to an authenticated, tenant-bound ruvector-service contract with equivalent durability, ordering, idempotency and transactional semantics.",
   "consumers": [
@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "7a4c31f88450712754eb906ad2307c81a71b6046",
+      "revision": "ab451e5575c700fd61a49dadb884631bc2ee547d",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "1ecff13707e9beb93cc9df97b19b5a0a9d359860",
+      "contract_authority_revision": "12fc0c522b21cf982ab7fa36c57e1aa9ccc998df",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "1ecff13707e9beb93cc9df97b19b5a0a9d359860",
-      "semantic_revision": "1ecff13707e9beb93cc9df97b19b5a0a9d359860",
+      "head_revision": "12fc0c522b21cf982ab7fa36c57e1aa9ccc998df",
+      "semantic_revision": "12fc0c522b21cf982ab7fa36c57e1aa9ccc998df",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43564988721,
+      "hosted_ci_run_id": 43569885280,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "7a4c31f88450712754eb906ad2307c81a71b6046",
+      "head_revision": "ab451e5575c700fd61a49dadb884631bc2ee547d",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43565195398,
+      "hosted_ci_run_id": 43570106407,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -199,6 +199,7 @@
         "delivery_time_binding_lock",
         "delivery_envelope_session_binding",
         "validated_delivery_before_erasure",
+        "authorization_delivery_precommit_validation",
         "delivery_copy_key_binding",
         "owner_role_authorization",
         "tenant_ownership"
@@ -250,6 +251,7 @@
         "delivery_time_binding_lock",
         "delivery_envelope_session_binding",
         "validated_delivery_before_erasure",
+        "authorization_delivery_precommit_validation",
         "delivery_copy_key_binding",
         "owner_role_authorization",
         "tenant_ownership"
