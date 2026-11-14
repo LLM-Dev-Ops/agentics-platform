@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "bd333142660fd332472839caf69c111dbed32b6d",
+      "revision": "123112748df1a89ddf6d62a4f8268cb7a2a14637",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "10e331c02c666c05b5a6cc87eba992bbc394a58a",
+      "contract_authority_revision": "c48772b0b11013098924c631a461d8a6f2560f68",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "10e331c02c666c05b5a6cc87eba992bbc394a58a",
-      "semantic_revision": "10e331c02c666c05b5a6cc87eba992bbc394a58a",
+      "head_revision": "c48772b0b11013098924c631a461d8a6f2560f68",
+      "semantic_revision": "c48772b0b11013098924c631a461d8a6f2560f68",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43574247012,
+      "hosted_ci_run_id": 43579208318,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "bd333142660fd332472839caf69c111dbed32b6d",
+      "head_revision": "123112748df1a89ddf6d62a4f8268cb7a2a14637",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43574640546,
+      "hosted_ci_run_id": 43579321396,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -201,6 +201,7 @@
         "validated_delivery_before_erasure",
         "authorization_delivery_precommit_validation",
         "final_precommit_database_wall_clock_session_expiry",
+        "post_write_precommit_database_wall_clock_session_expiry",
         "delivery_copy_key_binding",
         "owner_role_authorization",
         "tenant_ownership"
@@ -254,6 +255,7 @@
         "validated_delivery_before_erasure",
         "authorization_delivery_precommit_validation",
         "final_precommit_database_wall_clock_session_expiry",
+        "post_write_precommit_database_wall_clock_session_expiry",
         "delivery_copy_key_binding",
         "owner_role_authorization",
         "tenant_ownership"
