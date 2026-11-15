@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "08fbf33642ba46eab3a0f087519718ac460d3b85",
+      "revision": "c5f850ec2180aae52db2804a8e1272b22e13886a",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "a4688e664fba43b43449f7d43a3fac36e0b57b7b",
+      "contract_authority_revision": "8f92d88751ade7c98430bd34936f392cce61d8db",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "a4688e664fba43b43449f7d43a3fac36e0b57b7b",
-      "semantic_revision": "a4688e664fba43b43449f7d43a3fac36e0b57b7b",
+      "head_revision": "8f92d88751ade7c98430bd34936f392cce61d8db",
+      "semantic_revision": "8f92d88751ade7c98430bd34936f392cce61d8db",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43712358621,
+      "hosted_ci_run_id": 43717090062,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "08fbf33642ba46eab3a0f087519718ac460d3b85",
+      "head_revision": "c5f850ec2180aae52db2804a8e1272b22e13886a",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43712498073,
+      "hosted_ci_run_id": 43717276767,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -171,6 +171,7 @@
       "consumers": ["agentics-platform"],
       "required_semantics": [
         "api_key_lookup",
+        "unambiguous_end_user_authorization_credential",
         "time_bounded_end_user_jwt",
         "unambiguous_end_user_jwt_authorized_party",
         "strict_end_user_jwt_audience_claim",
@@ -242,6 +243,7 @@
       ],
       "implemented_semantics": [
         "api_key_lookup",
+        "unambiguous_end_user_authorization_credential",
         "time_bounded_end_user_jwt",
         "unambiguous_end_user_jwt_authorized_party",
         "strict_end_user_jwt_audience_claim",
