@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "fcb157cf1cc35d7e3bb371406d7ada760b33823a",
+      "revision": "0b383cf7c155f9781bcb426eb6babfea0b10ed3d",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "e1b4dd2b755414473e7310001e4ccb54df917f3c",
+      "contract_authority_revision": "a2048b9e2ef3123af3e164cba9fd462619160ee1",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "e1b4dd2b755414473e7310001e4ccb54df917f3c",
-      "semantic_revision": "e1b4dd2b755414473e7310001e4ccb54df917f3c",
+      "head_revision": "a2048b9e2ef3123af3e164cba9fd462619160ee1",
+      "semantic_revision": "a2048b9e2ef3123af3e164cba9fd462619160ee1",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43722679778,
+      "hosted_ci_run_id": 43727644303,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "fcb157cf1cc35d7e3bb371406d7ada760b33823a",
+      "head_revision": "0b383cf7c155f9781bcb426eb6babfea0b10ed3d",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43722848172,
+      "hosted_ci_run_id": 43727906161,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -172,6 +172,7 @@
       "required_semantics": [
         "api_key_lookup",
         "unambiguous_transport_iam_bearer_credential",
+        "canonical_transport_iam_audience_claim",
         "unambiguous_end_user_authorization_credential",
         "time_bounded_end_user_jwt",
         "unambiguous_end_user_jwt_authorized_party",
@@ -245,6 +246,7 @@
       "implemented_semantics": [
         "api_key_lookup",
         "unambiguous_transport_iam_bearer_credential",
+        "canonical_transport_iam_audience_claim",
         "unambiguous_end_user_authorization_credential",
         "time_bounded_end_user_jwt",
         "unambiguous_end_user_jwt_authorized_party",
