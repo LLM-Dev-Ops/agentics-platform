@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-11-14",
+  "captured_at": "2026-11-15",
   "evidence_status": "BLOCKED_PROVIDER_CONTRACT",
   "policy": "Direct consumer persistence may move only to an authenticated, tenant-bound ruvector-service contract with equivalent durability, ordering, idempotency and transactional semantics.",
   "consumers": [
@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "bba98f9273391eeaa6c66db4c70192bebb5029ca",
+      "revision": "98513145012e1ee029c6a2d99a231b7e70d3904d",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "38f932b6d7d56750c42d88f1e3e46c5749c3a517",
+      "contract_authority_revision": "7dc240cc028be3f05752d1ea8997a1286c69f16a",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "38f932b6d7d56750c42d88f1e3e46c5749c3a517",
-      "semantic_revision": "38f932b6d7d56750c42d88f1e3e46c5749c3a517",
+      "head_revision": "7dc240cc028be3f05752d1ea8997a1286c69f16a",
+      "semantic_revision": "7dc240cc028be3f05752d1ea8997a1286c69f16a",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43692962520,
+      "hosted_ci_run_id": 43697521350,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "bba98f9273391eeaa6c66db4c70192bebb5029ca",
+      "head_revision": "98513145012e1ee029c6a2d99a231b7e70d3904d",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43693114533,
+      "hosted_ci_run_id": 43697711710,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -175,6 +175,7 @@
         "unambiguous_end_user_jwt_authorized_party",
         "strict_end_user_jwt_audience_claim",
         "reject_unsupported_jwt_critical_headers",
+        "validated_end_user_jwt_email_claim",
         "active_key_scope_allowlist",
         "nonempty_identity_scopes",
         "persisted_session_scope_revalidation",
@@ -242,6 +243,7 @@
         "unambiguous_end_user_jwt_authorized_party",
         "strict_end_user_jwt_audience_claim",
         "reject_unsupported_jwt_critical_headers",
+        "validated_end_user_jwt_email_claim",
         "active_key_scope_allowlist",
         "nonempty_identity_scopes",
         "persisted_session_scope_revalidation",
