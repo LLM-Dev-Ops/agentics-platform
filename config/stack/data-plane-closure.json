@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "9cede6029e690a0b4bc56a2a29bcc40f583e7377",
+      "revision": "220cbd4b780cbb3420b7ef60a47edcbf6661cb13",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "006ecb44423831bc71439edc25fe4bf65fe48e0e",
+      "contract_authority_revision": "19bf61182ed3d44814b65707f8effbec41c21c11",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "006ecb44423831bc71439edc25fe4bf65fe48e0e",
-      "semantic_revision": "006ecb44423831bc71439edc25fe4bf65fe48e0e",
+      "head_revision": "19bf61182ed3d44814b65707f8effbec41c21c11",
+      "semantic_revision": "19bf61182ed3d44814b65707f8effbec41c21c11",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43738991602,
+      "hosted_ci_run_id": 43744900637,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "9cede6029e690a0b4bc56a2a29bcc40f583e7377",
+      "head_revision": "220cbd4b780cbb3420b7ef60a47edcbf6661cb13",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43739090153,
+      "hosted_ci_run_id": 43745093030,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -172,6 +172,7 @@
       "required_semantics": [
         "api_key_lookup",
         "canonical_transport_service_audience",
+        "canonical_end_user_jwt_verifier_configuration",
         "unambiguous_transport_iam_bearer_credential",
         "canonical_transport_iam_audience_claim",
         "strict_transport_iam_principal_claims",
@@ -248,6 +249,7 @@
       "implemented_semantics": [
         "api_key_lookup",
         "canonical_transport_service_audience",
+        "canonical_end_user_jwt_verifier_configuration",
         "unambiguous_transport_iam_bearer_credential",
         "canonical_transport_iam_audience_claim",
         "strict_transport_iam_principal_claims",
