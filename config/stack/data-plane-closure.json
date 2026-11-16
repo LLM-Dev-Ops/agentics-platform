@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "captured_at": "2026-11-15",
+  "captured_at": "2026-11-16",
   "evidence_status": "BLOCKED_PROVIDER_CONTRACT",
   "policy": "Direct consumer persistence may move only to an authenticated, tenant-bound ruvector-service contract with equivalent durability, ordering, idempotency and transactional semantics.",
   "consumers": [
@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "13439a14abd520746ec8a028ed00d236ea71071e",
+      "revision": "65a5ffb9c4de76af34ec727177710a71294e4587",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "480e80006d2b03fbbc9188b7b0ab96bb4f1787c0",
+      "contract_authority_revision": "9a76e780a92ed3ecf19fde7affaedaea59423e07",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,10 +57,10 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "480e80006d2b03fbbc9188b7b0ab96bb4f1787c0",
-      "semantic_revision": "480e80006d2b03fbbc9188b7b0ab96bb4f1787c0",
+      "head_revision": "9a76e780a92ed3ecf19fde7affaedaea59423e07",
+      "semantic_revision": "9a76e780a92ed3ecf19fde7affaedaea59423e07",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
-      "hosted_ci_run_id": 43814078817,
+      "hosted_ci_run_id": 43822279236,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "UNMERGED",
@@ -68,9 +68,9 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "13439a14abd520746ec8a028ed00d236ea71071e",
+      "head_revision": "65a5ffb9c4de76af34ec727177710a71294e4587",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
-      "hosted_ci_run_id": 43814435880,
+      "hosted_ci_run_id": 43822718871,
       "hosted_ci_conclusion": "success",
       "review_decision": "NONE",
       "merge_status": "DRAFT_UNMERGED",
@@ -181,6 +181,7 @@
         "canonical_transport_iam_serialization",
         "canonical_transport_iam_components",
         "structured_transport_iam_protected_header",
+        "canonical_transport_iam_protected_header",
         "canonical_transport_service_audience",
         "canonical_end_user_jwt_verifier_configuration",
         "canonical_end_user_jwt_token_type",
@@ -269,6 +270,7 @@
         "canonical_transport_iam_serialization",
         "canonical_transport_iam_components",
         "structured_transport_iam_protected_header",
+        "canonical_transport_iam_protected_header",
         "canonical_transport_service_audience",
         "canonical_end_user_jwt_verifier_configuration",
         "canonical_end_user_jwt_token_type",
