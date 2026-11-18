@@ -24,7 +24,7 @@ const UPSTREAM_ORIGIN =
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const accessToken = await getServerAccessToken();
   if (!accessToken) {
@@ -34,7 +34,7 @@ export async function GET(
     );
   }
 
-  const simulationId = params.id;
+  const simulationId = (await params).id;
   if (!simulationId) {
     return new Response(
       JSON.stringify({ error: 'simulation id required', code: 'INVALID_REQUEST' }),

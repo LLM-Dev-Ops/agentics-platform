@@ -12,15 +12,19 @@ import type { DecisionEvent } from '@agentics/contracts';
 
 // Mock ruvector client
 vi.mock('@agentics/ruvector-client', () => ({
-  RuvectorClient: vi.fn().mockImplementation(() => ({
-    request: vi.fn(),
-    health: vi.fn().mockResolvedValue({ status: 'healthy' }),
-  })),
-  DecisionEventStore: vi.fn().mockImplementation(() => ({
-    write: vi.fn().mockResolvedValue({ success: true, event_id: 'test-event-id' }),
-    get: vi.fn().mockResolvedValue(null),
-    query: vi.fn().mockResolvedValue({ data: [], total: 0 }),
-  })),
+  RuvectorClient: vi.fn().mockImplementation(function () {
+    return {
+      request: vi.fn(),
+      health: vi.fn().mockResolvedValue({ status: 'healthy' }),
+    };
+  }),
+  DecisionEventStore: vi.fn().mockImplementation(function () {
+    return {
+      write: vi.fn().mockResolvedValue({ success: true, event_id: 'test-event-id' }),
+      get: vi.fn().mockResolvedValue(null),
+      query: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+    };
+  }),
 }));
 
 describe('Decision Agent Contract', () => {

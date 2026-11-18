@@ -126,6 +126,26 @@ describe('Decision Memo Agent', () => {
 
       expect(result.overall).toBe(0.1); // 0.5 * 0.20 for evidence = 0.1
     });
+
+    it('should not credit evidence that is not bound to a source event', () => {
+      const result = calculateConfidence({
+        sourceEvents: mockEvents,
+        processedCount: 1,
+        filteredCount: 0,
+        totalCount: 1,
+        memo: {
+          ...mockMemo,
+          sections: [{
+            ...mockMemo.sections[0],
+            evidence: [
+              { source_event_id: 'missing-event', excerpt: 'unsupported', relevance: 1 },
+            ],
+          }],
+        },
+      });
+
+      expect(result.components.evidence_strength).toBe(0.5);
+    });
   });
 
   describe('Confidence to Risk Level', () => {

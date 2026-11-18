@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "scope": "agentics-platform",
+  "policy": "Known direct-persistence findings may decrease but may not increase or move to new files while the RuVector service migration remains incomplete.",
+  "source_findings": {
+    "packages/api/src/db.ts": {
+      "pg_imports": 1,
+      "database_url_reads": 1,
+      "query_calls": 0
+    },
+    "packages/api/src/handlers/enterprise-gate.ts": {
+      "pg_imports": 0,
+      "database_url_reads": 0,
+      "query_calls": 6
+    },
+    "packages/api/src/middleware/auth.ts": {
+      "pg_imports": 0,
+      "database_url_reads": 0,
+      "query_calls": 3
+    },
+    "packages/api/src/middleware/enterprise-boundary.ts": {
+      "pg_imports": 0,
+      "database_url_reads": 0,
+      "query_calls": 3
+    },
+    "packages/api/src/routes/auth-session.ts": {
+      "pg_imports": 0,
+      "database_url_reads": 0,
+      "query_calls": 1
+    },
+    "packages/api/src/routes/cli-auth.ts": {
+      "pg_imports": 0,
+      "database_url_reads": 0,
+      "query_calls": 17
+    },
+    "packages/api/src/routes/keys.ts": {
+      "pg_imports": 0,
+      "database_url_reads": 0,
+      "query_calls": 4
+    },
+    "packages/api/src/routes/me.ts": {
+      "pg_imports": 0,
+      "database_url_reads": 0,
+      "query_calls": 1
+    },
+    "packages/api/src/services/simulation-events-pubsub.ts": {
+      "pg_imports": 1,
+      "database_url_reads": 1,
+      "query_calls": 2
+    },
+    "packages/api/src/services/simulation-events-store.ts": {
+      "pg_imports": 1,
+      "database_url_reads": 0,
+      "query_calls": 3
+    },
+    "packages/api/src/services/simulation-poller.ts": {
+      "pg_imports": 1,
+      "database_url_reads": 0,
+      "query_calls": 0
+    }
+  },
+  "manifest_findings": {
+    "package.json": 1,
+    "packages/api/package.json": 1
+  },
+  "totals": {
+    "pg_imports": 4,
+    "database_url_reads": 2,
+    "query_calls": 40,
+    "runtime_pg_dependencies": 2,
+    "all_findings": 48
+  }
+}

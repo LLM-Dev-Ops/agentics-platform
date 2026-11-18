@@ -19,6 +19,7 @@ import {
   deleteSimulationHandler,
 } from '../handlers/simulate.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { scopeMiddleware } from '../middleware/scope.js';
 
 /**
  * Register simulation routes
@@ -41,7 +42,7 @@ export async function registerSimulateRoutes(fastify: FastifyInstance) {
    * Scope required: research:write
    */
   fastify.post('/v1/simulate', {
-    onRequest: [authMiddleware],
+    onRequest: [authMiddleware, scopeMiddleware],
     handler: createSimulationHandler,
   });
 
@@ -54,7 +55,7 @@ export async function registerSimulateRoutes(fastify: FastifyInstance) {
    * Scope required: research:read
    */
   fastify.get('/v1/simulate/:id', {
-    onRequest: [authMiddleware],
+    onRequest: [authMiddleware, scopeMiddleware],
     handler: getSimulationHandler,
   });
 
@@ -67,7 +68,7 @@ export async function registerSimulateRoutes(fastify: FastifyInstance) {
    * Scope required: research:read
    */
   fastify.get('/v1/simulate', {
-    onRequest: [authMiddleware],
+    onRequest: [authMiddleware, scopeMiddleware],
     handler: listSimulationsHandler,
   });
 
@@ -80,7 +81,7 @@ export async function registerSimulateRoutes(fastify: FastifyInstance) {
    * Scope required: research:write
    */
   fastify.delete('/v1/simulate/:id', {
-    onRequest: [authMiddleware],
+    onRequest: [authMiddleware, scopeMiddleware],
     handler: deleteSimulationHandler,
   });
 }

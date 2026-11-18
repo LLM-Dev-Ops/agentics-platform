@@ -32,8 +32,13 @@ function calculateSourceQualityScore(sourceEvents: DecisionEvent[]): number {
   return avgConfidence;
 }
 
-function calculateEvidenceStrength(sections: MemoSection[]): number {
+function calculateEvidenceStrength(
+  sections: MemoSection[],
+  sourceEvents: DecisionEvent[]
+): number {
   if (sections.length === 0) return 0;
+
+  const sourceEventIds = new Set(sourceEvents.map(event => event.event_id));
 
   let totalRelevance = 0;
   let evidenceCount = 0;
@@ -41,6 +46,9 @@ function calculateEvidenceStrength(sections: MemoSection[]): number {
   for (const section of sections) {
     if (section.evidence && section.evidence.length > 0) {
       for (const ev of section.evidence) {
+        // Memo evidence is only meaningful when it is bound to an input event.
+        // This prevents stale or fabricated references from raising confidence.
+        if (!sourceEventIds.has(ev.source_event_id)) continue;
         totalRelevance += ev.relevance;
         evidenceCount++;
       }
@@ -109,7 +117,7 @@ export function calculateConfidence(context: ConfidenceContext): ConfidenceResul
 
   const coverage = calculateCoverageScore(processedCount, filteredCount, totalCount);
   const sourceQuality = calculateSourceQualityScore(sourceEvents);
-  const evidenceStrength = calculateEvidenceStrength(memo.sections);
+  const evidenceStrength = calculateEvidenceStrength(memo.sections, sourceEvents);
   const recommendationSupport = calculateRecommendationSupport(memo.recommendations, sourceEvents);
   const recency = calculateRecencyScore(sourceEvents);
 

@@ -1,0 +1,738 @@
+{
+  "schemaVersion": 1,
+  "description": "Pre-existing ESLint findings. The lint ratchet rejects new instances and accepts removals.",
+  "findings": [
+    {
+      "file": "ci/stack/deploy.test.mts",
+      "ruleId": "no-empty",
+      "message": "Empty block statement.",
+      "count": 1
+    },
+    {
+      "file": "ci/stack/probe.mts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/agents/src/base/agent.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'_context' is defined but never used.",
+      "count": 2
+    },
+    {
+      "file": "packages/agents/src/cli/index.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'_options' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/agents/src/executive-summary/agent.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'_context' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/agents/tests/decision-memo.test.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'vi' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/agents/tests/risk-scoring.test.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 3
+    },
+    {
+      "file": "packages/agents/tests/risk-scoring.test.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'beforeEach' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/agents/tests/risk-scoring.test.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'mockClient' is assigned a value but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/agents/tests/risk-scoring.test.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'RiskScoringAgentInput' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/handlers/automation.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 4
+    },
+    {
+      "file": "packages/api/src/handlers/billing.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/handlers/billing.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'Stripe' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/handlers/data.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 7
+    },
+    {
+      "file": "packages/api/src/handlers/ecosystem.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 5
+    },
+    {
+      "file": "packages/api/src/handlers/enterprise-gate.ts",
+      "ruleId": "no-case-declarations",
+      "message": "Unexpected lexical declaration in case block.",
+      "count": 3
+    },
+    {
+      "file": "packages/api/src/handlers/governance.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 5
+    },
+    {
+      "file": "packages/api/src/handlers/identity.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'user' is assigned a value but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/handlers/intelligence.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 3
+    },
+    {
+      "file": "packages/api/src/handlers/interface.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 6
+    },
+    {
+      "file": "packages/api/src/handlers/metrics.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 3
+    },
+    {
+      "file": "packages/api/src/handlers/request-lifecycle.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'auth' is defined but never used.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/handlers/request-lifecycle.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'isStreamingEndpoint' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/handlers/request-lifecycle.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'UpgradeRequiredError' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/handlers/research.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 4
+    },
+    {
+      "file": "packages/api/src/handlers/security.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 5
+    },
+    {
+      "file": "packages/api/src/handlers/simulate.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/lib/router.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 6
+    },
+    {
+      "file": "packages/api/src/lib/router.ts",
+      "ruleId": "no-constant-condition",
+      "message": "Unexpected constant condition.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'cleanupOldEntries' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'createUpgradeRequiredError' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'getAgentCount' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'getConcurrentRunCount' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'getDailySimulationCount' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'getRepositoryCount' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'isCICDContext' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'isEnterpriseTier' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'reply' is defined but never used.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/middleware/enterprise-boundary.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'request' is defined but never used.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/middleware/observability.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 5
+    },
+    {
+      "file": "packages/api/src/middleware/rate-limit.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'endpoint' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/scope.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'action' is assigned a value but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/scope.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'AuthContext' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/middleware/scope.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'Identity' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/router/index.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'FastifyRequest' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/router/index.ts",
+      "ruleId": "no-constant-condition",
+      "message": "Unexpected constant condition.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/routes/agents.ts",
+      "ruleId": "@typescript-eslint/ban-ts-comment",
+      "message": "Use \"@ts-expect-error\" instead of \"@ts-ignore\", as \"@ts-ignore\" will do nothing if the following line is error-free.",
+      "count": 3
+    },
+    {
+      "file": "packages/api/src/routes/agents.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 3
+    },
+    {
+      "file": "packages/api/src/routes/agents.ts",
+      "ruleId": "no-case-declarations",
+      "message": "Unexpected lexical declaration in case block.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/routes/cli-auth.ts",
+      "ruleId": "no-case-declarations",
+      "message": "Unexpected lexical declaration in case block.",
+      "count": 3
+    },
+    {
+      "file": "packages/api/src/routes/cli-commands.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'INTERNAL_EMAIL_PATTERNS' is assigned a value but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/routes/cli-commands.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'reply' is defined but never used.",
+      "count": 32
+    },
+    {
+      "file": "packages/api/src/routes/cli-commands.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'request' is defined but never used.",
+      "count": 6
+    },
+    {
+      "file": "packages/api/src/routes/coherence.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/routes/keys.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'AuthContext' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/routes/protected-example.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'AuthContext' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/routes/simulation-events.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 3
+    },
+    {
+      "file": "packages/api/src/server.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'reply' is defined but never used.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/server.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'request' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/coherence/human-oversight.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'DecisionAuditEntry' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/coherence/human-oversight.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'ImpactAssessment' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/coherence/invariant-validator.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'randomUUID' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/coherence/lineage-tracker.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'ArtifactType' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/entitlements/billing.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/entitlements/index.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'endpoint' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/entitlements/store.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'key' is assigned a value but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/entitlements/store.ts",
+      "ruleId": "prefer-const",
+      "message": "'userAggs' is never reassigned. Use 'const' instead.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/entitlements/usage.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/services/entitlements/usage.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'endpoint' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/entitlements/usage.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'record' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/entitlements/usage.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'userId' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/identity/index.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/identity/index.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'_' is assigned a value but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/intent/intent-service.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'ActualChange' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/intent/intent-service.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'CreateDecisionRequest' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/intent/intent-service.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'DecisionCategory' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/intent/intent-service.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'DecisionStatus' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/intent/intent-service.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'getHumanOversightService' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/intent/intent-service.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'orgId' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/intent/intent-service.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'userId' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/audit.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 10
+    },
+    {
+      "file": "packages/api/src/services/observability/audit.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'event' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/correlation.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/services/observability/index.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 4
+    },
+    {
+      "file": "packages/api/src/services/observability/index.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'generateCorrelationId' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/index.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'getCorrelationContext' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/index.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'getCorrelationId' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/index.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'getLayer3Headers' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/metrics.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/metrics.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'Counter' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/metrics.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'HistogramBucket' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/metrics.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'MetricLabels' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/src/services/observability/usage-emission.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 2
+    },
+    {
+      "file": "packages/api/src/services/observability/usage-emission.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'event' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/tests/handlers/simulate.test.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 6
+    },
+    {
+      "file": "packages/api/tests/services/coherence/drift-detector.test.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'DriftSeverity' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/tests/services/coherence/invariant-validator.test.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/tests/services/coherence/invariant-validator.test.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'SYSTEM_INVARIANTS' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/api/tests/services/coherence/lineage-tracker.test.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'later' is assigned a value but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/cli/src/commands/automation.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 8
+    },
+    {
+      "file": "packages/cli/src/commands/intelligence.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/cli/src/commands/simulate.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 4
+    },
+    {
+      "file": "packages/cli/src/commands/usage.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 3
+    },
+    {
+      "file": "packages/platform-cli/src/commands/erp/references.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 3
+    },
+    {
+      "file": "packages/platform-cli/src/routing/interceptor.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'_config' is assigned a value but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/platform-cli/tests/erp/events.test.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 3
+    },
+    {
+      "file": "packages/platform-cli/tests/erp/references.test.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 2
+    },
+    {
+      "file": "packages/sdk/src/resources/identity.ts",
+      "ruleId": "@typescript-eslint/no-unsafe-declaration-merging",
+      "message": "Unsafe declaration merging between classes and interfaces.",
+      "count": 2
+    },
+    {
+      "file": "packages/ui/src/app/cli/auth/page.tsx",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 2
+    },
+    {
+      "file": "packages/ui/src/app/coherence/page.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'apiClient' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/app/coherence/page.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'ApiError' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/app/coherence/page.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'ConfirmationRequirement' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/app/coherence/page.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'Intent' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/app/coherence/page.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'PreviewData' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/app/coherence/page.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'WorkflowPhase' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/app/login/page.tsx",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 2
+    },
+    {
+      "file": "packages/ui/src/app/settings/page.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'ApiError' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/components/control-surface/ConfirmationWorkflow.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'ConfirmationStep' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/components/telemetry/ProgressBar.tsx",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/components/usage-graphs/DailyUsageTimeSeries.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "message": "'label' is defined but never used.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/lib/api.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 1
+    },
+    {
+      "file": "packages/ui/src/lib/useSimulationEvents.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "message": "Unexpected any. Specify a different type.",
+      "count": 4
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+name: Stack Staging Validation
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: stack-staging
+  cancel-in-progress: false
+jobs:
+  staging:
+    # Secret-bearing live validation only executes committed, trusted main.
+    if: github.ref == 'refs/heads/main'
+    environment: staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      STACK_GATEWAY_URL: ${{ vars.STACK_GATEWAY_URL }}
+      STACK_SIMULATION_SCENARIO: ${{ vars.STACK_SIMULATION_SCENARIO }}
+      STACK_EXPECTED_VERSION: ${{ github.sha }}
+      STACK_API_KEY: ${{ secrets.STACK_API_KEY }}
+      STACK_OTHER_TENANT_API_KEY: ${{ secrets.STACK_OTHER_TENANT_API_KEY }}
+      WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
+      STACK_INVOKER_SERVICE_ACCOUNT: ${{ vars.STACK_INVOKER_SERVICE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24.22.1"
+      - name: Require existing staging identity and two scoped test tenants
+        run: |
+          for name in STACK_GATEWAY_URL STACK_SIMULATION_SCENARIO STACK_EXPECTED_VERSION STACK_API_KEY STACK_OTHER_TENANT_API_KEY WIF_PROVIDER STACK_INVOKER_SERVICE_ACCOUNT; do
+            if [ -z "${!name}" ]; then echo "Missing staging configuration: $name"; exit 1; fi
+          done
+          node --test ci/stack/*.test.mts
+      - id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.STACK_INVOKER_SERVICE_ACCOUNT }}
+          token_format: id_token
+          id_token_audience: ${{ env.STACK_GATEWAY_URL }}
+          id_token_include_email: true
+          create_credentials_file: false
+      - name: Run live gateway, spine, persisted-readback and tenant-isolation journey
+        env:
+          STACK_ID_TOKEN: ${{ steps.auth.outputs.id_token }}
+        run: node ci/stack/probe.mts

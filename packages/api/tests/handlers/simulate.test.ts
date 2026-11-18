@@ -9,7 +9,7 @@
  * against the orchestration spine.
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterEach, afterAll, vi } from 'vitest';
 import Fastify, { type FastifyInstance } from 'fastify';
 import {
   createSimulationHandler,
@@ -100,15 +100,21 @@ function buildApp(): FastifyInstance {
 
 let app: FastifyInstance;
 
-beforeEach(async () => {
-  calls = [];
-  vi.stubGlobal('fetch', vi.fn(fakeFleet));
+beforeAll(async () => {
   app = buildApp();
   await app.ready();
+}, 30_000);
+
+beforeEach(() => {
+  calls = [];
+  vi.stubGlobal('fetch', vi.fn(fakeFleet));
 });
 
-afterEach(async () => {
+afterEach(() => {
   vi.unstubAllGlobals();
+});
+
+afterAll(async () => {
   await app.close();
 });
 

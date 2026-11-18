@@ -10,27 +10,31 @@
     "build": "npm run build --workspace=@agentics/api",
     "start": "npm run start --workspace=@agentics/api",
     "build:all": "npm run build --workspaces --if-present",
+    "build:test-dependencies": "npm run build --workspace=@agentics/shared && npm run build --workspace=@agentics/contracts && npm run build --workspace=@agentics/ruvector-client && npm run build --workspace=@agentics/agents && npm run build --workspace=@agentics/api",
     "dev": "npm run dev --workspaces --if-present",
-    "test": "vitest",
-    "lint": "eslint . --ext .ts,.tsx",
+    "pretest": "npm run build:test-dependencies",
+    "test": "npm run test:vitest && npm run test:node",
+    "test:vitest": "vitest run --config vitest.config.mts --pool=forks --maxWorkers=1 --no-file-parallelism",
+    "test:node": "node --test ci/stack/*.test.mts packages/contracts/test/*.test.mjs",
+    "lint": "node scripts/lint-ratchet.mjs",
+    "lint:strict": "eslint . --ext .ts,.tsx,.mts --max-warnings=0",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "clean": "rm -rf node_modules packages/*/node_modules packages/*/dist"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^6.13.0",
-    "@typescript-eslint/parser": "^6.13.0",
+    "@types/node": "^24.0.0",
+    "@typescript-eslint/eslint-plugin": "6.15.0",
+    "@typescript-eslint/parser": "6.15.0",
     "eslint": "^8.55.0",
     "prettier": "^3.1.0",
     "typescript": "^5.3.0",
-    "vitest": "^1.0.0"
+    "vitest": "^5.1.0"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
   },
   "dependencies": {
-    "claude-flow": "^3.0.0-alpha.152",
     "init": "^0.1.2",
     "pg": "^8.16.3"
   }

@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-11-12",
+  "evidence_status": "INVENTORY_ONLY",
+  "evidence_limit": "These immutable main revisions identify the selected source closure only. They do not prove compatibility, deployment, IAM connectivity, or stack operation.",
+  "pins": [
+    {
+      "component": "intelligence-core",
+      "repository": "LLM-Dev-Ops/intelligence-core",
+      "branch": "main",
+      "commit": "2da20a031c6d02cc99bd3dc86da450791f0f37e7"
+    },
+    {
+      "component": "security-core",
+      "repository": "LLM-Dev-Ops/security-core",
+      "branch": "main",
+      "commit": "6b07fd1e61363ba981986927355bc8c2e2810e6b"
+    },
+    {
+      "component": "automation-core",
+      "repository": "LLM-Dev-Ops/automation-core",
+      "branch": "main",
+      "commit": "3f1b6f7dc755756305527e3672fd91c95acfb8b0"
+    },
+    {
+      "component": "governance-core",
+      "repository": "LLM-Dev-Ops/governance-core",
+      "branch": "main",
+      "commit": "7dc3b493ccfd9568b278d9f7a2bde351769b30d3"
+    },
+    {
+      "component": "data-core",
+      "repository": "LLM-Dev-Ops/data-core",
+      "branch": "main",
+      "commit": "d8a4d82b3918f2cf8aaf5fe003b5c351f184a9a9"
+    },
+    {
+      "component": "ecosystem-core",
+      "repository": "LLM-Dev-Ops/ecosystem-core",
+      "branch": "main",
+      "commit": "2066fb4be1cc72031e19c71040e017310ab4dbae"
+    },
+    {
+      "component": "research-core",
+      "repository": "LLM-Dev-Ops/research-core",
+      "branch": "main",
+      "commit": "9853244c59179d7a8e5742814d226b2f979c3bde"
+    },
+    {
+      "component": "interface-core",
+      "repository": "LLM-Dev-Ops/interface-core",
+      "branch": "main",
+      "commit": "ccdaa69b8b8e1adede067848841a26df024a4e44"
+    },
+    {
+      "component": "agentics-orchestration-engine",
+      "repository": "LLM-Dev-Ops/agentics-orchestration-engine",
+      "branch": "main",
+      "commit": "a365c1a6f954041aefef67678fc3fe1b0b4eba7d"
+    },
+    {
+      "component": "agentics-results-index",
+      "repository": "LLM-Dev-Ops/agentics-results-index",
+      "branch": "main",
+      "commit": "876cd8cf38eb9e5687c92b73e8d3b8ac7e34e57c"
+    },
+    {
+      "component": "agentics-simulation-runner",
+      "repository": "LLM-Dev-Ops/agentics-simulation-runner",
+      "branch": "main",
+      "commit": "ead6a0f0b2f0af389c1cae6dc7b001ecfe7a90f8"
+    },
+    {
+      "component": "agentics-usage-ledger",
+      "repository": "LLM-Dev-Ops/agentics-usage-ledger",
+      "branch": "main",
+      "commit": "dbd63a6ae35a45f889170fc2ca3e611907506c45"
+    },
+    {
+      "component": "ruvector-service",
+      "repository": "LLM-Dev-Ops/ruvector-service",
+      "branch": "main",
+      "commit": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4"
+    },
+    {
+      "component": "agentics-contracts",
+      "repository": "LLM-Dev-Ops/agentics-contracts",
+      "branch": "main",
+      "commit": "716a33348721f78a7a14bd98e6717e3b40470730"
+    },
+    {
+      "component": "schema-registry",
+      "repository": "LLM-Dev-Ops/schema-registry",
+      "branch": "main",
+      "commit": "d0d89f267c32a2d31b622ad112836435c2534f39"
+    }
+  ]
+}

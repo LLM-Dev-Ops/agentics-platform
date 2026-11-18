@@ -90,7 +90,9 @@ export function getRequiredScope(endpoint: string): string | null {
 
     // Simulation endpoint (unified)
     'POST /v1/simulate': 'research:write',
+    'GET /v1/simulate': 'research:read',
     'GET /v1/simulate/*': 'research:read',
+    'DELETE /v1/simulate/*': 'research:write',
   };
 
   // Exact match first

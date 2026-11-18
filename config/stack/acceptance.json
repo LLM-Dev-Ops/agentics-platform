@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "goal": "One operational Agentics system across the supplied 54 repositories",
+  "composition_manifest": "config/stack/topology.json",
+  "implemented_checks": [
+    "Canonical runtime-layer/import enforcement via ci/check-architecture.sh",
+    "Supplied repository and eight-core composition inventory",
+    "Production gateway simulation-route registration and scope regression tests",
+    "Readiness requires all eight cores and three execution-spine endpoints",
+    "Native package-export resolution after deterministic workspace builds",
+    "Platform release candidates reject missing or unsafe shared-service URLs and direct database bindings",
+    "Immutable inventory pins cover all runtime providers plus contract and schema authorities without claiming compatibility or deployment",
+    "Direct platform persistence debt is frozen at 48 findings and may only decrease pending RuVector service migration",
+    "Exact pinned closure inspection records 101 direct-persistence findings across platform, results index and usage ledger and refuses migration readiness without tenant-bound provider contracts",
+    "Cross-repository evidence pins component-validated simulation-event and partial results-index provider contracts while preserving blocked migration status",
+    "Live staging simulation creation, completed-result readback and cross-tenant rejection"
+  ],
+  "required_before_stack_operational": [
+    "Record exact validated source commits and deployed image/revision digests for the impacted dependency closure",
+    "Build/test the Rust and TypeScript providers and their downstream consumers against compatible contracts",
+    "Verify every consumer's environment bindings and authenticated service-to-service IAM path",
+    "Migrate consumer-owned/direct SQL persistence to the shared RuVector/Cloud SQL interface without weakening identity or tenancy",
+    "Demonstrate real policy allow/deny, entitlements and kill-switch behavior",
+    "Demonstrate micro simulation, macro/ERP/ROI composition and all eight core bundles",
+    "Correlate the same execution across telemetry, artifacts, decision packet and usage/cost ledger",
+    "Prove durable retrieval after restart/redeployment and a tested rollback",
+    "Reject health-only, fallback, mocked and synthetic results as live stack-operation evidence"
+  ],
+  "live_probe_scope": "gateway-spine-result-readback-and-tenant-isolation",
+  "whole_stack_operational": false,
+  "deployment_authority": "Existing IAM and environment approvals; no new provisioning or production deployment is authorized by this configuration"
+}

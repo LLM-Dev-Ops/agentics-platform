@@ -7,6 +7,7 @@
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import config from '../config.js';
+import { serviceIdentityHeaders } from './service-identity.js';
 
 export interface ForwardRequestOptions {
   method: string;
@@ -41,11 +42,13 @@ export async function forwardRequest(
     'X-User-Id': options.userId,
     'X-Scopes': options.scopes.join(','),
     ...options.headers,
+    ...await serviceIdentityHeaders(baseUrl),
   };
 
   try {
     const response = await fetch(url, {
       method: options.method,
+      redirect: 'error',
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
@@ -80,11 +83,13 @@ export async function forwardStreamingRequest(
     'X-User-Id': options.userId,
     'X-Scopes': options.scopes.join(','),
     ...options.headers,
+    ...await serviceIdentityHeaders(baseUrl),
   };
 
   try {
     const response = await fetch(url, {
       method: options.method,
+      redirect: 'error',
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
     });

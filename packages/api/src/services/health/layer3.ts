@@ -14,6 +14,7 @@
  */
 
 import config, { Layer3Endpoints } from '../../config.js';
+import { serviceIdentityHeaders } from '../../lib/service-identity.js';
 
 /**
  * Health status values for Layer 3 services
@@ -84,16 +85,19 @@ export async function checkServiceHealth(
   const startTime = Date.now();
   const timestamp = new Date().toISOString();
   const displayName = SERVICE_DISPLAY_NAMES[serviceName];
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), HEALTH_CHECK_TIMEOUT_MS);
+    timeoutId = setTimeout(() => controller.abort(), HEALTH_CHECK_TIMEOUT_MS);
 
     const response = await fetch(`${baseUrl}/health`, {
       method: 'GET',
       signal: controller.signal,
+      redirect: 'error',
       headers: {
         'Accept': 'application/json',
+        ...await serviceIdentityHeaders(baseUrl),
       },
     });
 
@@ -151,6 +155,8 @@ export async function checkServiceHealth(
       latencyMs,
       timestamp,
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

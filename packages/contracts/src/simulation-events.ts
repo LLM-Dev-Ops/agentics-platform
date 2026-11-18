@@ -113,7 +113,13 @@ const CancelledPayload = z.object({
 
 const Envelope = z.object({
   id: z.string(),
-  simulation_id: z.string().uuid(),
+  // Preserve the v0.1 contract's UUID-shape validation. Zod 4's uuid()
+  // additionally enforces RFC variant bits and would reject identifiers that
+  // existing producers and consumers accepted under Zod 3.
+  simulation_id: z.string().regex(
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+    'Invalid UUID'
+  ),
   seq: z.number().int().positive(),
   ts: z.string(),
 });

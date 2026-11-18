@@ -49,7 +49,7 @@ export const outputPayloadSchema = z.object({
   summary: z.string().optional(),
   score: z.number().optional(),
   risk_level: z.enum(['low', 'medium', 'high', 'critical']).optional(),
-  data: z.record(z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
   artifacts: z.array(z.object({
     type: z.string(),
     uri: z.string().url().optional(),
