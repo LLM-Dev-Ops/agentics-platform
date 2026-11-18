@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "39b2af404bb5818c1694076bc820e28bec3b9122",
+      "revision": "f4f89be66d02fc1354a6101464d07ac52d618ca9",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "3d4f8a68fa674e122330e1755142672185c65959",
+      "contract_authority_revision": "d27dca081a77ff80f955a752dd952d826a1fb83b",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,8 +57,8 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "3d4f8a68fa674e122330e1755142672185c65959",
-      "semantic_revision": "3d4f8a68fa674e122330e1755142672185c65959",
+      "head_revision": "d27dca081a77ff80f955a752dd952d826a1fb83b",
+      "semantic_revision": "d27dca081a77ff80f955a752dd952d826a1fb83b",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
       "hosted_ci_run_id": 44301755214,
       "hosted_ci_conclusion": "success",
@@ -68,7 +68,7 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "39b2af404bb5818c1694076bc820e28bec3b9122",
+      "head_revision": "f4f89be66d02fc1354a6101464d07ac52d618ca9",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
       "hosted_ci_run_id": 44302840635,
       "hosted_ci_conclusion": "success",
@@ -216,6 +216,7 @@
         "exact_entitlement_tenant_binding",
         "exact_active_membership_identity_binding",
         "exact_completed_poll_membership_binding",
+        "exact_completed_poll_api_key_binding",
         "canonical_persisted_api_key_id",
         "canonical_persisted_api_key_hash",
         "canonical_persisted_api_key_name",
@@ -355,6 +356,7 @@
         "exact_entitlement_tenant_binding",
         "exact_active_membership_identity_binding",
         "exact_completed_poll_membership_binding",
+        "exact_completed_poll_api_key_binding",
         "canonical_persisted_api_key_id",
         "canonical_persisted_api_key_hash",
         "canonical_persisted_api_key_name",
