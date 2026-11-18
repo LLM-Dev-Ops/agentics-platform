@@ -45,10 +45,10 @@
     "transport_identity": "CLOUD_RUN_IAM",
     "application_tenant_binding": false,
     "candidate": {
-      "revision": "c0213fa30b2658cf3a04a0c240423f0ba497622e",
+      "revision": "11d81743b1d38486d2216963e59131fd23f01df4",
       "branch": "integration/tenant-bound-data-plane-2026-11-12",
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "contract_authority_revision": "6e80979a231d763fd7fff0a8e46e0dec06bec96a",
+      "contract_authority_revision": "d7f703ac0291b97b5720dfbd4a432752d26cbbc5",
       "contract_pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
       "application_tenant_binding": true,
       "status": "COMPONENT_VALIDATED"
@@ -57,8 +57,8 @@
   "promotion_evidence": {
     "contract_authority": {
       "pull_request": "https://github.com/LLM-Dev-Ops/agentics-contracts/pull/1",
-      "head_revision": "6e80979a231d763fd7fff0a8e46e0dec06bec96a",
-      "semantic_revision": "6e80979a231d763fd7fff0a8e46e0dec06bec96a",
+      "head_revision": "d7f703ac0291b97b5720dfbd4a432752d26cbbc5",
+      "semantic_revision": "d7f703ac0291b97b5720dfbd4a432752d26cbbc5",
       "base_main_revision": "716a33348721f78a7a14bd98e6717e3b40470730",
       "hosted_ci_run_id": 44301755214,
       "hosted_ci_conclusion": "success",
@@ -68,7 +68,7 @@
     },
     "provider": {
       "pull_request": "https://github.com/LLM-Dev-Ops/ruvector-service/pull/5",
-      "head_revision": "c0213fa30b2658cf3a04a0c240423f0ba497622e",
+      "head_revision": "11d81743b1d38486d2216963e59131fd23f01df4",
       "base_main_revision": "e3a56d6c4c42f61fec8afb9da01939578e39ffa4",
       "hosted_ci_run_id": 44302840635,
       "hosted_ci_conclusion": "success",
@@ -224,6 +224,7 @@
         "canonical_persisted_cli_session_code",
         "canonical_persisted_cli_authorizing_identity",
         "canonical_persisted_cli_delivery_timestamp",
+        "string_typed_cli_delivery_envelope",
         "canonical_persisted_api_key_name",
         "canonical_persisted_organization_id",
         "canonical_persisted_cli_tenant_binding",
@@ -365,6 +366,7 @@
         "canonical_persisted_cli_session_code",
         "canonical_persisted_cli_authorizing_identity",
         "canonical_persisted_cli_delivery_timestamp",
+        "string_typed_cli_delivery_envelope",
         "canonical_persisted_api_key_name",
         "canonical_persisted_organization_id",
         "canonical_persisted_cli_tenant_binding",
